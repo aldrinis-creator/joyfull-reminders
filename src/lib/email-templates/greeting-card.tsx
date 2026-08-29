@@ -28,7 +28,7 @@ const CARD_ACCENTS: Record<string, { bg: string; border: string }> = {
 }
 
 const GreetingCard = ({ senderName, recipientName, occasion, message, cardStyle }: Props) => {
-  const accent = CARD_ACCENTS[cardStyle ?? 'classic'] ?? CARD_ACCENTS.classic!
+  const accent = CARD_ACCENTS[cardStyle ?? 'classic'] ?? CARD_ACCENTS['classic']!
   const greetingTo = recipientName?.trim() || 'you'
   const greetingFrom = senderName?.trim() || 'Someone who cares'
   const occasionLabel = occasion?.trim() || 'a special day'
@@ -60,7 +60,7 @@ const GreetingCard = ({ senderName, recipientName, occasion, message, cardStyle 
 export const template = {
   component: GreetingCard,
   subject: (data: Record<string, any>) =>
-    `${data?.senderName || 'Someone'} sent you a greeting${data?.occasion ? ` for ${data.occasion}` : ''}`,
+    `${data?.['senderName'] || 'Someone'} sent you a greeting${data?.['occasion'] ? ` for ${data['occasion']}` : ''}`,
   displayName: 'Greeting card',
   previewData: {
     senderName: 'Asha',
