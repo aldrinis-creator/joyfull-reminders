@@ -84,12 +84,52 @@ export const sendGreeting = createServerFn({ method: "POST" })
     }
 
     if (data.channel === "email") {
-      await supabase.from("greetings").insert({ ...insertRow, status: "draft" as const });
-      return {
-        ok: false,
-        reason: "not_configured",
-        detail: "Email greetings need a verified sending domain. Set one up in Cloud → Emails.",
-      };
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", userId)
+        .maybeSingle();
+
+      try {
+        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+        const result = await sendTemplateEmail("greeting-card", recipient!, {
+          templateData: {
+            senderName: profile?.full_name ?? undefined,
+            recipientName: member.full_name,
+            occasion: data.occasion,
+            message: data.message,
+            cardStyle: data.cardStyle,
+          },
+          idempotencyKey: `greeting-${data.familyMemberId}-${data.occasionKey}-email`,
+        });
+
+        if (!result.sent) {
+          await supabase.from("greetings").insert({
+            ...insertRow,
+            status: "skipped" as const,
+            error_message: "Recipient unsubscribed or unreachable.",
+          });
+          return {
+            ok: false,
+            reason: "failed",
+            detail: "This address has opted out of emails, so the card was not sent.",
+          };
+        }
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : "Email could not be sent.";
+        await supabase
+          .from("greetings")
+          .insert({ ...insertRow, status: "failed" as const, error_message: detail.slice(0, 400) });
+        return { ok: false, reason: "failed", detail: "The email could not be sent right now." };
+      }
+
+      const { data: row, error } = await supabase
+        .from("greetings")
+        .insert({ ...insertRow, status: "sent" as const, sent_at: new Date().toISOString() })
+        .select("id")
+        .single();
+      if (error || !row) return { ok: false, reason: "failed", detail: "Sent, but could not be saved." };
+      return { ok: true, greetingId: row.id, channel: "email" };
     }
 
     // WhatsApp via MSG91
