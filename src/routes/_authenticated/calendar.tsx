@@ -5,9 +5,12 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { ReminderCard } from "@/components/ReminderCard";
 import { useReminders } from "@/lib/queries";
+import { useT } from "@/hooks/useLanguage";
+import { activeLocale } from "@/lib/i18n";
 import {
   CATEGORIES,
   categoryMeta,
+  categoryShortLabel,
   nextOccurrence,
   type ReminderCategory,
 } from "@/lib/ereminder";
@@ -30,6 +33,7 @@ export const Route = createFileRoute("/_authenticated/calendar")({
 });
 
 function CalendarPage() {
+  const t = useT();
   const { data: reminders } = useReminders();
   const [monthOffset, setMonthOffset] = useState(0);
   const [category, setCategory] = useState<ReminderCategory | "all">("all");
@@ -70,16 +74,16 @@ function CalendarPage() {
 
   return (
     <AppShell
-      title="Calendar"
-      subtitle={cursor.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+      title={t("nav.calendar")}
+      subtitle={cursor.toLocaleDateString(activeLocale(), { month: "long", year: "numeric" })}
     >
       <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-2">
         <Chip active={category === "all"} onClick={() => setCategory("all")}>
-          All
+          {t("reminders.filterAll")}
         </Chip>
         {CATEGORIES.map((c) => (
           <Chip key={c.value} active={category === c.value} onClick={() => setCategory(c.value)}>
-            {c.emoji} {c.short}
+            {c.emoji} {categoryShortLabel(c.value)}
           </Chip>
         ))}
       </div>
@@ -90,19 +94,19 @@ function CalendarPage() {
             variant="ghost"
             size="icon"
             className="size-12"
-            aria-label="Previous month"
+            aria-label={t("reminders.prevMonth")}
             onClick={() => setMonthOffset((m) => m - 1)}
           >
             <ChevronLeft className="size-6" aria-hidden />
           </Button>
           <p className="text-lg font-bold">
-            {cursor.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+            {cursor.toLocaleDateString(activeLocale(), { month: "long", year: "numeric" })}
           </p>
           <Button
             variant="ghost"
             size="icon"
             className="size-12"
-            aria-label="Next month"
+            aria-label={t("reminders.nextMonth")}
             onClick={() => setMonthOffset((m) => m + 1)}
           >
             <ChevronRight className="size-6" aria-hidden />
@@ -110,9 +114,11 @@ function CalendarPage() {
         </div>
 
         <div className="text-muted-foreground grid grid-cols-7 gap-1 text-center text-xs font-bold">
-          {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-            <span key={`${d}-${i}`}>{d}</span>
-          ))}
+          {t("reminders.weekdayInitials")
+            .split(",")
+            .map((d, i) => (
+              <span key={`${d}-${i}`}>{d}</span>
+            ))}
         </div>
         <div className="mt-1 grid grid-cols-7 gap-1">
           {cells.map((day, idx) => {
@@ -155,14 +161,20 @@ function CalendarPage() {
 
       <section className="mt-5 space-y-3 pb-6">
         <h2 className="text-muted-foreground text-sm font-bold tracking-widest uppercase">
-          {selectedDay ? new Date(selectedDay).toDateString() : "Upcoming"}
+          {selectedDay
+            ? new Date(selectedDay).toLocaleDateString(activeLocale(), {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })
+            : t("reminders.upcoming")}
         </h2>
         {(selectedDay ? selectedEvents : events.slice(0, 20)).map(({ reminder, occurrence }) => (
           <ReminderCard key={reminder.id} reminder={reminder} occurrence={occurrence} />
         ))}
         {(selectedDay ? selectedEvents : events).length === 0 ? (
           <p className="text-muted-foreground bg-card shadow-card rounded-3xl px-6 py-10 text-center">
-            Nothing scheduled here.
+            {t("reminders.nothingScheduled")}
           </p>
         ) : null}
       </section>

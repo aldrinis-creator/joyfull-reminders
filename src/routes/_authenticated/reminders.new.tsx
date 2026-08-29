@@ -18,10 +18,14 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useFamilyMembers } from "@/lib/queries";
+import { useT } from "@/hooks/useLanguage";
 import {
   ALERT_PRESETS,
   CATEGORIES,
   RECURRENCES,
+  alertPresetLabel,
+  categoryLabel,
+  recurrenceLabel,
   type RecurrenceKind,
   type ReminderCategory,
 } from "@/lib/ereminder";
@@ -43,14 +47,15 @@ export const Route = createFileRoute("/_authenticated/reminders/new")({
 });
 
 const schema = z.object({
-  title: z.string().trim().min(1, "Give it a title").max(120),
+  title: z.string().trim().min(1, "reminders.errTitle").max(120),
   description: z.string().trim().max(1000).optional(),
-  dueDate: z.string().min(1, "Pick a date"),
-  dueTime: z.string().min(1, "Pick a time"),
+  dueDate: z.string().min(1, "reminders.errDate"),
+  dueTime: z.string().min(1, "reminders.errTime"),
   birthYear: z.string().trim().max(4).optional(),
 });
 
 function NewReminder() {
+  const t = useT();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: members } = useFamilyMembers();
@@ -74,19 +79,19 @@ function NewReminder() {
     );
 
   return (
-    <AppShell title="New reminder" subtitle="It only takes a few seconds">
+    <AppShell title={t("reminders.title")} subtitle={t("reminders.subtitle")}>
       <form
         className="space-y-5 pb-8"
         onSubmit={async (e) => {
           e.preventDefault();
           const parsed = schema.safeParse({ title, description, dueDate, dueTime, birthYear });
           if (!parsed.success) {
-            toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
+            toast.error(t(parsed.error.issues[0]?.message ?? "reminders.errForm"));
             return;
           }
           const dueAt = new Date(`${dueDate}T${dueTime}`);
           if (Number.isNaN(dueAt.getTime())) {
-            toast.error("That date and time isn't valid");
+            toast.error(t("reminders.errInvalidDate"));
             return;
           }
           setSaving(true);
@@ -94,7 +99,7 @@ function NewReminder() {
           const userId = userData.user?.id;
           if (!userId) {
             setSaving(false);
-            toast.error("Please sign in again");
+            toast.error(t("reminders.errSignIn"));
             return;
           }
           const { data: created, error } = await supabase
@@ -117,7 +122,7 @@ function NewReminder() {
 
           if (error || !created) {
             setSaving(false);
-            toast.error("Could not save that reminder.");
+            toast.error(t("reminders.errSave"));
             return;
           }
 
@@ -134,22 +139,22 @@ function NewReminder() {
 
           setSaving(false);
           void queryClient.invalidateQueries({ queryKey: ["reminders"] });
-          toast.success("Reminder saved");
+          toast.success(t("reminders.saved"));
           navigate({ to: "/home" });
         }}
       >
-        <Field label="What should we remind you about?" htmlFor="title">
+        <Field label={t("reminders.fieldTitle")} htmlFor="title">
           <Input
             id="title"
             value={title}
             maxLength={120}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Amma's birthday"
+            placeholder={t("reminders.titlePlaceholder")}
             className="h-13 text-lg"
           />
         </Field>
 
-        <Field label="Category" htmlFor="category">
+        <Field label={t("reminders.fieldCategory")} htmlFor="category">
           <Select value={category} onValueChange={(v) => setCategory(v as ReminderCategory)}>
             <SelectTrigger id="category" className="h-13 text-base">
               <SelectValue />
@@ -157,7 +162,7 @@ function NewReminder() {
             <SelectContent>
               {CATEGORIES.map((c) => (
                 <SelectItem key={c.value} value={c.value}>
-                  {c.emoji} {c.label}
+                  {c.emoji} {categoryLabel(c.value)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -165,7 +170,7 @@ function NewReminder() {
         </Field>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <Field label="Date" htmlFor="date">
+          <Field label={t("reminders.fieldDate")} htmlFor="date">
             <Input
               id="date"
               type="date"
@@ -174,7 +179,7 @@ function NewReminder() {
               className="h-13 w-full min-w-0 text-base"
             />
           </Field>
-          <Field label="Time" htmlFor="time">
+          <Field label={t("reminders.fieldTime")} htmlFor="time">
             <Input
               id="time"
               type="time"
@@ -186,7 +191,7 @@ function NewReminder() {
         </div>
 
 
-        <Field label="Repeats" htmlFor="recurrence">
+        <Field label={t("reminders.fieldRepeats")} htmlFor="recurrence">
           <Select value={recurrence} onValueChange={(v) => setRecurrence(v as RecurrenceKind)}>
             <SelectTrigger id="recurrence" className="h-13 text-base">
               <SelectValue />
@@ -194,7 +199,7 @@ function NewReminder() {
             <SelectContent>
               {RECURRENCES.map((r) => (
                 <SelectItem key={r.value} value={r.value}>
-                  {r.label}
+                  {recurrenceLabel(r.value)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -202,7 +207,7 @@ function NewReminder() {
         </Field>
 
         {recurrence === "custom" ? (
-          <Field label="Every how many days?" htmlFor="interval">
+          <Field label={t("reminders.fieldInterval")} htmlFor="interval">
             <Input
               id="interval"
               type="number"
@@ -215,7 +220,7 @@ function NewReminder() {
           </Field>
         ) : null}
 
-        <Field label="Birth year (optional — we'll show the age)" htmlFor="birthYear">
+        <Field label={t("reminders.fieldBirthYear")} htmlFor="birthYear">
           <Input
             id="birthYear"
             inputMode="numeric"
@@ -228,13 +233,13 @@ function NewReminder() {
         </Field>
 
         {members && members.length > 0 ? (
-          <Field label="Who is this for?" htmlFor="member">
+          <Field label={t("reminders.fieldFor")} htmlFor="member">
             <Select value={memberId} onValueChange={setMemberId}>
               <SelectTrigger id="member" className="h-13 text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Just me</SelectItem>
+                <SelectItem value="none">{t("reminders.justMe")}</SelectItem>
                 {members.map((m) => (
                   <SelectItem key={m.id} value={m.id}>
                     {m.full_name} · {m.relationship}
@@ -245,20 +250,20 @@ function NewReminder() {
           </Field>
         ) : null}
 
-        <Field label="Notes" htmlFor="notes">
+        <Field label={t("reminders.fieldNotes")} htmlFor="notes">
           <Textarea
             id="notes"
             value={description}
             maxLength={1000}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Book the cake a day early this time."
+            placeholder={t("reminders.notesPlaceholder")}
             rows={3}
             className="text-base"
           />
         </Field>
 
         <fieldset className="bg-card shadow-card rounded-3xl p-5">
-          <legend className="px-2 text-sm font-bold tracking-widest uppercase">Alert me</legend>
+          <legend className="px-2 text-sm font-bold tracking-widest uppercase">{t("reminders.alertMe")}</legend>
           <div className="mt-2 space-y-2">
             {ALERT_PRESETS.map((preset) => {
               const on = alerts.includes(preset.minutes);
@@ -274,7 +279,7 @@ function NewReminder() {
                       : "bg-muted text-foreground min-h-13 w-full rounded-2xl px-4 text-left text-base font-semibold"
                   }
                 >
-                  {preset.label}
+                  {alertPresetLabel(preset.minutes)}
                 </button>
               );
             })}
@@ -283,16 +288,14 @@ function NewReminder() {
 
         <div className="bg-card shadow-card flex items-center justify-between gap-4 rounded-3xl p-5">
           <div>
-            <p className="font-semibold">Ring a full-screen alarm</p>
-            <p className="text-muted-foreground text-sm">
-              Plays a chime for up to 60 seconds when it's due.
-            </p>
+            <p className="font-semibold">{t("reminders.alarmTitle")}</p>
+            <p className="text-muted-foreground text-sm">{t("reminders.alarmBody")}</p>
           </div>
           <Switch checked={highPriority} onCheckedChange={setHighPriority} />
         </div>
 
         <Button type="submit" size="lg" className="h-15 w-full text-lg" disabled={saving}>
-          Save reminder
+          {saving ? t("saving") : t("reminders.saveCta")}
         </Button>
       </form>
     </AppShell>
