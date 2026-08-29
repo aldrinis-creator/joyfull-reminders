@@ -32,12 +32,23 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: order, error } = await supabase
       .from("orders")
-      .select("id, amount_paise, status, recipient_name, vendor_id, vendor_products(name), vendors(name)")
+      .select(
+        "id, amount_paise, quantity, product_id, status, recipient_name, vendor_id, vendor_products(name, price_paise), vendors(name)",
+      )
       .eq("id", data.orderId)
       .maybeSingle();
 
     if (error || !order) throw new Error("Order not found");
     if (order.status !== "pending_payment") throw new Error("This order is already paid");
+
+    // Never trust a stored amount that disagrees with the vendor's listed price.
+    const listedPaise = order.vendor_products?.price_paise;
+    const authoritativePaise =
+      typeof listedPaise === "number" ? listedPaise * (order.quantity ?? 1) : order.amount_paise;
+    if (authoritativePaise !== order.amount_paise) {
+      console.error("Order amount mismatch", order.id);
+      throw new Error("This order needs to be re-created before payment.");
+    }
 
     if (!keyId || !keySecret) {
       return {
