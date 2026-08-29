@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/hooks/useLanguage";
 import {
   orderStatusLabel,
   vendorKindLabel,
@@ -54,6 +55,7 @@ const shopSchema = z.object({
 });
 
 function VendorPortal() {
+  const t = useT();
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["my_vendor"],
