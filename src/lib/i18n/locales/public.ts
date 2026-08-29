@@ -1,8 +1,130 @@
 import type { Namespace } from "../types";
 
 const publicNs: Namespace = {
-  en: {},
-  hi: {},
+  en: {
+    heroTitle: "Never miss a moment that matters.",
+    heroBody:
+      "Birthdays, bills, PUC, tax filings, exam forms — remembered for you, and celebrated with cake and flowers when the day arrives.",
+    createAccount: "Create your account",
+    createAccountShort: "Create account",
+    haveAccount: "I already have an account",
+    footer: "Made for busy families across India.",
+    "feature.milestones.title": "Family milestones first",
+    "feature.milestones.body":
+      "Birthdays, anniversaries, memorials and exam dates for everyone you love — with the age they're turning.",
+    "feature.alarms.title": "Alarms you can't sleep through",
+    "feature.alarms.body":
+      "A full-screen alert with a 60-second chime, snooze options and a one-tap way to act on it.",
+    "feature.deadlines.title": "Every deadline covered",
+    "feature.deadlines.body":
+      "IT returns, FD maturity, insurance, PUC expiry, rent, SIPs, OTT trials and exam forms.",
+    "feature.gifting.title": "Gifting built in",
+    "feature.gifting.body":
+      "Order cake, flowers or a hamper from shops near you and track it to the doorstep.",
+
+    authTagline: "Your milestones, deadlines and celebrations in one place.",
+    continueGoogle: "Continue with Google",
+    or: "or",
+    signIn: "Sign in",
+    signUp: "Sign up",
+    yourName: "Your name",
+    namePlaceholder: "Aarti Sharma",
+    password: "Password",
+    passwordPlaceholder: "At least 8 characters",
+    confirmEmail: "Almost there — tap the confirmation link we just emailed you.",
+    accountCreated: "Account created. Welcome to e-Reminder!",
+    errGoogle: "Google sign-in failed. Please try another method.",
+    errEmail: "Enter a valid email",
+    errPassword: "Use at least 8 characters",
+    errPhone: "Enter a valid phone number",
+    errSession: "Signed in, but the session could not be saved.",
+    errVerify: "Could not verify that code. Please try again.",
+    otpQuestionFor: "How would you like to receive your one-time code for",
+    changeNumber: "Change number",
+    otpSentSms: "Sent to {phone} by SMS. It expires in 10 minutes.",
+    otpSentWhatsapp: "Sent to {phone} on WhatsApp. It expires in 10 minutes.",
+    verifyContinue: "Verify and continue",
+    resend: "Resend",
+    differentNumber: "Use a different number",
+    mobileNumber: "Mobile number",
+    continue: "Continue",
+    otpChoiceHint: "We'll ask whether you'd like your code by SMS or WhatsApp.",
+
+    aGreeting: "A greeting",
+    forName: "for {name}",
+    defaultWish: "Wishing you a wonderful day.",
+    sentWith: "Sent with e-Reminder",
+
+    thankYou: "Thank you!",
+    pincodeSaved: "We've saved {pincode}",
+    pincodeSavedTail: "Your surprise can now be delivered from a shop nearby.",
+    sharePincodeTitle: "Share your delivery pincode",
+    sharePincodeBody:
+      "Someone wants to send you a gift. Your 6-digit pincode helps us find a shop within a few kilometres of you. Nothing else is shared.",
+    sharePincodeCta: "Share pincode",
+  },
+  hi: {
+    heroTitle: "कोई भी ख़ास पल अब नहीं छूटेगा।",
+    heroBody:
+      "जन्मदिन, बिल, PUC, कर भुगतान, परीक्षा फ़ॉर्म — सब हम याद रखेंगे, और दिन आने पर केक और फूलों के साथ ख़ुशी मनाएँगे।",
+    createAccount: "अपना खाता बनाएँ",
+    createAccountShort: "खाता बनाएँ",
+    haveAccount: "मेरा खाता पहले से है",
+    footer: "पूरे भारत के व्यस्त परिवारों के लिए बनाया गया।",
+    "feature.milestones.title": "परिवार के ख़ास दिन सबसे पहले",
+    "feature.milestones.body":
+      "अपनों के जन्मदिन, सालगिरह, पुण्यतिथि और परीक्षा की तारीख़ें — साथ में उनकी उम्र भी।",
+    "feature.alarms.title": "ऐसे अलार्म जो छूटें नहीं",
+    "feature.alarms.body":
+      "पूरी स्क्रीन पर 60 सेकंड की घंटी, स्नूज़ के विकल्प और एक टैप में कार्रवाई।",
+    "feature.deadlines.title": "हर अंतिम तारीख़ शामिल",
+    "feature.deadlines.body":
+      "आयकर रिटर्न, FD मैच्योरिटी, बीमा, PUC, किराया, SIP, OTT ट्रायल और परीक्षा फ़ॉर्म।",
+    "feature.gifting.title": "उपहार भेजना भी आसान",
+    "feature.gifting.body":
+      "पास की दुकानों से केक, फूल या हैम्पर मँगाइए और डिलीवरी तक नज़र रखिए।",
+
+    authTagline: "आपके ख़ास दिन, अंतिम तारीख़ें और ख़ुशियाँ — एक ही जगह।",
+    continueGoogle: "Google से जारी रखें",
+    or: "या",
+    signIn: "साइन इन",
+    signUp: "खाता बनाएँ",
+    yourName: "आपका नाम",
+    namePlaceholder: "आरती शर्मा",
+    password: "पासवर्ड",
+    passwordPlaceholder: "कम से कम 8 अक्षर",
+    confirmEmail: "बस थोड़ा और — हमने जो पुष्टि लिंक भेजा है उस पर टैप कीजिए।",
+    accountCreated: "खाता बन गया। ई-रिमाइंडर में आपका स्वागत है!",
+    errGoogle: "Google से साइन इन नहीं हो सका। कृपया कोई और तरीक़ा आज़माइए।",
+    errEmail: "सही ईमेल डालिए",
+    errPassword: "कम से कम 8 अक्षर इस्तेमाल कीजिए",
+    errPhone: "सही फ़ोन नंबर डालिए",
+    errSession: "साइन इन हो गया, पर सत्र सहेजा नहीं जा सका।",
+    errVerify: "यह कोड सत्यापित नहीं हो सका। कृपया फिर कोशिश कीजिए।",
+    otpQuestionFor: "आप अपना एक-बार का कोड किस तरह पाना चाहेंगे —",
+    changeNumber: "नंबर बदलें",
+    otpSentSms: "{phone} पर SMS से भेजा गया। 10 मिनट में समाप्त होगा।",
+    otpSentWhatsapp: "{phone} पर व्हाट्सऐप से भेजा गया। 10 मिनट में समाप्त होगा।",
+    verifyContinue: "सत्यापित करें और आगे बढ़ें",
+    resend: "फिर भेजें",
+    differentNumber: "कोई दूसरा नंबर इस्तेमाल करें",
+    mobileNumber: "मोबाइल नंबर",
+    continue: "आगे बढ़ें",
+    otpChoiceHint: "हम पूछेंगे कि कोड SMS पर चाहिए या व्हाट्सऐप पर।",
+
+    aGreeting: "एक शुभकामना",
+    forName: "{name} के लिए",
+    defaultWish: "आपका दिन शानदार हो।",
+    sentWith: "ई-रिमाइंडर से भेजा गया",
+
+    thankYou: "धन्यवाद!",
+    pincodeSaved: "हमने {pincode} सहेज लिया",
+    pincodeSavedTail: "अब आपका उपहार पास की दुकान से भेजा जा सकेगा।",
+    sharePincodeTitle: "अपना डिलीवरी पिनकोड बताइए",
+    sharePincodeBody:
+      "कोई आपको उपहार भेजना चाहता है। आपका 6 अंकों का पिनकोड हमें आपके कुछ किलोमीटर के भीतर दुकान ढूँढ़ने में मदद करता है। और कुछ भी साझा नहीं होता।",
+    sharePincodeCta: "पिनकोड साझा करें",
+  },
 };
 
 export default publicNs;
