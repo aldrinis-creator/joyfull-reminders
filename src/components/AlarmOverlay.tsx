@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { BellRing, Clock, Check, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { categoryMeta, formatDateTime, type Reminder } from "@/lib/ereminder";
+import { categoryMeta, categoryShortLabel, formatDateTime, type Reminder } from "@/lib/ereminder";
+import { useT } from "@/hooks/useLanguage";
 
 const RING_MS = 60_000;
 
@@ -58,6 +59,7 @@ export function AlarmOverlay({
   onDismiss: () => void;
   onSnooze: (minutes: number) => void;
 }) {
+  const t = useT();
   const [ringing, setRinging] = useState(true);
   useChime(ringing);
 
@@ -73,7 +75,7 @@ export function AlarmOverlay({
     <div
       role="alertdialog"
       aria-modal="true"
-      aria-label={`Reminder due: ${reminder.title}`}
+      aria-label={t("home.alarmAria", { title: reminder.title })}
       className="bg-indigo/95 fixed inset-0 z-50 flex flex-col items-center justify-center px-6 py-10 backdrop-blur-sm"
     >
       <div className="relative mb-8 flex size-28 items-center justify-center">
@@ -86,7 +88,7 @@ export function AlarmOverlay({
       </div>
 
       <p className="text-indigo-foreground/80 text-sm font-bold tracking-widest uppercase">
-        {meta.emoji} {meta.short} reminder
+        {meta.emoji} {t("home.alarmKicker", { category: categoryShortLabel(reminder.category) })}
       </p>
       <h2 className="text-indigo-foreground mt-3 max-w-md text-center text-4xl">
         {reminder.title}
@@ -109,7 +111,7 @@ export function AlarmOverlay({
             onDismiss();
           }}
         >
-          <Check className="size-6" aria-hidden /> Dismiss & mark done
+          <Check className="size-6" aria-hidden /> {t("home.dismissDone")}
         </Button>
 
         <Button
@@ -120,15 +122,15 @@ export function AlarmOverlay({
         >
           <Link to="/market">
             <Gift className="size-5" aria-hidden />
-            {isCelebration ? "Order cake or flowers" : "Take action now"}
+            {isCelebration ? t("home.orderCake") : t("home.takeAction")}
           </Link>
         </Button>
 
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: "15 min", minutes: 15 },
-            { label: "1 hour", minutes: 60 },
-            { label: "Tomorrow", minutes: 1440 },
+            { label: t("home.snooze15"), minutes: 15 },
+            { label: t("home.snooze60"), minutes: 60 },
+            { label: t("home.snoozeTomorrow"), minutes: 1440 },
           ].map((s) => (
             <Button
               key={s.minutes}

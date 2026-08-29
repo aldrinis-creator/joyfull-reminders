@@ -2,13 +2,14 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { CalendarDays, Home, ShoppingBag, User, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/hooks/useLanguage";
 
 const TABS = [
-  { to: "/home", label: "Home", icon: Home },
-  { to: "/family", label: "Family", icon: Users },
-  { to: "/market", label: "Market", icon: ShoppingBag },
-  { to: "/calendar", label: "Calendar", icon: CalendarDays },
-  { to: "/profile", label: "Profile", icon: User },
+  { to: "/home", labelKey: "nav.home", icon: Home },
+  { to: "/family", labelKey: "nav.family", icon: Users },
+  { to: "/market", labelKey: "nav.market", icon: ShoppingBag },
+  { to: "/calendar", labelKey: "nav.calendar", icon: CalendarDays },
+  { to: "/profile", labelKey: "nav.profile", icon: User },
 ] as const;
 
 export function AppShell({
@@ -23,6 +24,7 @@ export function AppShell({
   action?: ReactNode | undefined;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const t = useT();
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -41,7 +43,7 @@ export function AppShell({
       <main className="mx-auto -mt-4 max-w-2xl px-4 pt-4">{children}</main>
 
       <nav
-        aria-label="Main"
+        aria-label={t("nav.mainLabel")}
         className="bg-card/95 fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur"
       >
         <ul className="mx-auto flex max-w-2xl items-stretch justify-between px-2 py-1">
@@ -58,7 +60,7 @@ export function AppShell({
                   )}
                 >
                   <Icon className="size-6" strokeWidth={active ? 2.6 : 2} aria-hidden />
-                  {tab.label}
+                  {t(tab.labelKey)}
                 </Link>
               </li>
             );
