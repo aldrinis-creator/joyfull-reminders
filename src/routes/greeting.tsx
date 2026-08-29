@@ -1,7 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CARD_STYLES, OCCASIONS } from "@/lib/greetings";
 
-type Search = { to?: string; m?: string; s?: string; o?: string };
+type Search = {
+  to?: string | undefined;
+  m?: string | undefined;
+  s?: string | undefined;
+  o?: string | undefined;
+};
 
 export const Route = createFileRoute("/greeting")({
   validateSearch: (search: Record<string, unknown>): Search => ({

@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFamilyMembers, useVendor } from "@/lib/queries";
 import { VENDOR_KINDS, rupees, type VendorProduct } from "@/lib/ereminder";
 
-type VendorSearch = { pin?: string; for?: string };
+type VendorSearch = { pin?: string | undefined; for?: string | undefined };
 
 export const Route = createFileRoute("/_authenticated/market/$vendorId")({
   validateSearch: (search: Record<string, unknown>): VendorSearch => ({

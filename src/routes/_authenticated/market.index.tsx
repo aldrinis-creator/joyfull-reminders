@@ -8,7 +8,7 @@ import { useFamilyMembers, useProfile, useVendors } from "@/lib/queries";
 import { VENDOR_KINDS, haversineKm, type VendorKind } from "@/lib/ereminder";
 import { cn } from "@/lib/utils";
 
-type MarketSearch = { pin?: string; for?: string };
+type MarketSearch = { pin?: string | undefined; for?: string | undefined };
 
 export const Route = createFileRoute("/_authenticated/market/")({
   validateSearch: (search: Record<string, unknown>): MarketSearch => ({

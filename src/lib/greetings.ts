@@ -44,7 +44,7 @@ export function occasionKey(occasion: string, when: Date = new Date()): string {
 export function defaultMessage(params: {
   name: string;
   occasion: string;
-  senderName?: string | null;
+  senderName?: string | null | undefined;
   turning?: number | null;
   likes?: string[];
 }): string {

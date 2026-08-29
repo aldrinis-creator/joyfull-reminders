@@ -240,7 +240,7 @@ export function GreetingComposer({
 
         <DialogFooter className="gap-2">
           <Button type="button" variant="outline" className="h-13" onClick={shareCard}>
-            {navigator?.share ? (
+            {typeof navigator !== "undefined" && "share" in navigator ? (
               <Share2 className="size-5" aria-hidden />
             ) : (
               <Copy className="size-5" aria-hidden />
