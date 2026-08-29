@@ -9,7 +9,6 @@ import {
 } from "react";
 import {
   LANGUAGE_STORAGE_KEY,
-  readStoredLanguage,
   setActiveLanguage,
   translate,
   type Language,
@@ -24,17 +23,16 @@ type LanguageContextValue = {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-function initialLanguage(): Language {
-  if (typeof window === "undefined") return "en";
-  const fromScript = (window as unknown as { __EREMINDER_LANG__?: Language }).__EREMINDER_LANG__;
-  return fromScript === "hi" || fromScript === "en" ? fromScript : readStoredLanguage();
-}
-
-export function LanguageProvider({ children }: { children: ReactNode }) {
+export function LanguageProvider({
+  children,
+  initialLanguage = "en",
+}: {
+  children: ReactNode;
+  initialLanguage?: Language;
+}) {
   const [language, setLanguageState] = useState<Language>(() => {
-    const lang = initialLanguage();
-    setActiveLanguage(lang);
-    return lang;
+    setActiveLanguage(initialLanguage);
+    return initialLanguage;
   });
 
   useEffect(() => {
@@ -47,6 +45,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLanguage = useCallback((next: Language) => {
     try {
       window.localStorage.setItem(LANGUAGE_STORAGE_KEY, next);
+      // Mirrored into a cookie so server-rendered HTML starts in the right language.
+      document.cookie = `${LANGUAGE_STORAGE_KEY}=${next}; path=/; max-age=31536000; samesite=lax`;
     } catch {
       /* storage unavailable — keep it in memory only */
     }

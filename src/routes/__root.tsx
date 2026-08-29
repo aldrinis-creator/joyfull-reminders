@@ -13,7 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 import appCss from "../styles.css?url";
 import { applyTheme, readStoredTheme, themeInitScript } from "../lib/theme";
-import { languageInitScript } from "../lib/i18n";
+import { LANGUAGE_STORAGE_KEY, languageInitScript, readStoredLanguage } from "../lib/i18n";
+import { detectLanguage } from "../lib/i18n/detect";
 import { LanguageProvider, useT } from "@/hooks/useLanguage";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -97,6 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
+  loader: () => ({ language: detectLanguage() }),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -121,10 +123,14 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { language } = Route.useLoaderData();
   const router = useRouter();
 
   useEffect(() => {
     applyTheme(readStoredTheme());
+    // Keep the cookie in step with localStorage for future server renders.
+    const stored = readStoredLanguage();
+    document.cookie = `${LANGUAGE_STORAGE_KEY}=${stored}; path=/; max-age=31536000; samesite=lax`;
   }, []);
 
 
@@ -139,7 +145,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
+      <LanguageProvider initialLanguage={language}>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <Toaster position="top-center" richColors />
