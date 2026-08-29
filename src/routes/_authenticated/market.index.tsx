@@ -4,11 +4,17 @@ import { MapPin, Star, Truck } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProfile, useVendors } from "@/lib/queries";
+import { useFamilyMembers, useProfile, useVendors } from "@/lib/queries";
 import { VENDOR_KINDS, haversineKm, type VendorKind } from "@/lib/ereminder";
 import { cn } from "@/lib/utils";
 
+type MarketSearch = { pin?: string; for?: string };
+
 export const Route = createFileRoute("/_authenticated/market/")({
+  validateSearch: (search: Record<string, unknown>): MarketSearch => ({
+    pin: typeof search["pin"] === "string" ? search["pin"] : undefined,
+    for: typeof search["for"] === "string" ? search["for"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Gift marketplace — e-Reminder" },
@@ -30,6 +36,10 @@ export const Route = createFileRoute("/_authenticated/market/")({
 function MarketPage() {
   const { data: vendors, isLoading } = useVendors();
   const { data: profile } = useProfile();
+  const { data: members } = useFamilyMembers();
+  const { pin, for: forMemberId } = Route.useSearch();
+  const recipient = (members ?? []).find((m) => m.id === forMemberId);
+  const recipientPin = pin ?? recipient?.pincode ?? null;
   const [filter, setFilter] = useState<VendorKind | "all">("all");
   const [nearbyOnly, setNearbyOnly] = useState(false);
 
@@ -46,15 +56,33 @@ function MarketPage() {
           ? haversineKm(origin, { lat: v.latitude, lng: v.longitude })
           : null,
     }));
-    return withDistance
+    const scored = withDistance.map((v) => {
+      const serviceable = recipientPin
+        ? v.vendor.serviceable_pincodes.includes(recipientPin)
+        : false;
+      const samePin = recipientPin ? v.vendor.pincode === recipientPin : false;
+      const rank = recipientPin
+        ? samePin
+          ? 0
+          : serviceable
+            ? 1
+            : v.vendor.ships_all_india
+              ? 2
+              : 3
+        : 0;
+      return { ...v, rank, serviceable: serviceable || samePin };
+    });
+
+    return scored
       .filter((v) => (filter === "all" ? true : v.vendor.kind === filter))
       .filter((v) => {
+        if (recipientPin) return v.rank < 3;
         if (!nearbyOnly) return true;
         if (v.vendor.ships_all_india) return true;
         return v.distance != null && v.distance <= v.vendor.service_radius_km;
       })
-      .sort((a, b) => (a.distance ?? 999) - (b.distance ?? 999));
-  }, [vendors, filter, nearbyOnly, origin]);
+      .sort((a, b) => a.rank - b.rank || (a.distance ?? 999) - (b.distance ?? 999));
+  }, [vendors, filter, nearbyOnly, origin, recipientPin]);
 
   return (
     <AppShell title="Marketplace" subtitle="Cake, flowers and gifts, delivered">
@@ -68,6 +96,27 @@ function MarketPage() {
           </FilterChip>
         ))}
       </div>
+
+      {recipientPin || recipient ? (
+        <div className="bg-accent/30 mb-4 rounded-3xl px-5 py-4">
+          <p className="font-semibold">
+            Gifting {recipient ? recipient.full_name : "someone"}
+            {recipientPin ? ` · pincode ${recipientPin}` : ""}
+          </p>
+          <p className="text-muted-foreground text-sm">
+            {recipientPin
+              ? "Showing shops that deliver to that pincode first, then pan-India sellers."
+              : "Add their pincode on their family page to see shops within a few kilometres of them."}
+          </p>
+          {recipient && !recipientPin ? (
+            <Button asChild variant="secondary" className="mt-3 h-11">
+              <Link to="/family/$memberId" params={{ memberId: recipient.id }}>
+                Add their pincode
+              </Link>
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="bg-card shadow-card mb-4 flex items-center justify-between gap-3 rounded-3xl px-5 py-4">
         <div className="min-w-0">
@@ -101,11 +150,12 @@ function MarketPage() {
         </p>
       ) : (
         <div className="space-y-3 pb-6">
-          {list.map(({ vendor, distance }) => (
+          {list.map(({ vendor, distance, serviceable }) => (
             <Link
               key={vendor.id}
               to="/market/$vendorId"
               params={{ vendorId: vendor.id }}
+              search={{ pin: recipientPin ?? undefined, for: recipient?.id }}
               className="bg-card shadow-card block rounded-3xl p-5 transition-transform active:scale-[0.99]"
             >
               <div className="flex items-start justify-between gap-3">
@@ -121,6 +171,9 @@ function MarketPage() {
                       <MapPin className="size-4" aria-hidden /> {vendor.city}
                       {distance != null ? ` · ${distance.toFixed(1)} km` : ""}
                     </span>
+                    {recipientPin && serviceable ? (
+                      <span className="text-primary font-bold">Delivers to {recipientPin}</span>
+                    ) : null}
                     {vendor.ships_all_india ? (
                       <span className="inline-flex items-center gap-1">
                         <Truck className="size-4" aria-hidden /> All India

@@ -168,6 +168,11 @@ function HomePage() {
                           ? memberName.get(reminder.family_member_id)
                           : undefined
                       }
+                      member={
+                        reminder.family_member_id
+                          ? (members ?? []).find((m) => m.id === reminder.family_member_id)
+                          : undefined
+                      }
                       onComplete={(r) => complete.mutate(r)}
                     />
                   ))}
