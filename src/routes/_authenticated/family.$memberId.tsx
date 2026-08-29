@@ -441,8 +441,9 @@ function AddDateForm({
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="h-12"
+            className="h-12 w-full min-w-0"
           />
+
         </div>
       </div>
       <Input
