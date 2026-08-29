@@ -14,16 +14,744 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      checklist_items: {
+        Row: {
+          created_at: string
+          done: boolean
+          id: string
+          label: string
+          reminder_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          label: string
+          reminder_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          label?: string
+          reminder_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_items_reminder_id_fkey"
+            columns: ["reminder_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_members: {
+        Row: {
+          birth_date: string | null
+          birth_year: number | null
+          created_at: string
+          full_name: string
+          gift_hints: string | null
+          id: string
+          likes: string[]
+          music_genres: string[]
+          notes: string | null
+          photo_url: string | null
+          relationship: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_date?: string | null
+          birth_year?: number | null
+          created_at?: string
+          full_name: string
+          gift_hints?: string | null
+          id?: string
+          likes?: string[]
+          music_genres?: string[]
+          notes?: string | null
+          photo_url?: string | null
+          relationship?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_date?: string | null
+          birth_year?: number | null
+          created_at?: string
+          full_name?: string
+          gift_hints?: string | null
+          id?: string
+          likes?: string[]
+          music_genres?: string[]
+          notes?: string | null
+          photo_url?: string | null
+          relationship?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      order_events: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          order_id: string
+          status: Database["public"]["Enums"]["order_status"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id: string
+          status: Database["public"]["Enums"]["order_status"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          amount_paise: number
+          created_at: string
+          delivery_address: string | null
+          delivery_date: string | null
+          family_member_id: string | null
+          gift_message: string | null
+          id: string
+          product_id: string | null
+          quantity: number
+          recipient_name: string | null
+          reminder_id: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          updated_at: string
+          user_id: string
+          vendor_id: string
+        }
+        Insert: {
+          amount_paise: number
+          created_at?: string
+          delivery_address?: string | null
+          delivery_date?: string | null
+          family_member_id?: string | null
+          gift_message?: string | null
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          recipient_name?: string | null
+          reminder_id?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+          user_id: string
+          vendor_id: string
+        }
+        Update: {
+          amount_paise?: number
+          created_at?: string
+          delivery_address?: string | null
+          delivery_date?: string | null
+          family_member_id?: string | null
+          gift_message?: string | null
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          recipient_name?: string | null
+          reminder_id?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+          user_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_reminder_id_fkey"
+            columns: ["reminder_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_paise: number
+          created_at: string
+          id: string
+          order_id: string
+          provider: string
+          provider_order_id: string | null
+          provider_payment_id: string | null
+          signature_verified: boolean
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paise: number
+          created_at?: string
+          id?: string
+          order_id: string
+          provider?: string
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          signature_verified?: boolean
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paise?: number
+          created_at?: string
+          id?: string
+          order_id?: string
+          provider?: string
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          signature_verified?: boolean
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          alarm_sound: string
+          avatar_url: string | null
+          city: string | null
+          created_at: string
+          email_enabled: boolean
+          full_name: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          onboarded: boolean
+          phone: string | null
+          push_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          alarm_sound?: string
+          avatar_url?: string | null
+          city?: string | null
+          created_at?: string
+          email_enabled?: boolean
+          full_name?: string | null
+          id: string
+          latitude?: number | null
+          longitude?: number | null
+          onboarded?: boolean
+          phone?: string | null
+          push_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          alarm_sound?: string
+          avatar_url?: string | null
+          city?: string | null
+          created_at?: string
+          email_enabled?: boolean
+          full_name?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          onboarded?: boolean
+          phone?: string | null
+          push_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reminder_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          offset_minutes: number
+          reminder_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          offset_minutes?: number
+          reminder_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          offset_minutes?: number
+          reminder_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_alerts_reminder_id_fkey"
+            columns: ["reminder_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminder_occurrences: {
+        Row: {
+          acknowledged_at: string | null
+          created_at: string
+          id: string
+          occurrence_at: string
+          reminder_id: string
+          snoozed_until: string | null
+          status: Database["public"]["Enums"]["occurrence_status"]
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          created_at?: string
+          id?: string
+          occurrence_at: string
+          reminder_id: string
+          snoozed_until?: string | null
+          status?: Database["public"]["Enums"]["occurrence_status"]
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          created_at?: string
+          id?: string
+          occurrence_at?: string
+          reminder_id?: string
+          snoozed_until?: string | null
+          status?: Database["public"]["Enums"]["occurrence_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_occurrences_reminder_id_fkey"
+            columns: ["reminder_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminders: {
+        Row: {
+          action_type: string | null
+          amount_paise: number | null
+          birth_year: number | null
+          category: Database["public"]["Enums"]["reminder_category"]
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_at: string
+          family_member_id: string | null
+          id: string
+          priority: Database["public"]["Enums"]["reminder_priority"]
+          recurrence: Database["public"]["Enums"]["recurrence_kind"]
+          recurrence_interval_days: number | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_type?: string | null
+          amount_paise?: number | null
+          birth_year?: number | null
+          category?: Database["public"]["Enums"]["reminder_category"]
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_at: string
+          family_member_id?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["reminder_priority"]
+          recurrence?: Database["public"]["Enums"]["recurrence_kind"]
+          recurrence_interval_days?: number | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string | null
+          amount_paise?: number | null
+          birth_year?: number | null
+          category?: Database["public"]["Enums"]["reminder_category"]
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string
+          family_member_id?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["reminder_priority"]
+          recurrence?: Database["public"]["Enums"]["recurrence_kind"]
+          recurrence_interval_days?: number | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      special_dates: {
+        Row: {
+          created_at: string
+          event_date: string
+          family_member_id: string
+          id: string
+          kind: Database["public"]["Enums"]["special_date_kind"]
+          recurring: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_date: string
+          family_member_id: string
+          id?: string
+          kind?: Database["public"]["Enums"]["special_date_kind"]
+          recurring?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string
+          family_member_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["special_date_kind"]
+          recurring?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_dates_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          badges: string[]
+          current_streak: number
+          last_completed_on: string | null
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          badges?: string[]
+          current_streak?: number
+          last_completed_on?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          badges?: string[]
+          current_streak?: number
+          last_completed_on?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vendor_products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price_paise: number
+          tag: string | null
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price_paise: number
+          tag?: string | null
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price_paise?: number
+          tag?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_products_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          is_demo: boolean
+          kind: Database["public"]["Enums"]["vendor_kind"]
+          latitude: number | null
+          longitude: number | null
+          name: string
+          owner_id: string | null
+          phone: string | null
+          rating: number
+          service_radius_km: number
+          ships_all_india: boolean
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_demo?: boolean
+          kind?: Database["public"]["Enums"]["vendor_kind"]
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          owner_id?: string | null
+          phone?: string | null
+          rating?: number
+          service_radius_km?: number
+          ships_all_india?: boolean
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_demo?: boolean
+          kind?: Database["public"]["Enums"]["vendor_kind"]
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          owner_id?: string | null
+          phone?: string | null
+          rating?: number
+          service_radius_km?: number
+          ships_all_india?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      wishlist_items: {
+        Row: {
+          created_at: string
+          family_member_id: string | null
+          fulfilled: boolean
+          id: string
+          notes: string | null
+          price_paise: number | null
+          title: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_member_id?: string | null
+          fulfilled?: boolean
+          id?: string
+          notes?: string | null
+          price_paise?: number | null
+          title: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          family_member_id?: string | null
+          fulfilled?: boolean
+          id?: string
+          notes?: string | null
+          price_paise?: number | null
+          title?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_items_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "vendor" | "admin"
+      occurrence_status:
+        | "pending"
+        | "snoozed"
+        | "acknowledged"
+        | "completed"
+        | "missed"
+      order_status:
+        | "pending_payment"
+        | "paid"
+        | "confirmed"
+        | "out_for_delivery"
+        | "delivered"
+        | "cancelled"
+        | "failed"
+      payment_status: "created" | "captured" | "failed" | "refunded"
+      recurrence_kind:
+        | "once"
+        | "daily"
+        | "weekly"
+        | "monthly"
+        | "yearly"
+        | "custom"
+      reminder_category:
+        | "personal_family"
+        | "finance_tax"
+        | "automotive"
+        | "academic_career"
+        | "subscription"
+        | "health"
+        | "household"
+        | "custom"
+      reminder_priority: "low" | "normal" | "high"
+      special_date_kind:
+        | "birthday"
+        | "anniversary"
+        | "memorial"
+        | "exam"
+        | "milestone"
+        | "other"
+      vendor_kind: "florist" | "bakery" | "gift_shop" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +878,53 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "vendor", "admin"],
+      occurrence_status: [
+        "pending",
+        "snoozed",
+        "acknowledged",
+        "completed",
+        "missed",
+      ],
+      order_status: [
+        "pending_payment",
+        "paid",
+        "confirmed",
+        "out_for_delivery",
+        "delivered",
+        "cancelled",
+        "failed",
+      ],
+      payment_status: ["created", "captured", "failed", "refunded"],
+      recurrence_kind: [
+        "once",
+        "daily",
+        "weekly",
+        "monthly",
+        "yearly",
+        "custom",
+      ],
+      reminder_category: [
+        "personal_family",
+        "finance_tax",
+        "automotive",
+        "academic_career",
+        "subscription",
+        "health",
+        "household",
+        "custom",
+      ],
+      reminder_priority: ["low", "normal", "high"],
+      special_date_kind: [
+        "birthday",
+        "anniversary",
+        "memorial",
+        "exam",
+        "milestone",
+        "other",
+      ],
+      vendor_kind: ["florist", "bakery", "gift_shop", "other"],
+    },
   },
 } as const
