@@ -1,10 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
-
-const schema = z.object({
-  memberId: z.string().uuid(),
-  pincode: z.string().trim().regex(/^[1-9][0-9]{5}$/, "Enter a valid 6-digit pincode"),
-});
+import { recipientPincodeSchema } from "@/lib/greetings.schemas";
 
 /**
  * Public endpoint used by the private "share your pincode" link.
@@ -12,7 +7,7 @@ const schema = z.object({
  * stored details, so the unguessable contact id is the only thing needed.
  */
 export const submitRecipientPincode = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => schema.parse(input))
+  .inputValidator((input: unknown) => recipientPincodeSchema.parse(input))
   .handler(async ({ data }): Promise<{ ok: boolean; city: string | null }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
