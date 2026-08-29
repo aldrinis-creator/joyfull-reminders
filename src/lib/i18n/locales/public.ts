@@ -62,6 +62,11 @@ const publicNs: Namespace = {
     sharePincodeBody:
       "Someone wants to send you a gift. Your 6-digit pincode helps us find a shop within a few kilometres of you. Nothing else is shared.",
     sharePincodeCta: "Share pincode",
+    notFound: "Page not found",
+    notFoundBody: "The page you're looking for doesn't exist or has been moved.",
+    goHome: "Go home",
+    errorTitle: "This page didn't load",
+    errorBody: "Something went wrong on our end. You can try refreshing or head back home.",
   },
   hi: {
     heroTitle: "कोई भी ख़ास पल अब नहीं छूटेगा।",
@@ -124,6 +129,11 @@ const publicNs: Namespace = {
     sharePincodeBody:
       "कोई आपको उपहार भेजना चाहता है। आपका 6 अंकों का पिनकोड हमें आपके कुछ किलोमीटर के भीतर दुकान ढूँढ़ने में मदद करता है। और कुछ भी साझा नहीं होता।",
     sharePincodeCta: "पिनकोड साझा करें",
+    notFound: "पेज नहीं मिला",
+    notFoundBody: "आप जो पेज खोज रहे हैं वह मौजूद नहीं है या हटा दिया गया है।",
+    goHome: "होम पर जाएँ",
+    errorTitle: "यह पेज लोड नहीं हुआ",
+    errorBody: "हमारी ओर से कुछ गड़बड़ हुई। आप पेज दोबारा लोड कीजिए या होम पर जाइए।",
   },
 };
 
