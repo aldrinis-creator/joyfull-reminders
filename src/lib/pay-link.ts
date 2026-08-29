@@ -44,7 +44,7 @@ export function buildUpiLink(shortcut: PaymentShortcut): string | null {
   params.set("cu", "INR");
   const tn = shortcut.title?.trim();
   if (tn) params.set("tn", tn.slice(0, 50));
-  return `upi://pay?${params.toString()}`;
+  return `upi://pay?${params.toString().replace(/\+/g, "%20")}`;
 }
 
 /** The link the "Pay now" button should open, link first then UPI. */
