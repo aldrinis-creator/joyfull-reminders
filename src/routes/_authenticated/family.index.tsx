@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -195,6 +196,11 @@ function AddMemberDialog() {
   const [likes, setLikes] = useState("");
   const [music, setMusic] = useState("");
   const [giftHints, setGiftHints] = useState("");
+  const [email, setEmail] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [city, setCity] = useState("");
+  const [greetingsEnabled, setGreetingsEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
 
   return (
@@ -278,6 +284,69 @@ function AddMemberDialog() {
               rows={2}
             />
           </div>
+
+          <div className="bg-muted/60 space-y-4 rounded-2xl p-4">
+            <div>
+              <h3 className="text-lg">Greetings &amp; delivery</h3>
+              <p className="text-muted-foreground text-sm">
+                Optional. Needed to send greetings and to find shops near them.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="m-email">Email</Label>
+              <Input
+                id="m-email"
+                type="email"
+                inputMode="email"
+                value={email}
+                maxLength={200}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="sunita@example.com"
+                className="h-12"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="m-wa">WhatsApp number</Label>
+              <Input
+                id="m-wa"
+                inputMode="tel"
+                value={whatsapp}
+                maxLength={20}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                placeholder="+91 98765 43210"
+                className="h-12"
+              />
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="m-pin">Their pincode</Label>
+                <Input
+                  id="m-pin"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="400069"
+                  className="h-12"
+                />
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="m-city">Their city</Label>
+                <Input
+                  id="m-city"
+                  value={city}
+                  maxLength={80}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="Mumbai"
+                  className="h-12"
+                />
+              </div>
+            </div>
+            <label className="flex min-h-11 items-center justify-between gap-3 text-base font-semibold">
+              Allow greetings to this person
+              <Switch checked={greetingsEnabled} onCheckedChange={setGreetingsEnabled} />
+            </label>
+          </div>
         </div>
         <DialogFooter>
           <Button
@@ -317,6 +386,11 @@ function AddMemberDialog() {
                     .filter(Boolean)
                     .slice(0, 12),
                   gift_hints: parsed.data.gift_hints || null,
+                  email: email.trim() || null,
+                  whatsapp_phone: whatsapp.trim() || null,
+                  pincode: pincode.trim() || null,
+                  city: city.trim() || null,
+                  greetings_enabled: greetingsEnabled,
                 })
                 .select("id")
                 .single();
@@ -355,6 +429,11 @@ function AddMemberDialog() {
               setLikes("");
               setMusic("");
               setGiftHints("");
+              setEmail("");
+              setWhatsapp("");
+              setPincode("");
+              setCity("");
+              setGreetingsEnabled(true);
               void queryClient.invalidateQueries({ queryKey: ["family_members"] });
               void queryClient.invalidateQueries({ queryKey: ["special_dates"] });
               void queryClient.invalidateQueries({ queryKey: ["reminders"] });
