@@ -69,6 +69,7 @@ export type Database = {
           updated_at: string
           user_id: string
           whatsapp_phone: string | null
+          whatsapp_verified_at: string | null
         }
         Insert: {
           birth_date?: string | null
@@ -89,6 +90,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           whatsapp_phone?: string | null
+          whatsapp_verified_at?: string | null
         }
         Update: {
           birth_date?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           whatsapp_phone?: string | null
+          whatsapp_verified_at?: string | null
         }
         Relationships: []
       }
@@ -349,6 +352,51 @@ export type Database = {
           },
         ]
       }
+      phone_otp_challenges: {
+        Row: {
+          attempts: number
+          channel: string
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          ip: string | null
+          phone: string
+          purpose: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          channel: string
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip?: string | null
+          phone: string
+          purpose?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip?: string | null
+          phone?: string
+          purpose?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       pincodes: {
         Row: {
           city: string
@@ -390,6 +438,7 @@ export type Database = {
           longitude: number | null
           onboarded: boolean
           phone: string | null
+          phone_verified_at: string | null
           push_enabled: boolean
           updated_at: string
         }
@@ -406,6 +455,7 @@ export type Database = {
           longitude?: number | null
           onboarded?: boolean
           phone?: string | null
+          phone_verified_at?: string | null
           push_enabled?: boolean
           updated_at?: string
         }
@@ -422,6 +472,7 @@ export type Database = {
           longitude?: number | null
           onboarded?: boolean
           phone?: string | null
+          phone_verified_at?: string | null
           push_enabled?: boolean
           updated_at?: string
         }

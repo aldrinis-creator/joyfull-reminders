@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -9,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/otp.functions";
+import { phoneSchema } from "@/lib/otp.schemas";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -34,11 +37,6 @@ const emailSchema = z.object({
   password: z.string().min(8, "Use at least 8 characters").max(72),
   fullName: z.string().trim().max(100).optional(),
 });
-
-const phoneSchema = z
-  .string()
-  .trim()
-  .regex(/^\+[1-9]\d{7,14}$/, "Use international format, e.g. +919876543210");
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -217,43 +215,172 @@ function EmailForm({
 
 function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => void }) {
   const navigate = useNavigate();
+  const requestOtp = useServerFn(requestPhoneOtp);
+  const verifyOtp = useServerFn(verifyPhoneOtp);
   const [phone, setPhone] = useState("+91");
   const [code, setCode] = useState("");
-  const [sent, setSent] = useState(false);
+  const [step, setStep] = useState<"phone" | "channel" | "code">("phone");
+  const [channel, setChannel] = useState<"sms" | "whatsapp">("sms");
+
+  async function send(pickedChannel: "sms" | "whatsapp") {
+    const parsed = phoneSchema.safeParse(phone);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Enter a valid phone number");
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await requestOtp({ data: { phone: parsed.data, channel: pickedChannel } });
+      if (!result.ok) {
+        toast.error(result.detail);
+        return;
+      }
+      setChannel(pickedChannel);
+      setStep("code");
+      toast.success(
+        pickedChannel === "sms" ? "Code sent by SMS" : "Code sent on WhatsApp",
+      );
+    } catch {
+      toast.error("Could not send the code. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (step === "channel") {
+    return (
+      <div className="mt-5 space-y-4">
+        <p className="text-muted-foreground text-sm">
+          How would you like to receive your one-time code for <strong>{phone}</strong>?
+        </p>
+        <Button
+          type="button"
+          size="lg"
+          className="h-13 w-full text-base"
+          disabled={busy}
+          onClick={() => void send("sms")}
+        >
+          Text me on SMS
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="h-13 w-full text-base"
+          disabled={busy}
+          onClick={() => void send("whatsapp")}
+        >
+          Send it on WhatsApp
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full"
+          disabled={busy}
+          onClick={() => setStep("phone")}
+        >
+          Change number
+        </Button>
+      </div>
+    );
+  }
+
+  if (step === "code") {
+    return (
+      <form
+        className="mt-5 space-y-4"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const parsed = phoneSchema.safeParse(phone);
+          if (!parsed.success) return;
+          setBusy(true);
+          try {
+            const result = await verifyOtp({ data: { phone: parsed.data, code: code.trim() } });
+            if (!result.ok) {
+              toast.error(result.detail);
+              return;
+            }
+            const { error } = await supabase.auth.setSession({
+              access_token: result.accessToken,
+              refresh_token: result.refreshToken,
+            });
+            if (error) {
+              toast.error("Signed in, but the session could not be saved.");
+              return;
+            }
+            navigate({ to: "/home" });
+          } catch {
+            toast.error("Could not verify that code. Please try again.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <div className="space-y-2">
+          <Label htmlFor="otp">6-digit code</Label>
+          <Input
+            id="otp"
+            inputMode="numeric"
+            value={code}
+            maxLength={8}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+            placeholder="123456"
+            className="h-12 text-center text-2xl tracking-[0.4em]"
+          />
+          <p className="text-muted-foreground text-xs">
+            Sent to {phone} {channel === "sms" ? "by SMS" : "on WhatsApp"}. It expires in 10 minutes.
+          </p>
+        </div>
+        <Button type="submit" size="lg" className="h-13 w-full text-base" disabled={busy}>
+          Verify and continue
+        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            disabled={busy}
+            onClick={() => void send(channel)}
+          >
+            Resend
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            disabled={busy}
+            onClick={() => void send(channel === "sms" ? "whatsapp" : "sms")}
+          >
+            {channel === "sms" ? "Send on WhatsApp" : "Send by SMS"}
+          </Button>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full"
+          disabled={busy}
+          onClick={() => {
+            setCode("");
+            setStep("phone");
+          }}
+        >
+          Use a different number
+        </Button>
+      </form>
+    );
+  }
 
   return (
     <form
       className="mt-5 space-y-4"
-      onSubmit={async (e) => {
+      onSubmit={(e) => {
         e.preventDefault();
         const parsed = phoneSchema.safeParse(phone);
         if (!parsed.success) {
           toast.error(parsed.error.issues[0]?.message ?? "Enter a valid phone number");
           return;
         }
-        setBusy(true);
-        if (!sent) {
-          const { error } = await supabase.auth.signInWithOtp({ phone: parsed.data });
-          setBusy(false);
-          if (error) {
-            toast.error(error.message);
-            return;
-          }
-          setSent(true);
-          toast.success("Code sent by SMS");
-        } else {
-          const { error } = await supabase.auth.verifyOtp({
-            phone: parsed.data,
-            token: code.trim(),
-            type: "sms",
-          });
-          setBusy(false);
-          if (error) {
-            toast.error(error.message);
-            return;
-          }
-          navigate({ to: "/home" });
-        }
+        setStep("channel");
       }}
     >
       <div className="space-y-2">
@@ -269,25 +396,11 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
           className="h-12"
         />
       </div>
-      {sent ? (
-        <div className="space-y-2">
-          <Label htmlFor="otp">6-digit code</Label>
-          <Input
-            id="otp"
-            inputMode="numeric"
-            value={code}
-            maxLength={8}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="123456"
-            className="h-12 text-center text-2xl tracking-[0.4em]"
-          />
-        </div>
-      ) : null}
       <Button type="submit" size="lg" className="h-13 w-full text-base" disabled={busy}>
-        {sent ? "Verify and continue" : "Send OTP"}
+        Continue
       </Button>
       <p className="text-muted-foreground text-xs">
-        SMS sign-in needs an SMS provider connected to your account.
+        We'll ask whether you'd like your code by SMS or WhatsApp.
       </p>
     </form>
   );
