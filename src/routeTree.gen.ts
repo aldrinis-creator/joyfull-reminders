@@ -20,6 +20,7 @@ import { Route as AuthenticatedFamilyMemberIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedMarketIndexRouteImport } from './routes/_authenticated/market.index'
 import { Route as AuthenticatedMarketVendorIdRouteImport } from './routes/_authenticated/market.$vendorId'
 import { Route as AuthenticatedRemindersNewRouteImport } from './routes/_authenticated/reminders.new'
+import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -80,6 +81,12 @@ const AuthenticatedRemindersNewRoute =
     path: '/reminders/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicRazorpayWebhookRoute =
+  ApiPublicRazorpayWebhookRouteImport.update({
+    id: '/api/public/razorpay/webhook',
+    path: '/api/public/razorpay/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family/': typeof AuthenticatedFamilyIndexRoute
   '/market/': typeof AuthenticatedMarketIndexRoute
+  '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -104,6 +112,7 @@ export interface FileRoutesByTo {
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family': typeof AuthenticatedFamilyIndexRoute
   '/market': typeof AuthenticatedMarketIndexRoute
+  '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -118,6 +127,7 @@ export interface FileRoutesById {
   '/_authenticated/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/_authenticated/family/': typeof AuthenticatedFamilyIndexRoute
   '/_authenticated/market/': typeof AuthenticatedMarketIndexRoute
+  '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/reminders/new'
     | '/family/'
     | '/market/'
+    | '/api/public/razorpay/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/reminders/new'
     | '/family'
     | '/market'
+    | '/api/public/razorpay/webhook'
   id:
     | '__root__'
     | '/'
@@ -157,12 +169,14 @@ export interface FileRouteTypes {
     | '/_authenticated/reminders/new'
     | '/_authenticated/family/'
     | '/_authenticated/market/'
+    | '/api/public/razorpay/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -244,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRemindersNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/razorpay/webhook': {
+      id: '/api/public/razorpay/webhook'
+      path: '/api/public/razorpay/webhook'
+      fullPath: '/api/public/razorpay/webhook'
+      preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -276,6 +297,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
