@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/AppShell";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
+import { CalendarSyncCard } from "@/components/CalendarSyncCard";
+
 import { PhoneVerifyDialog } from "@/components/PhoneVerifyDialog";
 
 import { Button } from "@/components/ui/button";
@@ -265,7 +267,10 @@ function ProfilePage() {
           </Button>
         </section>
 
+        <CalendarSyncCard />
+
         <section className="bg-card shadow-card rounded-3xl p-5">
+
           <h2 className="text-xl">Orders & payments</h2>
           <ul className="mt-3 space-y-2">
             {(orders ?? []).map((o) => (
