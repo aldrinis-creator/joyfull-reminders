@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedFamilyIndexRouteImport } from './routes/_authenticated/family.index'
 import { Route as AuthenticatedFamilyMemberIdRouteImport } from './routes/_authenticated/family.$memberId'
+import { Route as AuthenticatedMarketIndexRouteImport } from './routes/_authenticated/market.index'
 import { Route as AuthenticatedRemindersNewRouteImport } from './routes/_authenticated/reminders.new'
 
 const IndexRoute = IndexRouteImport.update({
@@ -48,6 +49,12 @@ const AuthenticatedFamilyMemberIdRoute =
     path: '/family/$memberId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketIndexRoute =
+  AuthenticatedMarketIndexRouteImport.update({
+    id: '/market/',
+    path: '/market/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRemindersNewRoute =
   AuthenticatedRemindersNewRouteImport.update({
     id: '/reminders/new',
@@ -62,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family/': typeof AuthenticatedFamilyIndexRoute
+  '/market/': typeof AuthenticatedMarketIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +78,7 @@ export interface FileRoutesByTo {
   '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family': typeof AuthenticatedFamilyIndexRoute
+  '/market': typeof AuthenticatedMarketIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +89,7 @@ export interface FileRoutesById {
   '/_authenticated/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/_authenticated/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/_authenticated/family/': typeof AuthenticatedFamilyIndexRoute
+  '/_authenticated/market/': typeof AuthenticatedMarketIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,9 +100,16 @@ export interface FileRouteTypes {
     | '/family/$memberId'
     | '/reminders/new'
     | '/family/'
+    | '/market/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/auth' | '/home' | '/family/$memberId' | '/reminders/new' | '/family'
+    | '/'
+    | '/auth'
+    | '/home'
+    | '/family/$memberId'
+    | '/reminders/new'
+    | '/family'
+    | '/market'
   id:
     | '__root__'
     | '/'
@@ -102,6 +119,7 @@ export interface FileRouteTypes {
     | '/_authenticated/family/$memberId'
     | '/_authenticated/reminders/new'
     | '/_authenticated/family/'
+    | '/_authenticated/market/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -154,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFamilyMemberIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/market/': {
+      id: '/_authenticated/market/'
+      path: '/market'
+      fullPath: '/market/'
+      preLoaderRoute: typeof AuthenticatedMarketIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/reminders/new': {
       id: '/_authenticated/reminders/new'
       path: '/reminders/new'
@@ -169,6 +194,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFamilyMemberIdRoute: typeof AuthenticatedFamilyMemberIdRoute
   AuthenticatedRemindersNewRoute: typeof AuthenticatedRemindersNewRoute
   AuthenticatedFamilyIndexRoute: typeof AuthenticatedFamilyIndexRoute
+  AuthenticatedMarketIndexRoute: typeof AuthenticatedMarketIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -176,6 +202,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFamilyMemberIdRoute: AuthenticatedFamilyMemberIdRoute,
   AuthenticatedRemindersNewRoute: AuthenticatedRemindersNewRoute,
   AuthenticatedFamilyIndexRoute: AuthenticatedFamilyIndexRoute,
+  AuthenticatedMarketIndexRoute: AuthenticatedMarketIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
