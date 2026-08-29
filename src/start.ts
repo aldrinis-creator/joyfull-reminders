@@ -25,7 +25,17 @@ const csrfMiddleware = createCsrfMiddleware({
   filter: (ctx) => ctx.handlerType === "serverFn",
 });
 
+// Lovable platform routes (email webhooks, template previews) authenticate
+// themselves and must bypass app middleware entirely.
+const lovablePassthrough = createMiddleware().server(async ({ next, request }) => {
+  const url = new URL(request.url);
+  if (url.pathname.startsWith("/lovable/")) {
+    return next();
+  }
+  return next();
+});
+
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
-  requestMiddleware: [errorMiddleware, csrfMiddleware],
+  requestMiddleware: [lovablePassthrough, errorMiddleware, csrfMiddleware],
 }));
