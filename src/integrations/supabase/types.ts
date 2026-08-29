@@ -435,6 +435,7 @@ export type Database = {
           address: string | null
           alarm_sound: string
           avatar_url: string | null
+          calendar_token: string | null
           city: string | null
           created_at: string
           email_enabled: boolean
@@ -453,6 +454,7 @@ export type Database = {
           address?: string | null
           alarm_sound?: string
           avatar_url?: string | null
+          calendar_token?: string | null
           city?: string | null
           created_at?: string
           email_enabled?: boolean
@@ -471,6 +473,7 @@ export type Database = {
           address?: string | null
           alarm_sound?: string
           avatar_url?: string | null
+          calendar_token?: string | null
           city?: string | null
           created_at?: string
           email_enabled?: boolean
