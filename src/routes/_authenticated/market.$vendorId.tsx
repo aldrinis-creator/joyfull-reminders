@@ -45,9 +45,12 @@ export const Route = createFileRoute("/_authenticated/market/$vendorId")({
 const orderSchema = z.object({
   recipient: z.string().trim().min(1, "Who is it for?").max(100),
   address: z.string().trim().min(6, "Add a delivery address").max(400),
+  city: z.string().trim().min(2, "Add the delivery city").max(80),
+  pincode: z.string().trim().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit pincode"),
   date: z.string().min(1, "Pick a delivery date"),
   message: z.string().trim().max(300).optional(),
 });
+
 
 function VendorPage() {
   const { vendorId } = Route.useParams();
