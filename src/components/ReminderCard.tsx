@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Gift, MessageCircleHeart } from "lucide-react";
+import { CalendarPlus, Check, Gift, MessageCircleHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GreetingComposer } from "@/components/GreetingComposer";
 import { cn } from "@/lib/utils";
+import { buildIcs } from "@/lib/ics";
 import {
   categoryMeta,
   formatDateTime,
@@ -33,6 +34,29 @@ export function ReminderCard({
     : /exam/i.test(reminder.title)
       ? "exam"
       : "birthday";
+
+  function downloadIcs() {
+    const ics = buildIcs({
+      name: reminder.title,
+      events: [
+        {
+          uid: `reminder-${reminder.id}-${occurrence.getTime()}@ereminder`,
+          start: occurrence,
+          durationMinutes: 30,
+          summary: `${meta.emoji} ${reminder.title}`,
+          description: [meta.label, reminder.description].filter(Boolean).join(" — "),
+        },
+      ],
+    });
+    const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${reminder.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "reminder"}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <article
@@ -82,6 +106,9 @@ export function ReminderCard({
             <MessageCircleHeart className="size-4" aria-hidden /> Send greeting
           </Button>
         ) : null}
+        <Button size="sm" variant="outline" className="h-11" onClick={downloadIcs}>
+          <CalendarPlus className="size-4" aria-hidden /> Add to calendar
+        </Button>
         {isGiftable ? (
           <Button asChild size="sm" variant="outline" className="h-11">
             <Link
