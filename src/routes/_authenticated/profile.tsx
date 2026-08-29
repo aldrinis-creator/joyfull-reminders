@@ -119,7 +119,16 @@ function ProfilePage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="p-phone">Phone</Label>
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="p-phone">Phone</Label>
+              <PhoneVerifyDialog
+                phone={phone}
+                verified={Boolean(profile?.phone_verified_at) && phone === (profile?.phone ?? "")}
+                onVerified={() => {
+                  void queryClient.invalidateQueries({ queryKey: ["profile"] });
+                }}
+              />
+            </div>
             <Input
               id="p-phone"
               value={phone}
@@ -128,6 +137,13 @@ function ProfilePage() {
               className="h-12"
               placeholder="+919876543210"
             />
+            {profile?.phone_verified_at && phone === (profile.phone ?? "") ? (
+              <p className="text-muted-foreground text-xs">Verified number.</p>
+            ) : (
+              <p className="text-muted-foreground text-xs">
+                Save your number, then verify it by SMS or WhatsApp.
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="p-city">City</Label>
