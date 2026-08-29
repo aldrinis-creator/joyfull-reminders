@@ -16,7 +16,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { createGiftOrder } from "@/lib/orders.functions";
 import { useFamilyMembers, useVendor } from "@/lib/queries";
 import { VENDOR_KINDS, rupees, type VendorProduct } from "@/lib/ereminder";
 
