@@ -250,37 +250,27 @@ function OrderDialog({
                 return;
               }
               setSaving(true);
-              const { data: userData } = await supabase.auth.getUser();
-              const userId = userData.user?.id;
-              if (!userId) {
-                setSaving(false);
-                toast.error("Please sign in again");
-                return;
-              }
               const match = (members ?? []).find(
                 (m) => m.full_name.toLowerCase() === parsed.data.recipient.toLowerCase(),
               );
-              const { data: order, error } = await supabase
-                .from("orders")
-                .insert({
-                  user_id: userId,
-                  vendor_id: vendorId,
-                  product_id: product.id,
-                  family_member_id: match?.id ?? null,
-                  amount_paise: product.price_paise,
-                  recipient_name: parsed.data.recipient,
-                  delivery_address: parsed.data.address,
-                  delivery_date: parsed.data.date,
-                  gift_message: parsed.data.message || null,
-                })
-                .select("id")
-                .single();
-              setSaving(false);
-              if (error || !order) {
+              try {
+                const { orderId } = await placeOrder({
+                  data: {
+                    vendorId,
+                    productId: product.id,
+                    familyMemberId: match?.id ?? null,
+                    recipientName: parsed.data.recipient,
+                    deliveryAddress: parsed.data.address,
+                    deliveryDate: parsed.data.date,
+                    giftMessage: parsed.data.message || null,
+                  },
+                });
+                setSaving(false);
+                navigate({ to: "/orders/$orderId", params: { orderId } });
+              } catch {
+                setSaving(false);
                 toast.error("Could not create that order.");
-                return;
               }
-              navigate({ to: "/orders/$orderId", params: { orderId: order.id } });
             }}
           >
             Continue to payment
