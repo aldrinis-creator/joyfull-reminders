@@ -175,10 +175,11 @@ function OrderDialog({
   const navigate = useNavigate();
   const { data: members } = useFamilyMembers();
   const [recipient, setRecipient] = useState(recipientName);
-  const [address, setAddress] = useState(
-    recipientPin ? `\n${recipientCity ? `${recipientCity} ` : ""}${recipientPin}` : "",
-  );
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState(recipientCity);
+  const [pincode, setPincode] = useState(recipientPin);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const placeOrder = useServerFn(createGiftOrder);
