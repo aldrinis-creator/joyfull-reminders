@@ -209,18 +209,43 @@ function OrderDialog({
               ))}
             </datalist>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="o-address">
-              Delivery address{recipientPin ? ` (pincode ${recipientPin})` : ""}
-            </Label>
-            <Textarea
-              id="o-address"
-              value={address}
-              maxLength={400}
-              onChange={(e) => setAddress(e.target.value)}
-              rows={3}
-              placeholder="Flat 302, Sai Residency, Andheri East, Mumbai 400069"
-            />
+          <AddressAutocomplete
+            id="o-address"
+            label="Delivery address"
+            value={address}
+            onChange={setAddress}
+            onResolved={(a) => {
+              if (a.city) setCity(a.city);
+              if (a.pincode) setPincode(a.pincode);
+            }}
+            multiline
+            placeholder="Flat 302, Sai Residency, Andheri East"
+            hint="Type a few characters and pick the address — city and pincode fill in for you."
+          />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="space-y-2">
+              <Label htmlFor="o-city">City</Label>
+              <Input
+                id="o-city"
+                value={city}
+                maxLength={80}
+                onChange={(e) => setCity(e.target.value)}
+                className="h-12 w-full min-w-0"
+                placeholder="Mumbai"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="o-pin">Pincode</Label>
+              <Input
+                id="o-pin"
+                value={pincode}
+                inputMode="numeric"
+                maxLength={6}
+                onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                className="h-12 w-full min-w-0"
+                placeholder="400069"
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="o-date">Delivery date</Label>
@@ -229,9 +254,10 @@ function OrderDialog({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="h-12"
+              className="h-12 w-full min-w-0"
             />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="o-message">Gift message</Label>
             <Input
