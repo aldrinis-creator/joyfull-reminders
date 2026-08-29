@@ -31,20 +31,24 @@ Two connected additions: sending greetings to your family/contacts on their spec
 ## Technical notes
 
 **Database (one migration)**
+
 - `family_members`: add `email`, `whatsapp_phone`, `pincode`, `city`, `greetings_enabled`.
 - New `pincodes` table (code, city, state, lat, lng) seeded with major Indian pincode centroids so recipient coordinates can be derived without a paid geocoding API; unknown pincodes fall back to prefix/city matching.
 - `vendors`: add `serviceable_pincodes text[]` and `pincode`, so shops can declare exact delivery coverage in the vendor portal.
 - New `greetings` table (family_member_id, reminder_id, occasion, channel, message, status, sent_at, provider_message_id) with owner-scoped RLS and GRANTs.
 
 **Sending**
+
 - `sendGreeting` server function (auth middleware): validates the contact belongs to the caller, renders the message, dispatches by channel, writes the `greetings` row with an idempotency key of `member + occasion + year`.
 - Email uses the scaffolded app-email template helper (a new `greeting-card` React Email template).
 - WhatsApp uses provider credentials stored as secrets; missing credentials return a `configured: false` result the UI renders as "Connect WhatsApp".
 
 **Vendor matching**
+
 - `findVendorsForPincode(pincode)` resolves the pincode to lat/lng, then ranks: exact `serviceable_pincodes` match → within 5 km → within 25 km → `ships_all_india`.
 
 **UI**
+
 - New `GreetingComposer` dialog, greeting action on `ReminderCard` and `AlarmOverlay`, contact fields in the family add/edit forms, a "Gift & greeting details" section on the member page, recipient-context banner on the marketplace, and coverage editing in the vendor portal.
 
 ## Build order
@@ -55,3 +59,5 @@ Two connected additions: sending greetings to your family/contacts on their spec
 4. Email channel + branded card template.
 5. Recipient-aware vendor discovery and pre-filled checkout.
 6. WhatsApp channel behind credential check.
+
+We have a MSG91 account for WhatsApp already. Say what all templates you need including for account creation / OTP
