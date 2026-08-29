@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Store } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

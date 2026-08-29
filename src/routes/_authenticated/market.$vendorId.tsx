@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, MapPin, Star } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
