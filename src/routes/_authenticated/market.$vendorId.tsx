@@ -178,6 +178,7 @@ function OrderDialog({
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const placeOrder = useServerFn(createGiftOrder);
 
   return (
     <Dialog open onOpenChange={(o) => (!o ? onClose() : undefined)}>
