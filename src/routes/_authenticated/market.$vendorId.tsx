@@ -276,7 +276,14 @@ function OrderDialog({
             className="h-14 w-full text-base"
             disabled={saving}
             onClick={async () => {
-              const parsed = orderSchema.safeParse({ recipient, address, date, message });
+              const parsed = orderSchema.safeParse({
+                recipient,
+                address,
+                city,
+                pincode,
+                date,
+                message,
+              });
               if (!parsed.success) {
                 toast.error(parsed.error.issues[0]?.message ?? "Please check the details");
                 return;
@@ -293,10 +300,13 @@ function OrderDialog({
                     familyMemberId: match?.id ?? null,
                     recipientName: parsed.data.recipient,
                     deliveryAddress: parsed.data.address,
+                    deliveryCity: parsed.data.city,
+                    deliveryPincode: parsed.data.pincode,
                     deliveryDate: parsed.data.date,
                     giftMessage: parsed.data.message || null,
                   },
                 });
+
                 setSaving(false);
                 navigate({ to: "/orders/$orderId", params: { orderId } });
               } catch {
