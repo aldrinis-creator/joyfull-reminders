@@ -11,7 +11,7 @@ const demo = {
   description: "BESCOM",
   due_at: new Date().toISOString(),
   completed: false,
-  payment_url: null,
+  payment_url: "bill.example.com/pay",
   upi_id: "biller@upi",
   upi_payee_name: "BESCOM",
   payment_amount: 1499,
