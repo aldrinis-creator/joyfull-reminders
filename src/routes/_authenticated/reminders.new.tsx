@@ -164,14 +164,14 @@ function NewReminder() {
           </Select>
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <Field label="Date" htmlFor="date">
             <Input
               id="date"
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="h-13 text-base"
+              className="h-13 w-full min-w-0 text-base"
             />
           </Field>
           <Field label="Time" htmlFor="time">
@@ -180,10 +180,11 @@ function NewReminder() {
               type="time"
               value={dueTime}
               onChange={(e) => setDueTime(e.target.value)}
-              className="h-13 text-base"
+              className="h-13 w-full min-w-0 text-base"
             />
           </Field>
         </div>
+
 
         <Field label="Repeats" htmlFor="recurrence">
           <Select value={recurrence} onValueChange={(v) => setRecurrence(v as RecurrenceKind)}>

@@ -248,8 +248,9 @@ function AddMemberDialog() {
               type="date"
               value={birthDate}
               onChange={(e) => setBirthDate(e.target.value)}
-              className="h-12"
+              className="h-12 w-full min-w-0"
             />
+
           </div>
           <div className="space-y-2">
             <Label htmlFor="m-likes">What do they love? (comma separated)</Label>

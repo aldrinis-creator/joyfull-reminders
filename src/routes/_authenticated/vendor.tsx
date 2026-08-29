@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Store } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -345,20 +346,29 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
           </SelectContent>
         </Select>
       </div>
+      <AddressAutocomplete
+        id="v-address"
+        label="Shop address"
+        value={address}
+        onChange={setAddress}
+        onResolved={(a) => {
+          if (a.city) setCity(a.city);
+          if (a.pincode) setPincode(a.pincode);
+        }}
+        placeholder="Start typing your shop address…"
+        hint="Pick your shop from the list to fill city and pincode automatically."
+      />
       <div className="space-y-2">
         <Label htmlFor="v-city">City</Label>
-        <Input id="v-city" value={city} maxLength={80} onChange={(e) => setCity(e.target.value)} className="h-12" />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="v-address">Address</Label>
         <Input
-          id="v-address"
-          value={address}
-          maxLength={300}
-          onChange={(e) => setAddress(e.target.value)}
-          className="h-12"
+          id="v-city"
+          value={city}
+          maxLength={80}
+          onChange={(e) => setCity(e.target.value)}
+          className="h-12 w-full min-w-0"
         />
       </div>
+
       <div className="space-y-2">
         <Label htmlFor="v-desc">Short description</Label>
         <Textarea

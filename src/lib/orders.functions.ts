@@ -47,6 +47,9 @@ export const createGiftOrder = createServerFn({ method: "POST" })
         amount_paise: amountPaise,
         recipient_name: data.recipientName,
         delivery_address: data.deliveryAddress,
+        delivery_city: data.deliveryCity,
+        delivery_pincode: data.deliveryPincode,
+
         delivery_date: data.deliveryDate,
         gift_message: data.giftMessage ?? null,
       })

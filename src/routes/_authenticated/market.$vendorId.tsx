@@ -3,11 +3,11 @@ import { useState } from "react";
 import { ArrowLeft, MapPin, Star } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -45,9 +45,12 @@ export const Route = createFileRoute("/_authenticated/market/$vendorId")({
 const orderSchema = z.object({
   recipient: z.string().trim().min(1, "Who is it for?").max(100),
   address: z.string().trim().min(6, "Add a delivery address").max(400),
+  city: z.string().trim().min(2, "Add the delivery city").max(80),
+  pincode: z.string().trim().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit pincode"),
   date: z.string().min(1, "Pick a delivery date"),
   message: z.string().trim().max(300).optional(),
 });
+
 
 function VendorPage() {
   const { vendorId } = Route.useParams();
@@ -172,10 +175,11 @@ function OrderDialog({
   const navigate = useNavigate();
   const { data: members } = useFamilyMembers();
   const [recipient, setRecipient] = useState(recipientName);
-  const [address, setAddress] = useState(
-    recipientPin ? `\n${recipientCity ? `${recipientCity} ` : ""}${recipientPin}` : "",
-  );
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState(recipientCity);
+  const [pincode, setPincode] = useState(recipientPin);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const placeOrder = useServerFn(createGiftOrder);
@@ -205,18 +209,43 @@ function OrderDialog({
               ))}
             </datalist>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="o-address">
-              Delivery address{recipientPin ? ` (pincode ${recipientPin})` : ""}
-            </Label>
-            <Textarea
-              id="o-address"
-              value={address}
-              maxLength={400}
-              onChange={(e) => setAddress(e.target.value)}
-              rows={3}
-              placeholder="Flat 302, Sai Residency, Andheri East, Mumbai 400069"
-            />
+          <AddressAutocomplete
+            id="o-address"
+            label="Delivery address"
+            value={address}
+            onChange={setAddress}
+            onResolved={(a) => {
+              if (a.city) setCity(a.city);
+              if (a.pincode) setPincode(a.pincode);
+            }}
+            multiline
+            placeholder="Flat 302, Sai Residency, Andheri East"
+            hint="Type a few characters and pick the address — city and pincode fill in for you."
+          />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="space-y-2">
+              <Label htmlFor="o-city">City</Label>
+              <Input
+                id="o-city"
+                value={city}
+                maxLength={80}
+                onChange={(e) => setCity(e.target.value)}
+                className="h-12 w-full min-w-0"
+                placeholder="Mumbai"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="o-pin">Pincode</Label>
+              <Input
+                id="o-pin"
+                value={pincode}
+                inputMode="numeric"
+                maxLength={6}
+                onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                className="h-12 w-full min-w-0"
+                placeholder="400069"
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="o-date">Delivery date</Label>
@@ -225,9 +254,10 @@ function OrderDialog({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="h-12"
+              className="h-12 w-full min-w-0"
             />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="o-message">Gift message</Label>
             <Input
@@ -246,7 +276,14 @@ function OrderDialog({
             className="h-14 w-full text-base"
             disabled={saving}
             onClick={async () => {
-              const parsed = orderSchema.safeParse({ recipient, address, date, message });
+              const parsed = orderSchema.safeParse({
+                recipient,
+                address,
+                city,
+                pincode,
+                date,
+                message,
+              });
               if (!parsed.success) {
                 toast.error(parsed.error.issues[0]?.message ?? "Please check the details");
                 return;
@@ -263,10 +300,13 @@ function OrderDialog({
                     familyMemberId: match?.id ?? null,
                     recipientName: parsed.data.recipient,
                     deliveryAddress: parsed.data.address,
+                    deliveryCity: parsed.data.city,
+                    deliveryPincode: parsed.data.pincode,
                     deliveryDate: parsed.data.date,
                     giftMessage: parsed.data.message || null,
                   },
                 });
+
                 setSaving(false);
                 navigate({ to: "/orders/$orderId", params: { orderId } });
               } catch {

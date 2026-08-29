@@ -224,7 +224,9 @@ export type Database = {
           amount_paise: number
           created_at: string
           delivery_address: string | null
+          delivery_city: string | null
           delivery_date: string | null
+          delivery_pincode: string | null
           family_member_id: string | null
           gift_message: string | null
           id: string
@@ -241,7 +243,9 @@ export type Database = {
           amount_paise: number
           created_at?: string
           delivery_address?: string | null
+          delivery_city?: string | null
           delivery_date?: string | null
+          delivery_pincode?: string | null
           family_member_id?: string | null
           gift_message?: string | null
           id?: string
@@ -258,7 +262,9 @@ export type Database = {
           amount_paise?: number
           created_at?: string
           delivery_address?: string | null
+          delivery_city?: string | null
           delivery_date?: string | null
+          delivery_pincode?: string | null
           family_member_id?: string | null
           gift_message?: string | null
           id?: string
@@ -439,6 +445,7 @@ export type Database = {
           onboarded: boolean
           phone: string | null
           phone_verified_at: string | null
+          pincode: string | null
           push_enabled: boolean
           updated_at: string
         }
@@ -456,6 +463,7 @@ export type Database = {
           onboarded?: boolean
           phone?: string | null
           phone_verified_at?: string | null
+          pincode?: string | null
           push_enabled?: boolean
           updated_at?: string
         }
@@ -473,6 +481,7 @@ export type Database = {
           onboarded?: boolean
           phone?: string | null
           phone_verified_at?: string | null
+          pincode?: string | null
           push_enabled?: boolean
           updated_at?: string
         }

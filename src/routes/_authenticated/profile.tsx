@@ -5,7 +5,9 @@ import { Flame, LogOut, MapPin, Store } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/AppShell";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhoneVerifyDialog } from "@/components/PhoneVerifyDialog";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,7 +37,9 @@ const profileSchema = z.object({
   phone: z.string().trim().max(20),
   city: z.string().trim().max(80),
   address: z.string().trim().max(300),
+  pincode: z.union([z.literal(""), z.string().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit pincode")]),
 });
+
 
 function ProfilePage() {
   const { data: profile } = useProfile();
@@ -48,6 +52,7 @@ function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
+  const [pincode, setPincode] = useState("");
   const [push, setPush] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -57,11 +62,18 @@ function ProfilePage() {
     setPhone(profile.phone ?? "");
     setCity(profile.city ?? "");
     setAddress(profile.address ?? "");
+    setPincode(profile.pincode ?? "");
     setPush(profile.push_enabled);
   }, [profile]);
 
   const save = async (extra: Record<string, unknown> = {}) => {
-    const parsed = profileSchema.safeParse({ full_name: fullName, phone, city, address });
+    const parsed = profileSchema.safeParse({
+      full_name: fullName,
+      phone,
+      city,
+      address,
+      pincode,
+    });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Please check your details");
       return;
@@ -79,6 +91,8 @@ function ProfilePage() {
       phone: parsed.data.phone || null,
       city: parsed.data.city || null,
       address: parsed.data.address || null,
+      pincode: parsed.data.pincode || null,
+
       push_enabled: push,
       onboarded: true,
       ...extra,
@@ -146,27 +160,44 @@ function ProfilePage() {
               </p>
             )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="p-city">City</Label>
-            <Input
-              id="p-city"
-              value={city}
-              maxLength={80}
-              onChange={(e) => setCity(e.target.value)}
-              className="h-12"
-              placeholder="Mumbai"
-            />
+          <AddressAutocomplete
+            id="p-address"
+            label="Default delivery address"
+            value={address}
+            onChange={setAddress}
+            onResolved={(a) => {
+              if (a.city) setCity(a.city);
+              if (a.pincode) setPincode(a.pincode);
+            }}
+            placeholder="Start typing your address…"
+            hint="Type a few characters and pick your address to fill city and pincode."
+          />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="space-y-2">
+              <Label htmlFor="p-city">City</Label>
+              <Input
+                id="p-city"
+                value={city}
+                maxLength={80}
+                onChange={(e) => setCity(e.target.value)}
+                className="h-12 w-full min-w-0"
+                placeholder="Mumbai"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-pin">Pincode</Label>
+              <Input
+                id="p-pin"
+                value={pincode}
+                inputMode="numeric"
+                maxLength={6}
+                onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                className="h-12 w-full min-w-0"
+                placeholder="400069"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="p-address">Default delivery address</Label>
-            <Input
-              id="p-address"
-              value={address}
-              maxLength={300}
-              onChange={(e) => setAddress(e.target.value)}
-              className="h-12"
-            />
-          </div>
+
           <Button
             variant="outline"
             className="h-12 w-full"
