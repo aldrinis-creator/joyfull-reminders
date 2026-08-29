@@ -4,7 +4,7 @@
  */
 
 export const MSG91_SMS_OTP_TEMPLATE_ID = "69ce5c76e1a28470900ffe46";
-export const MSG91_WA_OTP_TEMPLATE = "verification_otp";
+export const MSG91_WA_OTP_TEMPLATE = "ereminder_verification_otp";
 
 export type OtpDispatchResult = { ok: true } | { ok: false; detail: string };
 
