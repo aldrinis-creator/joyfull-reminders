@@ -146,27 +146,44 @@ function ProfilePage() {
               </p>
             )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="p-city">City</Label>
-            <Input
-              id="p-city"
-              value={city}
-              maxLength={80}
-              onChange={(e) => setCity(e.target.value)}
-              className="h-12"
-              placeholder="Mumbai"
-            />
+          <AddressAutocomplete
+            id="p-address"
+            label="Default delivery address"
+            value={address}
+            onChange={setAddress}
+            onResolved={(a) => {
+              if (a.city) setCity(a.city);
+              if (a.pincode) setPincode(a.pincode);
+            }}
+            placeholder="Start typing your address…"
+            hint="Type a few characters and pick your address to fill city and pincode."
+          />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="space-y-2">
+              <Label htmlFor="p-city">City</Label>
+              <Input
+                id="p-city"
+                value={city}
+                maxLength={80}
+                onChange={(e) => setCity(e.target.value)}
+                className="h-12 w-full min-w-0"
+                placeholder="Mumbai"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-pin">Pincode</Label>
+              <Input
+                id="p-pin"
+                value={pincode}
+                inputMode="numeric"
+                maxLength={6}
+                onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                className="h-12 w-full min-w-0"
+                placeholder="400069"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="p-address">Default delivery address</Label>
-            <Input
-              id="p-address"
-              value={address}
-              maxLength={300}
-              onChange={(e) => setAddress(e.target.value)}
-              className="h-12"
-            />
-          </div>
+
           <Button
             variant="outline"
             className="h-12 w-full"
