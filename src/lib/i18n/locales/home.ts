@@ -21,6 +21,10 @@ const home: Namespace = {
     markDone: "Mark done",
     sendGreeting: "Send greeting",
     addToCalendar: "Add to calendar",
+    payNow: "Pay now",
+    copyUpi: "Copy UPI ID",
+    upiCopied: "UPI ID copied",
+    upiCopyFailed: "Could not copy the UPI ID",
     sendGift: "Send a gift",
 
     // Alarm overlay
@@ -52,6 +56,10 @@ const home: Namespace = {
     markDone: "पूरा हुआ",
     sendGreeting: "शुभकामना भेजें",
     addToCalendar: "कैलेंडर में जोड़ें",
+    payNow: "अभी भुगतान करें",
+    copyUpi: "UPI आईडी कॉपी करें",
+    upiCopied: "UPI आईडी कॉपी हो गई",
+    upiCopyFailed: "UPI आईडी कॉपी नहीं हो सकी",
     sendGift: "उपहार भेजें",
 
     alarmAria: "रिमाइंडर का समय: {title}",

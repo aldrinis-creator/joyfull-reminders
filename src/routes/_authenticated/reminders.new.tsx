@@ -19,6 +19,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useFamilyMembers } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
+import { isValidUpiId, safePaymentUrl } from "@/lib/pay-link";
+
 import {
   ALERT_PRESETS,
   CATEGORIES,
@@ -71,7 +73,12 @@ function NewReminder() {
   const [memberId, setMemberId] = useState<string>("none");
   const [highPriority, setHighPriority] = useState(true);
   const [alerts, setAlerts] = useState<number[]>([1440, 0]);
+  const [paymentUrl, setPaymentUrl] = useState("");
+  const [upiId, setUpiId] = useState("");
+  const [upiPayee, setUpiPayee] = useState("");
+  const [payAmount, setPayAmount] = useState("");
   const [saving, setSaving] = useState(false);
+
 
   const toggleAlert = (minutes: number) =>
     setAlerts((prev) =>
@@ -92,6 +99,17 @@ function NewReminder() {
           const dueAt = new Date(`${dueDate}T${dueTime}`);
           if (Number.isNaN(dueAt.getTime())) {
             toast.error(t("reminders.errInvalidDate"));
+            return;
+          }
+          const trimmedUrl = paymentUrl.trim();
+          const normalizedUrl = trimmedUrl ? safePaymentUrl(trimmedUrl) : null;
+          if (trimmedUrl && !normalizedUrl) {
+            toast.error(t("reminders.errPaymentUrl"));
+            return;
+          }
+          const trimmedUpi = upiId.trim();
+          if (trimmedUpi && !isValidUpiId(trimmedUpi)) {
+            toast.error(t("reminders.errUpiId"));
             return;
           }
           setSaving(true);
@@ -116,9 +134,14 @@ function NewReminder() {
               birth_year: birthYear ? Number(birthYear) : null,
               family_member_id: memberId === "none" ? null : memberId,
               priority: highPriority ? "high" : "normal",
+              payment_url: normalizedUrl,
+              upi_id: trimmedUpi || null,
+              upi_payee_name: upiPayee.trim() || null,
+              payment_amount: payAmount.trim() ? Number(payAmount) || null : null,
             })
             .select("id")
             .single();
+
 
           if (error || !created) {
             setSaving(false);
@@ -261,6 +284,54 @@ function NewReminder() {
             className="text-base"
           />
         </Field>
+
+        <details className="bg-card shadow-card rounded-3xl p-5">
+          <summary className="cursor-pointer text-base font-semibold">
+            {t("reminders.paymentSection")}
+          </summary>
+          <p className="text-muted-foreground mt-1 text-sm">{t("reminders.paymentHint")}</p>
+          <div className="mt-4 space-y-4">
+            <Field label={t("reminders.fieldPaymentUrl")} htmlFor="paymentUrl">
+              <Input
+                id="paymentUrl"
+                inputMode="url"
+                value={paymentUrl}
+                onChange={(e) => setPaymentUrl(e.target.value)}
+                placeholder="https://bill.example.com/pay"
+                className="h-13 text-base"
+              />
+            </Field>
+            <Field label={t("reminders.fieldUpiId")} htmlFor="upiId">
+              <Input
+                id="upiId"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                placeholder="biller@upi"
+                className="h-13 text-base"
+              />
+            </Field>
+            <Field label={t("reminders.fieldPayee")} htmlFor="upiPayee">
+              <Input
+                id="upiPayee"
+                value={upiPayee}
+                onChange={(e) => setUpiPayee(e.target.value)}
+                placeholder={t("reminders.payeePlaceholder")}
+                className="h-13 text-base"
+              />
+            </Field>
+            <Field label={t("reminders.fieldAmount")} htmlFor="payAmount">
+              <Input
+                id="payAmount"
+                inputMode="decimal"
+                value={payAmount}
+                onChange={(e) => setPayAmount(e.target.value.replace(/[^\d.]/g, ""))}
+                placeholder="1499"
+                className="h-13 text-base"
+              />
+            </Field>
+          </div>
+        </details>
+
 
         <fieldset className="bg-card shadow-card rounded-3xl p-5">
           <legend className="px-2 text-sm font-bold tracking-widest uppercase">{t("reminders.alertMe")}</legend>

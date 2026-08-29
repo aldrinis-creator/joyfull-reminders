@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { BellRing, Clock, Check, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PayNowButtons } from "@/components/PayNowButtons";
 import { categoryMeta, categoryShortLabel, formatDateTime, type Reminder } from "@/lib/ereminder";
 import { useT } from "@/hooks/useLanguage";
+
 
 const RING_MS = 60_000;
 
@@ -113,6 +115,11 @@ export function AlarmOverlay({
         >
           <Check className="size-6" aria-hidden /> {t("home.dismissDone")}
         </Button>
+
+        <div className="flex flex-wrap gap-2 [&>button]:flex-1">
+          <PayNowButtons shortcut={{ ...reminder, title: reminder.title }} tone="onDark" size="lg" />
+        </div>
+
 
         <Button
           asChild
