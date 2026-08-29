@@ -7,8 +7,18 @@ export type Greeting = Database["public"]["Tables"]["greetings"]["Row"];
 export const CARD_STYLES: { value: string; label: string; emoji: string; gradient: string }[] = [
   { value: "confetti", label: "Confetti", emoji: "🎉", gradient: "var(--gradient-warm)" },
   { value: "blossom", label: "Blossom", emoji: "🌸", gradient: "var(--gradient-cool)" },
-  { value: "lamp", label: "Warm wishes", emoji: "🪔", gradient: "var(--gradient-sunrise)" },
-  { value: "stars", label: "Starry", emoji: "✨", gradient: "var(--gradient-indigo)" },
+  {
+    value: "lamp",
+    label: "Warm wishes",
+    emoji: "🪔",
+    gradient: "linear-gradient(135deg, oklch(0.86 0.14 88), oklch(0.7 0.17 44))",
+  },
+  {
+    value: "stars",
+    label: "Starry",
+    emoji: "✨",
+    gradient: "linear-gradient(135deg, oklch(0.4 0.12 277), oklch(0.63 0.115 196))",
+  },
 ];
 
 export const OCCASIONS: { value: string; label: string; emoji: string }[] = [
