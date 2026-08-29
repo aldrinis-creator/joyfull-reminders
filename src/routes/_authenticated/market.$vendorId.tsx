@@ -20,7 +20,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFamilyMembers, useVendor } from "@/lib/queries";
 import { VENDOR_KINDS, rupees, type VendorProduct } from "@/lib/ereminder";
 
+type VendorSearch = { pin?: string; for?: string };
+
 export const Route = createFileRoute("/_authenticated/market/$vendorId")({
+  validateSearch: (search: Record<string, unknown>): VendorSearch => ({
+    pin: typeof search["pin"] === "string" ? search["pin"] : undefined,
+    for: typeof search["for"] === "string" ? search["for"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Shop details — e-Reminder" },
@@ -45,6 +51,10 @@ const orderSchema = z.object({
 function VendorPage() {
   const { vendorId } = Route.useParams();
   const { data, isLoading } = useVendor(vendorId);
+  const { pin, for: forMemberId } = Route.useSearch();
+  const { data: members } = useFamilyMembers();
+  const recipient = (members ?? []).find((m) => m.id === forMemberId);
+  const recipientPin = pin ?? recipient?.pincode ?? null;
   const [selected, setSelected] = useState<VendorProduct | null>(null);
 
   const vendor = data?.vendor;
@@ -87,6 +97,16 @@ function VendorPage() {
             </span>
           </div>
 
+          {recipientPin ? (
+            <p className="bg-accent/30 rounded-3xl px-5 py-4 font-semibold">
+              {vendor.serviceable_pincodes.includes(recipientPin) || vendor.pincode === recipientPin
+                ? `Delivers to ${recipientPin}${recipient ? ` — ${recipient.full_name}'s area` : ""}.`
+                : vendor.ships_all_india
+                  ? `Ships pan-India, so ${recipientPin} is covered by courier.`
+                  : `This shop may not deliver to ${recipientPin}.`}
+            </p>
+          ) : null}
+
           {(data?.products ?? []).map((p) => (
             <article key={p.id} className="bg-card shadow-card rounded-3xl p-5">
               <div className="flex items-start justify-between gap-4">
@@ -124,6 +144,9 @@ function VendorPage() {
           product={selected}
           vendorId={vendor.id}
           onClose={() => setSelected(null)}
+          recipientName={recipient?.full_name ?? ""}
+          recipientPin={recipientPin ?? ""}
+          recipientCity={recipient?.city ?? ""}
         />
       ) : null}
     </AppShell>
@@ -134,15 +157,23 @@ function OrderDialog({
   product,
   vendorId,
   onClose,
+  recipientName,
+  recipientPin,
+  recipientCity,
 }: {
   product: VendorProduct;
   vendorId: string;
   onClose: () => void;
+  recipientName: string;
+  recipientPin: string;
+  recipientCity: string;
 }) {
   const navigate = useNavigate();
   const { data: members } = useFamilyMembers();
-  const [recipient, setRecipient] = useState("");
-  const [address, setAddress] = useState("");
+  const [recipient, setRecipient] = useState(recipientName);
+  const [address, setAddress] = useState(
+    recipientPin ? `\n${recipientCity ? `${recipientCity} ` : ""}${recipientPin}` : "",
+  );
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
@@ -173,7 +204,9 @@ function OrderDialog({
             </datalist>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="o-address">Delivery address</Label>
+            <Label htmlFor="o-address">
+              Delivery address{recipientPin ? ` (pincode ${recipientPin})` : ""}
+            </Label>
             <Textarea
               id="o-address"
               value={address}
