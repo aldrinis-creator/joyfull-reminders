@@ -241,3 +241,18 @@ export function haversineKm(
     Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(s));
 }
+
+/** Local (device timezone) calendar day as YYYY-MM-DD — never UTC. */
+export function localDayKey(d: Date = new Date()): string {
+  const y = d.getFullYear();
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const day = `${d.getDate()}`.padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** The occurrence strictly after the given reminder's current due date. */
+export function advanceOccurrence(reminder: Reminder): Date | null {
+  if (reminder.recurrence === "once") return null;
+  const from = new Date(new Date(reminder.due_at).getTime() + 1000);
+  return nextOccurrence({ ...reminder, due_at: from.toISOString() }, from);
+}
