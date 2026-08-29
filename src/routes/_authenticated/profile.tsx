@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Flame, LogOut, MapPin, Monitor, Moon, Store, Sun } from "lucide-react";
+import { Flame, Languages, LogOut, MapPin, Monitor, Moon, Store, Sun } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/AppShell";
@@ -16,8 +16,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/hooks/useLanguage";
+import { LANGUAGES } from "@/lib/i18n";
 import { useOrders, useProfile, useStreak } from "@/lib/queries";
-import { ORDER_STATUS_LABEL, formatDate, rupees } from "@/lib/ereminder";
+import { formatDate, orderStatusLabel, rupees } from "@/lib/ereminder";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -40,7 +42,7 @@ const profileSchema = z.object({
   phone: z.string().trim().max(20),
   city: z.string().trim().max(80),
   address: z.string().trim().max(300),
-  pincode: z.union([z.literal(""), z.string().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit pincode")]),
+  pincode: z.union([z.literal(""), z.string().regex(/^[1-9]\d{5}$/, "family.errPincode")]),
 });
 
 
@@ -51,6 +53,7 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -79,7 +82,7 @@ function ProfilePage() {
       pincode,
     });
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Please check your details");
+      toast.error(t(parsed.error.issues[0]?.message ?? "profile.errDetails"));
       return;
     }
     setSaving(true);
@@ -103,32 +106,32 @@ function ProfilePage() {
     });
     setSaving(false);
     if (error) {
-      toast.error("Could not save your profile.");
+      toast.error(t("profile.errSave"));
       return;
     }
     void queryClient.invalidateQueries({ queryKey: ["profile"] });
-    toast.success("Saved");
+    toast.success(t("saved"));
   };
 
   return (
-    <AppShell title="Profile" subtitle="Your account and preferences">
+    <AppShell title={t("nav.profile")} subtitle={t("profile.subtitle")}>
       <div className="space-y-4 pb-8">
         {streak ? (
           <div className="bg-card shadow-card flex items-center gap-4 rounded-3xl px-5 py-4">
             <Flame className="text-primary size-8" aria-hidden />
             <div>
-              <p className="text-lg font-bold">{streak.current_streak}-day streak</p>
+              <p className="text-lg font-bold">{t("profile.streak", { count: streak.current_streak })}</p>
               <p className="text-muted-foreground text-sm">
-                Longest ever: {streak.longest_streak} days
+                {t("profile.longest", { count: streak.longest_streak })}
               </p>
             </div>
           </div>
         ) : null}
 
         <section className="bg-card shadow-card space-y-4 rounded-3xl p-5">
-          <h2 className="text-xl">Your details</h2>
+          <h2 className="text-xl">{t("profile.yourDetails")}</h2>
           <div className="space-y-2">
-            <Label htmlFor="p-name">Name</Label>
+            <Label htmlFor="p-name">{t("profile.name")}</Label>
             <Input
               id="p-name"
               value={fullName}
@@ -139,7 +142,7 @@ function ProfilePage() {
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="p-phone">Phone</Label>
+              <Label htmlFor="p-phone">{t("profile.phone")}</Label>
               <PhoneVerifyDialog
                 phone={phone}
                 verified={Boolean(profile?.phone_verified_at) && phone === (profile?.phone ?? "")}
@@ -157,39 +160,37 @@ function ProfilePage() {
               placeholder="+919876543210"
             />
             {profile?.phone_verified_at && phone === (profile.phone ?? "") ? (
-              <p className="text-muted-foreground text-xs">Verified number.</p>
+              <p className="text-muted-foreground text-xs">{t("profile.verifiedNumber")}</p>
             ) : (
-              <p className="text-muted-foreground text-xs">
-                Save your number, then verify it by SMS or WhatsApp.
-              </p>
+              <p className="text-muted-foreground text-xs">{t("profile.verifyHint")}</p>
             )}
           </div>
           <AddressAutocomplete
             id="p-address"
-            label="Default delivery address"
+            label={t("profile.defaultAddress")}
             value={address}
             onChange={setAddress}
             onResolved={(a) => {
               if (a.city) setCity(a.city);
               if (a.pincode) setPincode(a.pincode);
             }}
-            placeholder="Start typing your address…"
-            hint="Type a few characters and pick your address to fill city and pincode."
+            placeholder={t("profile.addressPlaceholder")}
+            hint={t("profile.addressHint")}
           />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="space-y-2">
-              <Label htmlFor="p-city">City</Label>
+              <Label htmlFor="p-city">{t("family.city")}</Label>
               <Input
                 id="p-city"
                 value={city}
                 maxLength={80}
                 onChange={(e) => setCity(e.target.value)}
                 className="h-12 w-full min-w-0"
-                placeholder="Mumbai"
+                placeholder={t("family.cityPlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="p-pin">Pincode</Label>
+              <Label htmlFor="p-pin">{t("family.pincode")}</Label>
               <Input
                 id="p-pin"
                 value={pincode}
@@ -207,7 +208,7 @@ function ProfilePage() {
             className="h-12 w-full"
             onClick={() => {
               if (!navigator.geolocation) {
-                toast.error("Location isn't available on this device.");
+                toast.error(t("profile.errNoGeo"));
                 return;
               }
               navigator.geolocation.getCurrentPosition(
@@ -215,26 +216,24 @@ function ProfilePage() {
                   void save({
                     latitude: pos.coords.latitude,
                     longitude: pos.coords.longitude,
-                  }).then(() => toast.success("Location saved — nearby shops will show first")),
-                () => toast.error("We couldn't get your location."),
+                  }).then(() => toast.success(t("profile.locationSaved"))),
+                () => toast.error(t("profile.errGeo")),
               );
             }}
           >
-            <MapPin className="size-5" aria-hidden /> Use my current location
+            <MapPin className="size-5" aria-hidden /> {t("profile.useLocation")}
           </Button>
           <div className="space-y-3 border-t pt-4">
             <div>
-              <p className="font-semibold">Appearance</p>
-              <p className="text-muted-foreground text-sm">
-                Choose a light or dark look, or follow your device setting.
-              </p>
+              <p className="font-semibold">{t("profile.appearance")}</p>
+              <p className="text-muted-foreground text-sm">{t("profile.appearanceHint")}</p>
             </div>
-            <div className="grid grid-cols-3 gap-2" role="group" aria-label="Appearance">
+            <div className="grid grid-cols-3 gap-2" role="group" aria-label={t("profile.appearance")}>
               {(
                 [
-                  { value: "light", label: "Light", Icon: Sun },
-                  { value: "dark", label: "Dark", Icon: Moon },
-                  { value: "system", label: "System", Icon: Monitor },
+                  { value: "light", label: t("profile.light"), Icon: Sun },
+                  { value: "dark", label: t("profile.dark"), Icon: Moon },
+                  { value: "system", label: t("profile.system"), Icon: Monitor },
                 ] as const
               ).map(({ value, label, Icon }) => (
                 <Button
@@ -250,10 +249,30 @@ function ProfilePage() {
               ))}
             </div>
           </div>
+          <div className="space-y-3 border-t pt-4">
+            <div>
+              <p className="font-semibold">{t("profile.language")}</p>
+              <p className="text-muted-foreground text-sm">{t("profile.languageHint")}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("profile.language")}>
+              {LANGUAGES.map((l) => (
+                <Button
+                  key={l.code}
+                  type="button"
+                  variant={language === l.code ? "default" : "outline"}
+                  className="h-12"
+                  aria-pressed={language === l.code}
+                  onClick={() => setLanguage(l.code)}
+                >
+                  <Languages className="size-4" aria-hidden /> {l.nativeLabel}
+                </Button>
+              ))}
+            </div>
+          </div>
           <div className="flex items-center justify-between gap-4 border-t pt-4">
             <div>
-              <p className="font-semibold">Push notifications</p>
-              <p className="text-muted-foreground text-sm">Alerts before each reminder is due.</p>
+              <p className="font-semibold">{t("profile.push")}</p>
+              <p className="text-muted-foreground text-sm">{t("profile.pushHint")}</p>
             </div>
             <Switch checked={push} onCheckedChange={setPush} />
           </div>
@@ -263,7 +282,7 @@ function ProfilePage() {
             disabled={saving}
             onClick={() => void save()}
           >
-            Save changes
+            {saving ? t("saving") : t("profile.saveChanges")}
           </Button>
         </section>
 
@@ -271,7 +290,7 @@ function ProfilePage() {
 
         <section className="bg-card shadow-card rounded-3xl p-5">
 
-          <h2 className="text-xl">Orders & payments</h2>
+          <h2 className="text-xl">{t("profile.orders")}</h2>
           <ul className="mt-3 space-y-2">
             {(orders ?? []).map((o) => (
               <li key={o.id}>
@@ -282,11 +301,11 @@ function ProfilePage() {
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold">
-                      {o.vendor_products?.name ?? "Gift"} · {o.vendors?.name}
+                      {o.vendor_products?.name ?? t("market.gift")} · {o.vendors?.name}
                     </p>
                     <p className="text-muted-foreground text-sm">
                       {o.delivery_date ? formatDate(o.delivery_date) : "—"} ·{" "}
-                      {ORDER_STATUS_LABEL[o.status]}
+                      {orderStatusLabel(o.status)}
                     </p>
                   </div>
                   <span className="shrink-0 font-bold">{rupees(o.amount_paise)}</span>
@@ -294,14 +313,14 @@ function ProfilePage() {
               </li>
             ))}
             {(orders?.length ?? 0) === 0 ? (
-              <li className="text-muted-foreground text-sm">No orders yet.</li>
+              <li className="text-muted-foreground text-sm">{t("profile.noOrders")}</li>
             ) : null}
           </ul>
         </section>
 
         <Button asChild variant="outline" size="lg" className="h-13 w-full text-base">
           <Link to="/vendor">
-            <Store className="size-5" aria-hidden /> I run a shop — list it here
+            <Store className="size-5" aria-hidden /> {t("profile.runShop")}
           </Link>
         </Button>
 
@@ -315,7 +334,7 @@ function ProfilePage() {
             navigate({ to: "/" });
           }}
         >
-          <LogOut className="size-5" aria-hidden /> Sign out
+          <LogOut className="size-5" aria-hidden /> {t("profile.signOut")}
         </Button>
       </div>
     </AppShell>

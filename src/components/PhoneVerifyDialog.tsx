@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { confirmNumberVerification, requestNumberVerification } from "@/lib/otp.functions";
 import { phoneSchema } from "@/lib/otp.schemas";
+import { useT } from "@/hooks/useLanguage";
 
 /** Lets a signed-in user confirm their own mobile number by SMS or WhatsApp. */
 export function PhoneVerifyDialog({
@@ -24,6 +25,7 @@ export function PhoneVerifyDialog({
   verified: boolean;
   onVerified?: () => void;
 }) {
+  const t = useT();
   const requestOtp = useServerFn(requestNumberVerification);
   const confirmOtp = useServerFn(confirmNumberVerification);
   const [open, setOpen] = useState(false);
@@ -36,7 +38,7 @@ export function PhoneVerifyDialog({
 
   async function send(picked: "sms" | "whatsapp") {
     if (!parsed.success) {
-      toast.error("Save a valid number in international format first, e.g. +919876543210");
+      toast.error(t("profile.errPhoneFormat"));
       return;
     }
     setBusy(true);
@@ -48,9 +50,9 @@ export function PhoneVerifyDialog({
       }
       setChannel(picked);
       setStep("code");
-      toast.success(picked === "sms" ? "Code sent by SMS" : "Code sent on WhatsApp");
+      toast.success(picked === "sms" ? t("profile.codeSms") : t("profile.codeWhatsapp"));
     } catch {
-      toast.error("Could not send the code. Please try again.");
+      toast.error(t("profile.errSendCode"));
     } finally {
       setBusy(false);
     }
@@ -69,20 +71,18 @@ export function PhoneVerifyDialog({
     >
       <DialogTrigger asChild>
         <Button type="button" variant="outline" size="sm" disabled={verified}>
-          {verified ? "Verified" : "Verify number"}
+          {verified ? t("profile.verified") : t("profile.verifyNumber")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Verify {phone || "your number"}</DialogTitle>
+          <DialogTitle>{t("profile.verifyTitle", { phone: phone || t("profile.yourNumber") })}</DialogTitle>
         </DialogHeader>
         {step === "channel" ? (
           <div className="space-y-3">
-            <p className="text-muted-foreground text-sm">
-              How would you like to receive your one-time code?
-            </p>
+            <p className="text-muted-foreground text-sm">{t("profile.otpChannelQuestion")}</p>
             <Button className="h-12 w-full" disabled={busy} onClick={() => void send("sms")}>
-              Text me on SMS
+              {t("profile.otpSms")}
             </Button>
             <Button
               variant="outline"
@@ -90,7 +90,7 @@ export function PhoneVerifyDialog({
               disabled={busy}
               onClick={() => void send("whatsapp")}
             >
-              Send it on WhatsApp
+              {t("profile.otpWhatsapp")}
             </Button>
           </div>
         ) : (
@@ -108,20 +108,20 @@ export function PhoneVerifyDialog({
                   toast.error(result.detail);
                   return;
                 }
-                toast.success("Number verified");
+                toast.success(t("profile.numberVerified"));
                 setOpen(false);
                 setStep("channel");
                 setCode("");
                 onVerified?.();
               } catch {
-                toast.error("Could not verify that code.");
+                toast.error(t("profile.errVerifyCode"));
               } finally {
                 setBusy(false);
               }
             }}
           >
             <div className="space-y-2">
-              <Label htmlFor="verify-otp">6-digit code</Label>
+              <Label htmlFor="verify-otp">{t("profile.sixDigitCode")}</Label>
               <Input
                 id="verify-otp"
                 inputMode="numeric"
@@ -132,11 +132,11 @@ export function PhoneVerifyDialog({
                 placeholder="123456"
               />
               <p className="text-muted-foreground text-xs">
-                Sent {channel === "sms" ? "by SMS" : "on WhatsApp"}. Expires in 10 minutes.
+                {channel === "sms" ? t("profile.sentBySms") : t("profile.sentByWhatsapp")}
               </p>
             </div>
             <Button type="submit" className="h-12 w-full" disabled={busy}>
-              Verify
+              {t("profile.verify")}
             </Button>
             <Button
               type="button"
@@ -145,7 +145,7 @@ export function PhoneVerifyDialog({
               disabled={busy}
               onClick={() => void send(channel === "sms" ? "whatsapp" : "sms")}
             >
-              {channel === "sms" ? "Send on WhatsApp instead" : "Send by SMS instead"}
+              {channel === "sms" ? t("profile.switchWhatsapp") : t("profile.switchSms")}
             </Button>
           </form>
         )}
