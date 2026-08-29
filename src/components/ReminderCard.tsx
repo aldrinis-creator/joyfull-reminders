@@ -3,9 +3,11 @@ import { Link } from "@tanstack/react-router";
 import { CalendarPlus, Check, Gift, MessageCircleHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GreetingComposer } from "@/components/GreetingComposer";
+import { PayNowButtons } from "@/components/PayNowButtons";
 import { cn } from "@/lib/utils";
 import { buildIcs } from "@/lib/ics";
 import { useT } from "@/hooks/useLanguage";
+
 import {
   categoryLabel,
   categoryShortLabel,
@@ -110,9 +112,11 @@ export function ReminderCard({
             <MessageCircleHeart className="size-4" aria-hidden /> {t("home.sendGreeting")}
           </Button>
         ) : null}
+        <PayNowButtons shortcut={{ ...reminder, title: reminder.title }} />
         <Button size="sm" variant="outline" className="h-11" onClick={downloadIcs}>
           <CalendarPlus className="size-4" aria-hidden /> {t("home.addToCalendar")}
         </Button>
+
         {isGiftable ? (
           <Button asChild size="sm" variant="outline" className="h-11">
             <Link
