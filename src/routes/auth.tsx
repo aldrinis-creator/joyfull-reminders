@@ -38,11 +38,6 @@ const emailSchema = z.object({
   fullName: z.string().trim().max(100).optional(),
 });
 
-const phoneSchema = z
-  .string()
-  .trim()
-  .regex(/^\+[1-9]\d{7,14}$/, "Use international format, e.g. +919876543210");
-
 function AuthPage() {
   const navigate = useNavigate();
   const { session, loading } = useAuth();
