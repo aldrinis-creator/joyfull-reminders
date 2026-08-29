@@ -31,6 +31,7 @@ const common: Namespace = {
     "nav.market": "Gifts",
     "nav.calendar": "Calendar",
     "nav.profile": "Profile",
+    "nav.mainLabel": "Main",
 
     // Categories
     "cat.personal_family": "Personal & Family",
@@ -134,6 +135,7 @@ const common: Namespace = {
     "nav.market": "उपहार",
     "nav.calendar": "कैलेंडर",
     "nav.profile": "प्रोफ़ाइल",
+    "nav.mainLabel": "मुख्य मेन्यू",
 
     "cat.personal_family": "निजी और पारिवारिक",
     "cat.finance_tax": "वित्त और कर",
