@@ -492,6 +492,7 @@ export type Database = {
           created_at: string
           id: string
           label: string | null
+          last_notified_occurrence_at: string | null
           offset_minutes: number
           reminder_id: string
           user_id: string
@@ -500,6 +501,7 @@ export type Database = {
           created_at?: string
           id?: string
           label?: string | null
+          last_notified_occurrence_at?: string | null
           offset_minutes?: number
           reminder_id: string
           user_id: string
@@ -508,6 +510,7 @@ export type Database = {
           created_at?: string
           id?: string
           label?: string | null
+          last_notified_occurrence_at?: string | null
           offset_minutes?: number
           reminder_id?: string
           user_id?: string
