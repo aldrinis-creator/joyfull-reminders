@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { submitRecipientPincode } from "@/lib/recipient.functions";
 import { isValidPincode } from "@/lib/greetings";
+import { useT } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/pincode/$memberId")({
   head: () => ({
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/pincode/$memberId")({
 });
 
 function PincodePage() {
+  const t = useT();
   const { memberId } = Route.useParams();
   const submit = useServerFn(submitRecipientPincode);
   const [pincode, setPincode] = useState("");
@@ -63,10 +65,10 @@ function PincodePage() {
             <p className="text-5xl" aria-hidden>
               🎁
             </p>
-            <h1 className="mt-4 text-3xl">Thank you!</h1>
+            <h1 className="mt-4 text-3xl">{t("public.thankYou")}</h1>
             <p className="text-muted-foreground mt-2 text-lg">
-              We've saved {pincode}
-              {city ? ` (${city})` : ""}. Your surprise can now be delivered from a shop nearby.
+              {t("public.pincodeSaved", { pincode })}
+              {city ? ` (${city})` : ""}. {t("public.pincodeSavedTail")}
             </p>
           </>
         ) : (
@@ -75,14 +77,13 @@ function PincodePage() {
               <p className="text-5xl" aria-hidden>
                 📮
               </p>
-              <h1 className="mt-4 text-3xl">Share your delivery pincode</h1>
+              <h1 className="mt-4 text-3xl">{t("public.sharePincodeTitle")}</h1>
               <p className="text-muted-foreground mt-2">
-                Someone wants to send you a gift. Your 6-digit pincode helps us find a shop within a
-                few kilometres of you. Nothing else is shared.
+                {t("public.sharePincodeBody")}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="pin">Pincode</Label>
+              <Label htmlFor="pin">{t("family.pincode")}</Label>
               <Input
                 id="pin"
                 inputMode="numeric"
@@ -94,11 +95,11 @@ function PincodePage() {
                 aria-invalid={state === "error"}
               />
               {state === "error" ? (
-                <p className="text-destructive text-sm">Please enter a valid 6-digit pincode.</p>
+                <p className="text-destructive text-sm">{t("family.errPincode")}</p>
               ) : null}
             </div>
             <Button type="submit" className="h-13 w-full text-base" disabled={state === "busy"}>
-              {state === "busy" ? "Saving…" : "Share pincode"}
+              {state === "busy" ? t("saving") : t("public.sharePincodeCta")}
             </Button>
           </form>
         )}
