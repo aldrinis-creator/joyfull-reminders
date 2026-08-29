@@ -15,11 +15,14 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedVendorRouteImport } from './routes/_authenticated/vendor'
 import { Route as AuthenticatedFamilyIndexRouteImport } from './routes/_authenticated/family.index'
 import { Route as AuthenticatedFamilyMemberIdRouteImport } from './routes/_authenticated/family.$memberId'
 import { Route as AuthenticatedMarketIndexRouteImport } from './routes/_authenticated/market.index'
 import { Route as AuthenticatedMarketVendorIdRouteImport } from './routes/_authenticated/market.$vendorId'
+import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
 import { Route as AuthenticatedRemindersNewRouteImport } from './routes/_authenticated/reminders.new'
+import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -50,6 +53,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedVendorRoute = AuthenticatedVendorRouteImport.update({
+  id: '/vendor',
+  path: '/vendor',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFamilyIndexRoute =
   AuthenticatedFamilyIndexRouteImport.update({
     id: '/family/',
@@ -74,11 +82,23 @@ const AuthenticatedMarketVendorIdRoute =
     path: '/market/$vendorId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOrdersOrderIdRoute =
+  AuthenticatedOrdersOrderIdRouteImport.update({
+    id: '/orders/$orderId',
+    path: '/orders/$orderId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRemindersNewRoute =
   AuthenticatedRemindersNewRouteImport.update({
     id: '/reminders/new',
     path: '/reminders/new',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiPublicRazorpayWebhookRoute =
+  ApiPublicRazorpayWebhookRouteImport.update({
+    id: '/api/public/razorpay/webhook',
+    path: '/api/public/razorpay/webhook',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -87,11 +107,14 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/vendor': typeof AuthenticatedVendorRoute
   '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
+  '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family/': typeof AuthenticatedFamilyIndexRoute
   '/market/': typeof AuthenticatedMarketIndexRoute
+  '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,11 +122,14 @@ export interface FileRoutesByTo {
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/vendor': typeof AuthenticatedVendorRoute
   '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
+  '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family': typeof AuthenticatedFamilyIndexRoute
   '/market': typeof AuthenticatedMarketIndexRoute
+  '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,11 +139,14 @@ export interface FileRoutesById {
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/vendor': typeof AuthenticatedVendorRoute
   '/_authenticated/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/_authenticated/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
+  '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/_authenticated/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/_authenticated/family/': typeof AuthenticatedFamilyIndexRoute
   '/_authenticated/market/': typeof AuthenticatedMarketIndexRoute
+  '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,11 +156,14 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/home'
     | '/profile'
+    | '/vendor'
     | '/family/$memberId'
     | '/market/$vendorId'
+    | '/orders/$orderId'
     | '/reminders/new'
     | '/family/'
     | '/market/'
+    | '/api/public/razorpay/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,11 +171,14 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/home'
     | '/profile'
+    | '/vendor'
     | '/family/$memberId'
     | '/market/$vendorId'
+    | '/orders/$orderId'
     | '/reminders/new'
     | '/family'
     | '/market'
+    | '/api/public/razorpay/webhook'
   id:
     | '__root__'
     | '/'
@@ -152,17 +187,21 @@ export interface FileRouteTypes {
     | '/_authenticated/calendar'
     | '/_authenticated/home'
     | '/_authenticated/profile'
+    | '/_authenticated/vendor'
     | '/_authenticated/family/$memberId'
     | '/_authenticated/market/$vendorId'
+    | '/_authenticated/orders/$orderId'
     | '/_authenticated/reminders/new'
     | '/_authenticated/family/'
     | '/_authenticated/market/'
+    | '/api/public/razorpay/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -209,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/vendor': {
+      id: '/_authenticated/vendor'
+      path: '/vendor'
+      fullPath: '/vendor'
+      preLoaderRoute: typeof AuthenticatedVendorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/family/': {
       id: '/_authenticated/family/'
       path: '/family'
@@ -237,12 +283,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketVendorIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/orders/$orderId': {
+      id: '/_authenticated/orders/$orderId'
+      path: '/orders/$orderId'
+      fullPath: '/orders/$orderId'
+      preLoaderRoute: typeof AuthenticatedOrdersOrderIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/reminders/new': {
       id: '/_authenticated/reminders/new'
       path: '/reminders/new'
       fullPath: '/reminders/new'
       preLoaderRoute: typeof AuthenticatedRemindersNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/razorpay/webhook': {
+      id: '/api/public/razorpay/webhook'
+      path: '/api/public/razorpay/webhook'
+      fullPath: '/api/public/razorpay/webhook'
+      preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -251,8 +311,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedVendorRoute: typeof AuthenticatedVendorRoute
   AuthenticatedFamilyMemberIdRoute: typeof AuthenticatedFamilyMemberIdRoute
   AuthenticatedMarketVendorIdRoute: typeof AuthenticatedMarketVendorIdRoute
+  AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRoute
   AuthenticatedRemindersNewRoute: typeof AuthenticatedRemindersNewRoute
   AuthenticatedFamilyIndexRoute: typeof AuthenticatedFamilyIndexRoute
   AuthenticatedMarketIndexRoute: typeof AuthenticatedMarketIndexRoute
@@ -262,8 +324,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedVendorRoute: AuthenticatedVendorRoute,
   AuthenticatedFamilyMemberIdRoute: AuthenticatedFamilyMemberIdRoute,
   AuthenticatedMarketVendorIdRoute: AuthenticatedMarketVendorIdRoute,
+  AuthenticatedOrdersOrderIdRoute: AuthenticatedOrdersOrderIdRoute,
   AuthenticatedRemindersNewRoute: AuthenticatedRemindersNewRoute,
   AuthenticatedFamilyIndexRoute: AuthenticatedFamilyIndexRoute,
   AuthenticatedMarketIndexRoute: AuthenticatedMarketIndexRoute,
@@ -276,6 +340,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

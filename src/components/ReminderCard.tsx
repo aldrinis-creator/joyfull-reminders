@@ -12,8 +12,8 @@ export function ReminderCard({
 }: {
   reminder: Reminder;
   occurrence: Date;
-  onComplete?: (r: Reminder) => void;
-  memberName?: string;
+  onComplete?: ((r: Reminder) => void) | undefined;
+  memberName?: string | undefined;
 }) {
   const meta = categoryMeta(reminder.category);
   const isGiftable = reminder.category === "personal_family";

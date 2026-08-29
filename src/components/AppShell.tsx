@@ -19,8 +19,8 @@ export function AppShell({
 }: {
   children: ReactNode;
   title: string;
-  subtitle?: string;
-  action?: ReactNode;
+  subtitle?: string | undefined;
+  action?: ReactNode | undefined;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 

@@ -136,7 +136,7 @@ function EmailForm({
         }
         setBusy(true);
         if (mode === "signup") {
-          const { error } = await supabase.auth.signUp({
+          const { data, error } = await supabase.auth.signUp({
             email: parsed.data.email,
             password: parsed.data.password,
             options: {
@@ -147,6 +147,10 @@ function EmailForm({
           setBusy(false);
           if (error) {
             toast.error(error.message);
+            return;
+          }
+          if (!data.session) {
+            toast.success("Almost there — tap the confirmation link we just emailed you.");
             return;
           }
           toast.success("Account created. Welcome to e-Reminder!");
