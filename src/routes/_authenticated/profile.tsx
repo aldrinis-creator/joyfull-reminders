@@ -50,6 +50,7 @@ function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
+  const [pincode, setPincode] = useState("");
   const [push, setPush] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -59,11 +60,18 @@ function ProfilePage() {
     setPhone(profile.phone ?? "");
     setCity(profile.city ?? "");
     setAddress(profile.address ?? "");
+    setPincode(profile.pincode ?? "");
     setPush(profile.push_enabled);
   }, [profile]);
 
   const save = async (extra: Record<string, unknown> = {}) => {
-    const parsed = profileSchema.safeParse({ full_name: fullName, phone, city, address });
+    const parsed = profileSchema.safeParse({
+      full_name: fullName,
+      phone,
+      city,
+      address,
+      pincode,
+    });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Please check your details");
       return;
@@ -81,6 +89,8 @@ function ProfilePage() {
       phone: parsed.data.phone || null,
       city: parsed.data.city || null,
       address: parsed.data.address || null,
+      pincode: parsed.data.pincode || null,
+
       push_enabled: push,
       onboarded: true,
       ...extra,
