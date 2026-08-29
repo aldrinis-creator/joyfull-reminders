@@ -24,6 +24,7 @@ import { Route as AuthenticatedMarketIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedMarketVendorIdRouteImport } from './routes/_authenticated/market.$vendorId'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
 import { Route as AuthenticatedRemindersNewRouteImport } from './routes/_authenticated/reminders.new'
+import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
 import { Route as ApiPublicCronDispatchRemindersRouteImport } from './routes/api/public/cron/dispatch-reminders'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -110,6 +111,11 @@ const AuthenticatedRemindersNewRoute =
     path: '/reminders/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
+  id: '/api/public/calendar/$token',
+  path: '/api/public/calendar/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCronDispatchRemindersRoute =
   ApiPublicCronDispatchRemindersRouteImport.update({
     id: '/api/public/cron/dispatch-reminders',
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family/': typeof AuthenticatedFamilyIndexRoute
   '/market/': typeof AuthenticatedMarketIndexRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/dispatch-reminders': typeof ApiPublicCronDispatchRemindersRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family': typeof AuthenticatedFamilyIndexRoute
   '/market': typeof AuthenticatedMarketIndexRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/dispatch-reminders': typeof ApiPublicCronDispatchRemindersRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/_authenticated/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/_authenticated/family/': typeof AuthenticatedFamilyIndexRoute
   '/_authenticated/market/': typeof AuthenticatedMarketIndexRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/dispatch-reminders': typeof ApiPublicCronDispatchRemindersRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/reminders/new'
     | '/family/'
     | '/market/'
+    | '/api/public/calendar/$token'
     | '/api/public/cron/dispatch-reminders'
     | '/api/public/razorpay/webhook'
     | '/lovable/email/auth/preview'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/reminders/new'
     | '/family'
     | '/market'
+    | '/api/public/calendar/$token'
     | '/api/public/cron/dispatch-reminders'
     | '/api/public/razorpay/webhook'
     | '/lovable/email/auth/preview'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reminders/new'
     | '/_authenticated/family/'
     | '/_authenticated/market/'
+    | '/api/public/calendar/$token'
     | '/api/public/cron/dispatch-reminders'
     | '/api/public/razorpay/webhook'
     | '/lovable/email/auth/preview'
@@ -277,6 +289,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   GreetingRoute: typeof GreetingRoute
   PincodeMemberIdRoute: typeof PincodeMemberIdRoute
+  ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiPublicCronDispatchRemindersRoute: typeof ApiPublicCronDispatchRemindersRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -391,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRemindersNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/calendar/$token': {
+      id: '/api/public/calendar/$token'
+      path: '/api/public/calendar/$token'
+      fullPath: '/api/public/calendar/$token'
+      preLoaderRoute: typeof ApiPublicCalendarTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/dispatch-reminders': {
       id: '/api/public/cron/dispatch-reminders'
       path: '/api/public/cron/dispatch-reminders'
@@ -464,6 +484,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   GreetingRoute: GreetingRoute,
   PincodeMemberIdRoute: PincodeMemberIdRoute,
+  ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
   ApiPublicCronDispatchRemindersRoute: ApiPublicCronDispatchRemindersRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
