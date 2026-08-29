@@ -35,7 +35,9 @@ const profileSchema = z.object({
   phone: z.string().trim().max(20),
   city: z.string().trim().max(80),
   address: z.string().trim().max(300),
+  pincode: z.union([z.literal(""), z.string().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit pincode")]),
 });
+
 
 function ProfilePage() {
   const { data: profile } = useProfile();
