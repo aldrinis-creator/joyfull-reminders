@@ -582,11 +582,15 @@ export type Database = {
           due_at: string
           family_member_id: string | null
           id: string
+          payment_amount: number | null
+          payment_url: string | null
           priority: Database["public"]["Enums"]["reminder_priority"]
           recurrence: Database["public"]["Enums"]["recurrence_kind"]
           recurrence_interval_days: number | null
           title: string
           updated_at: string
+          upi_id: string | null
+          upi_payee_name: string | null
           user_id: string
         }
         Insert: {
@@ -601,11 +605,15 @@ export type Database = {
           due_at: string
           family_member_id?: string | null
           id?: string
+          payment_amount?: number | null
+          payment_url?: string | null
           priority?: Database["public"]["Enums"]["reminder_priority"]
           recurrence?: Database["public"]["Enums"]["recurrence_kind"]
           recurrence_interval_days?: number | null
           title: string
           updated_at?: string
+          upi_id?: string | null
+          upi_payee_name?: string | null
           user_id: string
         }
         Update: {
@@ -620,11 +628,15 @@ export type Database = {
           due_at?: string
           family_member_id?: string | null
           id?: string
+          payment_amount?: number | null
+          payment_url?: string | null
           priority?: Database["public"]["Enums"]["reminder_priority"]
           recurrence?: Database["public"]["Enums"]["recurrence_kind"]
           recurrence_interval_days?: number | null
           title?: string
           updated_at?: string
+          upi_id?: string | null
+          upi_payee_name?: string | null
           user_id?: string
         }
         Relationships: [
