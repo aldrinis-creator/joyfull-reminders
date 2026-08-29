@@ -15,11 +15,11 @@ type ReminderCategory = Database["public"]["Enums"]["reminder_category"];
 
 const MAX_EVENTS = 500;
 
-export const Route = createFileRoute("/api/public/calendar/$token.ics")({
+export const Route = createFileRoute("/api/public/calendar/$token")({
   server: {
     handlers: {
       GET: async ({ params }) => {
-        const token = params.token?.trim();
+        const token = params.token?.trim().replace(/\.ics$/i, "");
         if (!token || token.length < 16 || !/^[a-f0-9]+$/i.test(token)) {
           return new Response("Not found", { status: 404 });
         }
