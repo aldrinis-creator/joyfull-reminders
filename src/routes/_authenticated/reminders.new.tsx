@@ -19,6 +19,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useFamilyMembers } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
+import { isValidUpiId, safePaymentUrl } from "@/lib/pay-link";
+
 import {
   ALERT_PRESETS,
   CATEGORIES,
@@ -99,6 +101,17 @@ function NewReminder() {
             toast.error(t("reminders.errInvalidDate"));
             return;
           }
+          const trimmedUrl = paymentUrl.trim();
+          const normalizedUrl = trimmedUrl ? safePaymentUrl(trimmedUrl) : null;
+          if (trimmedUrl && !normalizedUrl) {
+            toast.error(t("reminders.errPaymentUrl"));
+            return;
+          }
+          const trimmedUpi = upiId.trim();
+          if (trimmedUpi && !isValidUpiId(trimmedUpi)) {
+            toast.error(t("reminders.errUpiId"));
+            return;
+          }
           setSaving(true);
           const { data: userData } = await supabase.auth.getUser();
           const userId = userData.user?.id;
@@ -121,9 +134,14 @@ function NewReminder() {
               birth_year: birthYear ? Number(birthYear) : null,
               family_member_id: memberId === "none" ? null : memberId,
               priority: highPriority ? "high" : "normal",
+              payment_url: normalizedUrl,
+              upi_id: trimmedUpi || null,
+              upi_payee_name: upiPayee.trim() || null,
+              payment_amount: payAmount.trim() ? Number(payAmount) || null : null,
             })
             .select("id")
             .single();
+
 
           if (error || !created) {
             setSaving(false);
