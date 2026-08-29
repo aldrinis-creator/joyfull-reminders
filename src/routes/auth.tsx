@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -9,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/otp.functions";
+import { phoneSchema } from "@/lib/otp.schemas";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
