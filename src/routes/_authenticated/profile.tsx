@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Flame, LogOut, MapPin, Store } from "lucide-react";
+import { Flame, LogOut, MapPin, Monitor, Moon, Store, Sun } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/AppShell";
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
+import { useTheme } from "@/hooks/useTheme";
 import { useOrders, useProfile, useStreak } from "@/lib/queries";
 import { ORDER_STATUS_LABEL, formatDate, rupees } from "@/lib/ereminder";
 
@@ -47,6 +48,7 @@ function ProfilePage() {
   const { data: streak } = useStreak();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -218,6 +220,34 @@ function ProfilePage() {
           >
             <MapPin className="size-5" aria-hidden /> Use my current location
           </Button>
+          <div className="space-y-3 border-t pt-4">
+            <div>
+              <p className="font-semibold">Appearance</p>
+              <p className="text-muted-foreground text-sm">
+                Choose a light or dark look, or follow your device setting.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2" role="group" aria-label="Appearance">
+              {(
+                [
+                  { value: "light", label: "Light", Icon: Sun },
+                  { value: "dark", label: "Dark", Icon: Moon },
+                  { value: "system", label: "System", Icon: Monitor },
+                ] as const
+              ).map(({ value, label, Icon }) => (
+                <Button
+                  key={value}
+                  type="button"
+                  variant={theme === value ? "default" : "outline"}
+                  className="h-12"
+                  aria-pressed={theme === value}
+                  onClick={() => setTheme(value)}
+                >
+                  <Icon className="size-4" aria-hidden /> {label}
+                </Button>
+              ))}
+            </div>
+          </div>
           <div className="flex items-center justify-between gap-4 border-t pt-4">
             <div>
               <p className="font-semibold">Push notifications</p>

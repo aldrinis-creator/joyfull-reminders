@@ -253,6 +253,6 @@ export function localDayKey(d: Date = new Date()): string {
 /** The occurrence strictly after the given reminder's current due date. */
 export function advanceOccurrence(reminder: Reminder): Date | null {
   if (reminder.recurrence === "once") return null;
-  const from = new Date(new Date(reminder.due_at).getTime() + 1000);
-  return nextOccurrence({ ...reminder, due_at: from.toISOString() }, from);
+  const from = new Date(Math.max(new Date(reminder.due_at).getTime() + 1000, Date.now()));
+  return nextOccurrence(reminder, from);
 }
