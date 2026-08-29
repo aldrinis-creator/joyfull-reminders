@@ -12,7 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFamilyMembers, useProfile, useReminders, useStreak } from "@/lib/queries";
 import {
   BUCKET_LABEL,
+  advanceOccurrence,
   bucketFor,
+  formatDate,
+  localDayKey,
   nextOccurrence,
   type Reminder,
   type UrgencyBucket,
@@ -45,21 +48,44 @@ function HomePage() {
 
   const complete = useMutation({
     mutationFn: async (reminder: Reminder) => {
-      const { error } = await supabase
-        .from("reminders")
-        .update({ completed: true, completed_at: new Date().toISOString() })
-        .eq("id", reminder.id);
-      if (error) throw error;
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
+      const completedOccurrence = nextOccurrence(reminder);
+      const upcoming = advanceOccurrence(reminder);
+
       if (userId) {
-        const today = new Date().toISOString().slice(0, 10);
+        await supabase.from("reminder_occurrences").insert({
+          user_id: userId,
+          reminder_id: reminder.id,
+          occurrence_at: completedOccurrence.toISOString(),
+          status: "completed",
+          acknowledged_at: new Date().toISOString(),
+        });
+      }
+
+      if (upcoming) {
+        // Recurring: roll forward to the next occurrence, keep it active.
+        const { error } = await supabase
+          .from("reminders")
+          .update({ due_at: upcoming.toISOString(), completed: false, completed_at: null })
+          .eq("id", reminder.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("reminders")
+          .update({ completed: true, completed_at: new Date().toISOString() })
+          .eq("id", reminder.id);
+        if (error) throw error;
+      }
+
+      if (userId) {
+        const today = localDayKey();
         const { data: current } = await supabase
           .from("user_streaks")
           .select("*")
           .eq("user_id", userId)
           .maybeSingle();
-        const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+        const yesterday = localDayKey(new Date(Date.now() - 86_400_000));
         const next =
           current?.last_completed_on === today
             ? current.current_streak
@@ -73,14 +99,20 @@ function HomePage() {
           last_completed_on: today,
         });
       }
+      return { recurring: Boolean(upcoming), upcoming };
     },
-    onSuccess: () => {
-      toast.success("Nice! Marked as done.");
+    onSuccess: (result) => {
+      toast.success(
+        result.recurring && result.upcoming
+          ? `Done! Next one on ${formatDate(result.upcoming)}.`
+          : "Nice! Marked as done.",
+      );
       void queryClient.invalidateQueries({ queryKey: ["reminders"] });
       void queryClient.invalidateQueries({ queryKey: ["streak"] });
     },
     onError: () => toast.error("Could not update that reminder."),
   });
+
 
   const memberName = useMemo(() => {
     const map = new Map<string, string>();

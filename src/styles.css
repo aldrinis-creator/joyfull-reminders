@@ -105,7 +105,7 @@
   --cat-personal-family: oklch(0.65 0.185 22);
   --cat-finance-tax: oklch(0.6 0.12 196);
   --cat-automotive: oklch(0.45 0.13 277);
-  --cat-academic-career: oklch(0.72 0.155 72);
+  --cat-academic-career: oklch(0.55 0.13 65);
   --cat-subscription: oklch(0.58 0.19 315);
   --cat-health: oklch(0.62 0.14 155);
   --cat-household: oklch(0.58 0.1 45);
@@ -155,7 +155,7 @@
   --cat-personal-family: oklch(0.72 0.175 24);
   --cat-finance-tax: oklch(0.7 0.11 196);
   --cat-automotive: oklch(0.65 0.12 277);
-  --cat-academic-career: oklch(0.82 0.15 74);
+  --cat-academic-career: oklch(0.58 0.13 68);
   --cat-subscription: oklch(0.68 0.17 315);
   --cat-health: oklch(0.72 0.13 155);
   --cat-household: oklch(0.7 0.1 45);
