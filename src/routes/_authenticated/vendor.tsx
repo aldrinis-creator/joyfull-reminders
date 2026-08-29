@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  ORDER_STATUS_LABEL,
+  orderStatusLabel,
+  vendorKindLabel,
   ORDER_STEPS,
   VENDOR_KINDS,
   formatDate,
@@ -46,8 +47,8 @@ export const Route = createFileRoute("/_authenticated/vendor")({
 });
 
 const shopSchema = z.object({
-  name: z.string().trim().min(2, "Shop name is required").max(100),
-  city: z.string().trim().min(2, "City is required").max(80),
+  name: z.string().trim().min(2, "market.errShopName").max(100),
+  city: z.string().trim().min(2, "market.errShopCity").max(80),
   address: z.string().trim().max(300).optional(),
   description: z.string().trim().max(500).optional(),
 });
@@ -82,7 +83,7 @@ function VendorPortal() {
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["my_vendor"] });
 
   return (
-    <AppShell title="Vendor portal" subtitle="Sell cakes, flowers and gifts on e-Reminder">
+    <AppShell title={t("market.vendorPortal")} subtitle={t("market.vendorSubtitle")}>
       {isLoading ? null : !data?.shop ? (
         <RegisterShop onSaved={refresh} />
       ) : (
@@ -90,9 +91,9 @@ function VendorPortal() {
           <section className="bg-card shadow-card rounded-3xl p-5">
             <h2 className="text-xl">{data.shop.name}</h2>
             <p className="text-muted-foreground text-sm">
-              {VENDOR_KINDS.find((k) => k.value === data.shop!.kind)?.label} · {data.shop.city} ·
-              delivers within {data.shop.service_radius_km} km
-              {data.shop.ships_all_india ? " · ships all India" : ""}
+              {vendorKindLabel(data.shop.kind)} · {data.shop.city} ·{" "}
+              {t("market.deliversWithin", { km: data.shop.service_radius_km })}
+              {data.shop.ships_all_india ? ` · ${t("market.shipsAllIndia")}` : ""}
             </p>
           </section>
 
@@ -104,7 +105,7 @@ function VendorPortal() {
           />
 
           <section className="bg-card shadow-card rounded-3xl p-5">
-            <h2 className="text-xl">Your catalogue</h2>
+            <h2 className="text-xl">{t("market.catalogue")}</h2>
             <ul className="mt-3 space-y-2">
               {data.products.map((p) => (
                 <li
@@ -116,24 +117,24 @@ function VendorPortal() {
                 </li>
               ))}
               {data.products.length === 0 ? (
-                <li className="text-muted-foreground text-sm">Nothing listed yet.</li>
+                <li className="text-muted-foreground text-sm">{t("market.nothingListed")}</li>
               ) : null}
             </ul>
             <AddProduct vendorId={data.shop.id} onSaved={refresh} />
           </section>
 
           <section className="bg-card shadow-card rounded-3xl p-5">
-            <h2 className="text-xl">Incoming orders</h2>
+            <h2 className="text-xl">{t("market.incomingOrders")}</h2>
             <ul className="mt-3 space-y-3">
               {data.orders.map((o) => (
                 <li key={o.id} className="bg-muted rounded-2xl px-4 py-3">
                   <p className="font-semibold">
-                    {o.vendor_products?.name ?? "Gift"} · {rupees(o.amount_paise)}
+                    {o.vendor_products?.name ?? t("market.gift")} · {rupees(o.amount_paise)}
                   </p>
                   <p className="text-muted-foreground text-sm">
                     {o.recipient_name} ·{" "}
-                    {o.delivery_date ? formatDate(o.delivery_date) : "no date"} ·{" "}
-                    {ORDER_STATUS_LABEL[o.status]}
+                    {o.delivery_date ? formatDate(o.delivery_date) : t("market.noDate")} ·{" "}
+                    {orderStatusLabel(o.status)}
                   </p>
                   <p className="text-sm">{o.delivery_address}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -149,24 +150,24 @@ function VendorPortal() {
                             .update({ status: step as OrderStatus })
                             .eq("id", o.id);
                           if (error) {
-                            toast.error("Could not update that order.");
+                            toast.error(t("market.errUpdateOrder"));
                             return;
                           }
                           await supabase
                             .from("order_events")
                             .insert({ order_id: o.id, status: step as OrderStatus });
-                          toast.success(`Marked ${ORDER_STATUS_LABEL[step].toLowerCase()}`);
+                          toast.success(t("market.markedAs", { status: orderStatusLabel(step) }));
                           refresh();
                         }}
                       >
-                        {ORDER_STATUS_LABEL[step]}
+                        {orderStatusLabel(step)}
                       </Button>
                     ))}
                   </div>
                 </li>
               ))}
               {data.orders.length === 0 ? (
-                <li className="text-muted-foreground text-sm">No paid orders yet.</li>
+                <li className="text-muted-foreground text-sm">{t("market.noPaidOrders")}</li>
               ) : null}
             </ul>
           </section>
@@ -187,16 +188,15 @@ function CoverageSection({
   pins: string[];
   onSaved: () => void;
 }) {
+  const t = useT();
   const [pin, setPin] = useState(pincode);
   const [list, setList] = useState(pins.join(", "));
   const [saving, setSaving] = useState(false);
 
   return (
     <section className="bg-card shadow-card rounded-3xl p-5">
-      <h2 className="text-xl">Delivery coverage</h2>
-      <p className="text-muted-foreground text-sm">
-        Customers gifting someone see you first when their pincode is on this list.
-      </p>
+      <h2 className="text-xl">{t("market.coverage")}</h2>
+      <p className="text-muted-foreground text-sm">{t("market.coverageHint")}</p>
       <form
         className="mt-4 space-y-3"
         onSubmit={async (e) => {
@@ -208,16 +208,16 @@ function CoverageSection({
             .eq("id", vendorId);
           setSaving(false);
           if (error) {
-            toast.error("Could not save your coverage.");
+            toast.error(t("market.errCoverage"));
             return;
           }
-          toast.success("Coverage updated");
+          toast.success(t("market.coverageSaved"));
           onSaved();
         }}
       >
         <div className="space-y-1">
           <Label htmlFor="c-shop-pin" className="text-sm">
-            Shop pincode
+            {t("market.shopPincode")}
           </Label>
           <Input
             id="c-shop-pin"
@@ -230,7 +230,7 @@ function CoverageSection({
         </div>
         <div className="space-y-1">
           <Label htmlFor="c-shop-pins" className="text-sm">
-            Pincodes you deliver to
+            {t("market.servicePins")}
           </Label>
           <Textarea
             id="c-shop-pins"
@@ -241,7 +241,7 @@ function CoverageSection({
           />
         </div>
         <Button type="submit" variant="secondary" className="h-12 w-full" disabled={saving}>
-          {saving ? "Saving…" : "Save coverage"}
+          {saving ? t("saving") : t("market.saveCoverage")}
         </Button>
       </form>
     </section>
@@ -256,6 +256,7 @@ function parsePincodes(raw: string, own: string): string[] {
 }
 
 function RegisterShop({ onSaved }: { onSaved: () => void }) {
+  const t = useT();
   const [name, setName] = useState("");
   const [kind, setKind] = useState<VendorKind>("bakery");
   const [city, setCity] = useState("");
@@ -283,7 +284,7 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
         e.preventDefault();
         const parsed = shopSchema.safeParse({ name, city, address, description });
         if (!parsed.success) {
-          toast.error(parsed.error.issues[0]?.message ?? "Please check the details");
+          toast.error(t(parsed.error.issues[0]?.message ?? "family.errDetails"));
           return;
         }
         setSaving(true);
@@ -312,27 +313,25 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
         }
         setSaving(false);
         if (error) {
-          toast.error("Could not register your shop.");
+          toast.error(t("market.errRegisterShop"));
           return;
         }
-        toast.success("Your shop is live");
+        toast.success(t("market.shopLive"));
         onSaved();
       }}
     >
       <div className="bg-card shadow-card rounded-3xl p-6 text-center">
         <Store className="text-primary mx-auto size-10" aria-hidden />
-        <h2 className="mt-3 text-2xl">List your shop</h2>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Customers nearby will see you when a birthday or anniversary comes up.
-        </p>
+        <h2 className="mt-3 text-2xl">{t("market.listShop")}</h2>
+        <p className="text-muted-foreground mt-1 text-sm">{t("market.listShopHint")}</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="v-name">Shop name</Label>
+        <Label htmlFor="v-name">{t("market.shopName")}</Label>
         <Input id="v-name" value={name} maxLength={100} onChange={(e) => setName(e.target.value)} className="h-12" />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="v-kind">What do you sell?</Label>
+        <Label htmlFor="v-kind">{t("market.whatSell")}</Label>
         <Select value={kind} onValueChange={(v) => setKind(v as VendorKind)}>
           <SelectTrigger id="v-kind" className="h-12">
             <SelectValue />
@@ -340,7 +339,7 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
           <SelectContent>
             {VENDOR_KINDS.map((k) => (
               <SelectItem key={k.value} value={k.value}>
-                {k.emoji} {k.label}
+                {k.emoji} {vendorKindLabel(k.value)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -348,18 +347,18 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
       </div>
       <AddressAutocomplete
         id="v-address"
-        label="Shop address"
+        label={t("market.shopAddress")}
         value={address}
         onChange={setAddress}
         onResolved={(a) => {
           if (a.city) setCity(a.city);
           if (a.pincode) setPincode(a.pincode);
         }}
-        placeholder="Start typing your shop address…"
-        hint="Pick your shop from the list to fill city and pincode automatically."
+        placeholder={t("market.shopAddressPlaceholder")}
+        hint={t("market.shopAddressHint")}
       />
       <div className="space-y-2">
-        <Label htmlFor="v-city">City</Label>
+        <Label htmlFor="v-city">{t("family.city")}</Label>
         <Input
           id="v-city"
           value={city}
@@ -370,7 +369,7 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="v-desc">Short description</Label>
+        <Label htmlFor="v-desc">{t("market.shortDescription")}</Label>
         <Textarea
           id="v-desc"
           value={description}
@@ -380,7 +379,7 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="v-pin">Shop pincode</Label>
+        <Label htmlFor="v-pin">{t("market.shopPincode")}</Label>
         <Input
           id="v-pin"
           inputMode="numeric"
@@ -392,7 +391,7 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="v-pins">Pincodes you deliver to (comma separated)</Label>
+        <Label htmlFor="v-pins">{t("market.servicePinsComma")}</Label>
         <Textarea
           id="v-pins"
           value={servicePins}
@@ -403,7 +402,7 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="v-radius">Delivery radius (km)</Label>
+        <Label htmlFor="v-radius">{t("market.radius")}</Label>
         <Input
           id="v-radius"
           type="number"
@@ -416,19 +415,20 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
       </div>
       <div className="bg-card shadow-card flex items-center justify-between gap-4 rounded-3xl p-5">
         <div>
-          <p className="font-semibold">I ship across India</p>
-          <p className="text-muted-foreground text-sm">Show up outside your local radius too.</p>
+          <p className="font-semibold">{t("market.shipIndia")}</p>
+          <p className="text-muted-foreground text-sm">{t("market.shipIndiaHint")}</p>
         </div>
         <Switch checked={allIndia} onCheckedChange={setAllIndia} />
       </div>
       <Button type="submit" size="lg" className="h-14 w-full text-base" disabled={saving}>
-        Register shop
+        {saving ? t("saving") : t("market.registerShop")}
       </Button>
     </form>
   );
 }
 
 function AddProduct({ vendorId, onSaved }: { vendorId: string; onSaved: () => void }) {
+  const t = useT();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
 
@@ -440,7 +440,7 @@ function AddProduct({ vendorId, onSaved }: { vendorId: string; onSaved: () => vo
         const clean = name.trim();
         const amount = Number(price);
         if (!clean || !amount) {
-          toast.error("Add a name and price");
+          toast.error(t("market.errNamePrice"));
           return;
         }
         const { error } = await supabase.from("vendor_products").insert({
@@ -449,7 +449,7 @@ function AddProduct({ vendorId, onSaved }: { vendorId: string; onSaved: () => vo
           price_paise: Math.round(amount * 100),
         });
         if (error) {
-          toast.error("Could not add that item.");
+          toast.error(t("market.errAddItem"));
           return;
         }
         setName("");
@@ -458,15 +458,15 @@ function AddProduct({ vendorId, onSaved }: { vendorId: string; onSaved: () => vo
       }}
     >
       <Input
-        aria-label="Item name"
+        aria-label={t("market.itemName")}
         value={name}
         maxLength={120}
         onChange={(e) => setName(e.target.value)}
-        placeholder="1 Kg Butterscotch Cake"
+        placeholder={t("market.itemPlaceholder")}
         className="h-12 flex-1"
       />
       <Input
-        aria-label="Price in rupees"
+        aria-label={t("market.priceAria")}
         value={price}
         inputMode="numeric"
         maxLength={7}
