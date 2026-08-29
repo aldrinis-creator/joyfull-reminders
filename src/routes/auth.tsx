@@ -218,6 +218,7 @@ function EmailForm({
 }
 
 function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => void }) {
+  const t = useT();
   const navigate = useNavigate();
   const requestOtp = useServerFn(requestPhoneOtp);
   const verifyOtp = useServerFn(verifyPhoneOtp);
