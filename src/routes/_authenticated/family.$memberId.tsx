@@ -414,7 +414,7 @@ function AddDateForm({
         onSaved();
       }}
     >
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-1">
           <Label htmlFor="sd-kind" className="text-sm">
             Occasion
