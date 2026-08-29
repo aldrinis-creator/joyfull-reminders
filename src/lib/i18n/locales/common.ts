@@ -32,6 +32,9 @@ const common: Namespace = {
     "nav.calendar": "Calendar",
     "nav.profile": "Profile",
     "nav.mainLabel": "Main",
+    "Use international format, e.g. +919876543210":
+      "Use international format, e.g. +919876543210",
+    "Enter the code we sent you": "Enter the code we sent you",
 
     // Categories
     "cat.personal_family": "Personal & Family",
@@ -136,6 +139,9 @@ const common: Namespace = {
     "nav.calendar": "कैलेंडर",
     "nav.profile": "प्रोफ़ाइल",
     "nav.mainLabel": "मुख्य मेन्यू",
+    "Use international format, e.g. +919876543210":
+      "अंतरराष्ट्रीय रूप में लिखिए, जैसे +919876543210",
+    "Enter the code we sent you": "हमने जो कोड भेजा है वह डालिए",
 
     "cat.personal_family": "निजी और पारिवारिक",
     "cat.finance_tax": "वित्त और कर",
