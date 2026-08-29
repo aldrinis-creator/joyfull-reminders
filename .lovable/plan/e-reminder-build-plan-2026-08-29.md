@@ -59,8 +59,8 @@ Before any code, I'll render 3 clickable design concepts around your brief (warm
 - Stack: TanStack Start (React + TypeScript), Tailwind, Lovable Cloud (Postgres + auth + storage), server functions for all backend logic.
 - Schema: `profiles`, `family_members`, `special_dates`, `reminders`, `reminder_alerts`, `reminder_instances`, `wishlist_items`, `family_circles` + `circle_members`, `vendors`, `vendor_products`, `orders`, `order_events`, `payments`, `user_roles` (user/vendor/admin in a separate roles table). Row-level security scopes every table to its owner or circle.
 - Razorpay needs **your own Razorpay Key ID, Key Secret and Webhook Secret** — Lovable's built-in payment providers are Stripe and Paddle, so Razorpay runs on your keys, stored as encrypted secrets. I'll ask for them at Phase 6; everything before that can be built and tested without them.
-- Phone OTP sign-in requires an SMS provider (Twilio or MSG91) configured in Cloud auth; I'll flag this at Phase 1 and keep email + Google working regardless.
-- Web push and background alarms are reliable when the app is installed to the home screen; iOS Safari requires installation for push.
+- Phone OTP sign-in requires an SMS provider (MSG91 to be used) configured in Cloud auth; I'll flag this at Phase 1 and keep email + Google working regardless.
+- Web push and background alarms are reliable when the app is installed to the home screen; iOS Safari requires installation for push. 
 
 ## Suggested order of delivery
 
