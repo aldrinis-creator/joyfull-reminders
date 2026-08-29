@@ -164,7 +164,7 @@ function NewReminder() {
           </Select>
         </Field>
 
-        <div className="grid grid-cols-1 gap-3 xs:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <Field label="Date" htmlFor="date">
             <Input
               id="date"
