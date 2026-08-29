@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as GreetingRouteImport } from './routes/greeting'
-import { Route as PaytestRouteImport } from './routes/paytest'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -49,11 +48,6 @@ const AuthRoute = AuthRouteImport.update({
 const GreetingRoute = GreetingRouteImport.update({
   id: '/greeting',
   path: '/greeting',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PaytestRoute = PaytestRouteImport.update({
-  id: '/paytest',
-  path: '/paytest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
@@ -155,7 +149,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/greeting': typeof GreetingRoute
-  '/paytest': typeof PaytestRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -178,7 +171,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/greeting': typeof GreetingRoute
-  '/paytest': typeof PaytestRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -203,7 +195,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/greeting': typeof GreetingRoute
-  '/paytest': typeof PaytestRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -228,7 +219,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/greeting'
-    | '/paytest'
     | '/calendar'
     | '/home'
     | '/profile'
@@ -251,7 +241,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/greeting'
-    | '/paytest'
     | '/calendar'
     | '/home'
     | '/profile'
@@ -275,7 +264,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/greeting'
-    | '/paytest'
     | '/_authenticated/calendar'
     | '/_authenticated/home'
     | '/_authenticated/profile'
@@ -300,7 +288,6 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   GreetingRoute: typeof GreetingRoute
-  PaytestRoute: typeof PaytestRoute
   PincodeMemberIdRoute: typeof PincodeMemberIdRoute
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiPublicCronDispatchRemindersRoute: typeof ApiPublicCronDispatchRemindersRoute
@@ -338,13 +325,6 @@ declare module '@tanstack/react-router' {
       path: '/greeting'
       fullPath: '/greeting'
       preLoaderRoute: typeof GreetingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/paytest': {
-      id: '/paytest'
-      path: '/paytest'
-      fullPath: '/paytest'
-      preLoaderRoute: typeof PaytestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/calendar': {
@@ -503,7 +483,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   GreetingRoute: GreetingRoute,
-  PaytestRoute: PaytestRoute,
   PincodeMemberIdRoute: PincodeMemberIdRoute,
   ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
   ApiPublicCronDispatchRemindersRoute: ApiPublicCronDispatchRemindersRoute,
