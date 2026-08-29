@@ -1,22 +1,38 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Gift } from "lucide-react";
+import { Check, Gift, MessageCircleHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { GreetingComposer } from "@/components/GreetingComposer";
 import { cn } from "@/lib/utils";
-import { categoryMeta, formatDateTime, relativeDay, type Reminder } from "@/lib/ereminder";
+import {
+  categoryMeta,
+  formatDateTime,
+  relativeDay,
+  type FamilyMember,
+  type Reminder,
+} from "@/lib/ereminder";
 
 export function ReminderCard({
   reminder,
   occurrence,
   onComplete,
   memberName,
+  member,
 }: {
   reminder: Reminder;
   occurrence: Date;
   onComplete?: ((r: Reminder) => void) | undefined;
   memberName?: string | undefined;
+  member?: FamilyMember | undefined;
 }) {
   const meta = categoryMeta(reminder.category);
   const isGiftable = reminder.category === "personal_family";
+  const [composerOpen, setComposerOpen] = useState(false);
+  const occasion = /anniversar/i.test(reminder.title)
+    ? "anniversary"
+    : /exam/i.test(reminder.title)
+      ? "exam"
+      : "birthday";
 
   return (
     <article
@@ -56,14 +72,37 @@ export function ReminderCard({
             <Check className="size-4" aria-hidden /> Mark done
           </Button>
         ) : null}
+        {member && member.greetings_enabled ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-11"
+            onClick={() => setComposerOpen(true)}
+          >
+            <MessageCircleHeart className="size-4" aria-hidden /> Send greeting
+          </Button>
+        ) : null}
         {isGiftable ? (
           <Button asChild size="sm" variant="outline" className="h-11">
-            <Link to="/market">
+            <Link
+              to="/market"
+              search={{ pin: member?.pincode ?? undefined, for: member?.id }}
+            >
               <Gift className="size-4" aria-hidden /> Send a gift
             </Link>
           </Button>
         ) : null}
       </div>
+
+      {member ? (
+        <GreetingComposer
+          member={member}
+          open={composerOpen}
+          onOpenChange={setComposerOpen}
+          occasion={occasion}
+          reminderId={reminder.id}
+        />
+      ) : null}
     </article>
   );
 }

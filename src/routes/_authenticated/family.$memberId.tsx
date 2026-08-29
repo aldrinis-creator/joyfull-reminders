@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Gift, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Gift, MessageCircleHeart, Plus, Share2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { GreetingComposer } from "@/components/GreetingComposer";
 import { supabase } from "@/integrations/supabase/client";
+import { isValidPincode } from "@/lib/greetings";
 import {
   SPECIAL_DATE_KINDS,
   formatDate,
@@ -22,6 +25,7 @@ import {
   relativeDay,
   rupees,
   turningAge,
+  type FamilyMember,
   type SpecialDateKind,
 } from "@/lib/ereminder";
 
@@ -70,6 +74,7 @@ function MemberPage() {
   });
 
   const member = data?.member;
+  const [composerOpen, setComposerOpen] = useState(false);
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["family_member", memberId] });
 
   return (
@@ -157,12 +162,30 @@ function MemberPage() {
                 {member.gift_hints}
               </p>
             ) : null}
-            <Button asChild size="lg" className="mt-5 h-13 w-full text-base">
-              <Link to="/market">
-                <Gift className="size-5" aria-hidden /> Find a gift nearby
-              </Link>
-            </Button>
+            <div className="mt-5 grid gap-2">
+              <Button asChild size="lg" className="h-13 w-full text-base">
+                <Link
+                  to="/market"
+                  search={{ pin: member.pincode ?? undefined, for: member.id }}
+                >
+                  <Gift className="size-5" aria-hidden />
+                  {member.pincode ? `Find a gift near ${member.pincode}` : "Find a gift"}
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="h-13 w-full text-base"
+                onClick={() => setComposerOpen(true)}
+              >
+                <MessageCircleHeart className="size-5" aria-hidden /> Send a greeting
+              </Button>
+            </div>
           </section>
+        ) : null}
+
+        {member ? (
+          <ContactSection member={member as FamilyMember} onSaved={refresh} />
         ) : null}
 
         <section className="bg-card shadow-card rounded-3xl p-5">
@@ -196,7 +219,143 @@ function MemberPage() {
           <AddWishForm memberId={memberId} onSaved={refresh} />
         </section>
       </div>
+
+      {member ? (
+        <GreetingComposer
+          member={member as FamilyMember}
+          open={composerOpen}
+          onOpenChange={setComposerOpen}
+        />
+      ) : null}
     </AppShell>
+  );
+}
+
+function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: () => void }) {
+  const [email, setEmail] = useState(member.email ?? "");
+  const [whatsapp, setWhatsapp] = useState(member.whatsapp_phone ?? "");
+  const [pincode, setPincode] = useState(member.pincode ?? "");
+  const [city, setCity] = useState(member.city ?? "");
+  const [enabled, setEnabled] = useState(member.greetings_enabled);
+  const [saving, setSaving] = useState(false);
+
+  async function requestPincode() {
+    const url = `${window.location.origin}/pincode/${member.id}`;
+    const text = `Hi ${member.full_name.split(" ")[0]}, I'd like to send you something. Could you share your delivery pincode here? ${url}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Share your pincode", text });
+        return;
+      } catch {
+        /* dismissed */
+      }
+    }
+    await navigator.clipboard.writeText(text);
+    toast.success("Request link copied — send it to them.");
+  }
+
+  return (
+    <section className="bg-card shadow-card rounded-3xl p-5">
+      <h2 className="text-xl">Greetings &amp; delivery</h2>
+      <p className="text-muted-foreground text-sm">
+        We only store what's needed to greet them and to find shops close by.
+      </p>
+      <form
+        className="mt-4 space-y-3"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (pincode && !isValidPincode(pincode)) {
+            toast.error("Enter a valid 6-digit pincode");
+            return;
+          }
+          setSaving(true);
+          const { error } = await supabase
+            .from("family_members")
+            .update({
+              email: email.trim() || null,
+              whatsapp_phone: whatsapp.trim() || null,
+              pincode: pincode.trim() || null,
+              city: city.trim() || null,
+              greetings_enabled: enabled,
+            })
+            .eq("id", member.id);
+          setSaving(false);
+          if (error) {
+            toast.error("Could not save those details.");
+            return;
+          }
+          toast.success("Contact details saved");
+          onSaved();
+        }}
+      >
+        <div className="space-y-1">
+          <Label htmlFor="c-email" className="text-sm">
+            Email
+          </Label>
+          <Input
+            id="c-email"
+            type="email"
+            value={email}
+            maxLength={200}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-12"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="c-wa" className="text-sm">
+            WhatsApp number
+          </Label>
+          <Input
+            id="c-wa"
+            inputMode="tel"
+            value={whatsapp}
+            maxLength={20}
+            onChange={(e) => setWhatsapp(e.target.value)}
+            placeholder="+91 98765 43210"
+            className="h-12"
+          />
+        </div>
+        <div className="flex gap-2">
+          <div className="flex-1 space-y-1">
+            <Label htmlFor="c-pin" className="text-sm">
+              Pincode
+            </Label>
+            <Input
+              id="c-pin"
+              inputMode="numeric"
+              maxLength={6}
+              value={pincode}
+              onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+              className="h-12"
+            />
+          </div>
+          <div className="flex-1 space-y-1">
+            <Label htmlFor="c-city" className="text-sm">
+              City
+            </Label>
+            <Input
+              id="c-city"
+              value={city}
+              maxLength={80}
+              onChange={(e) => setCity(e.target.value)}
+              className="h-12"
+            />
+          </div>
+        </div>
+        <label className="flex min-h-11 items-center justify-between gap-3 text-base font-semibold">
+          Allow greetings
+          <Switch checked={enabled} onCheckedChange={setEnabled} />
+        </label>
+        <div className="flex gap-2">
+          <Button type="submit" variant="secondary" className="h-12 flex-1" disabled={saving}>
+            {saving ? "Saving…" : "Save details"}
+          </Button>
+          <Button type="button" variant="outline" className="h-12" onClick={requestPincode}>
+            <Share2 className="size-4" aria-hidden /> Ask for pincode
+          </Button>
+        </div>
+      </form>
+    </section>
   );
 }
 

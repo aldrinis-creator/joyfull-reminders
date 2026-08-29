@@ -12,10 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as GreetingRouteImport } from './routes/greeting'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedVendorRouteImport } from './routes/_authenticated/vendor'
+import { Route as PincodeMemberIdRouteImport } from './routes/pincode.$memberId'
 import { Route as AuthenticatedFamilyIndexRouteImport } from './routes/_authenticated/family.index'
 import { Route as AuthenticatedFamilyMemberIdRouteImport } from './routes/_authenticated/family.$memberId'
 import { Route as AuthenticatedMarketIndexRouteImport } from './routes/_authenticated/market.index'
@@ -38,6 +40,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GreetingRoute = GreetingRouteImport.update({
+  id: '/greeting',
+  path: '/greeting',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -57,6 +64,11 @@ const AuthenticatedVendorRoute = AuthenticatedVendorRouteImport.update({
   id: '/vendor',
   path: '/vendor',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const PincodeMemberIdRoute = PincodeMemberIdRouteImport.update({
+  id: '/pincode/$memberId',
+  path: '/pincode/$memberId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedFamilyIndexRoute =
   AuthenticatedFamilyIndexRouteImport.update({
@@ -104,10 +116,12 @@ const ApiPublicRazorpayWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/greeting': typeof GreetingRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/vendor': typeof AuthenticatedVendorRoute
+  '/pincode/$memberId': typeof PincodeMemberIdRoute
   '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
@@ -119,10 +133,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/greeting': typeof GreetingRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/vendor': typeof AuthenticatedVendorRoute
+  '/pincode/$memberId': typeof PincodeMemberIdRoute
   '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
@@ -136,10 +152,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/greeting': typeof GreetingRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/vendor': typeof AuthenticatedVendorRoute
+  '/pincode/$memberId': typeof PincodeMemberIdRoute
   '/_authenticated/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/_authenticated/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
@@ -153,10 +171,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/greeting'
     | '/calendar'
     | '/home'
     | '/profile'
     | '/vendor'
+    | '/pincode/$memberId'
     | '/family/$memberId'
     | '/market/$vendorId'
     | '/orders/$orderId'
@@ -168,10 +188,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/greeting'
     | '/calendar'
     | '/home'
     | '/profile'
     | '/vendor'
+    | '/pincode/$memberId'
     | '/family/$memberId'
     | '/market/$vendorId'
     | '/orders/$orderId'
@@ -184,10 +206,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/greeting'
     | '/_authenticated/calendar'
     | '/_authenticated/home'
     | '/_authenticated/profile'
     | '/_authenticated/vendor'
+    | '/pincode/$memberId'
     | '/_authenticated/family/$memberId'
     | '/_authenticated/market/$vendorId'
     | '/_authenticated/orders/$orderId'
@@ -201,6 +225,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  GreetingRoute: typeof GreetingRoute
+  PincodeMemberIdRoute: typeof PincodeMemberIdRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
 }
 
@@ -225,6 +251,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/greeting': {
+      id: '/greeting'
+      path: '/greeting'
+      fullPath: '/greeting'
+      preLoaderRoute: typeof GreetingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/calendar': {
@@ -254,6 +287,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/vendor'
       preLoaderRoute: typeof AuthenticatedVendorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/pincode/$memberId': {
+      id: '/pincode/$memberId'
+      path: '/pincode/$memberId'
+      fullPath: '/pincode/$memberId'
+      preLoaderRoute: typeof PincodeMemberIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/family/': {
       id: '/_authenticated/family/'
@@ -340,6 +380,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  GreetingRoute: GreetingRoute,
+  PincodeMemberIdRoute: PincodeMemberIdRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
 }
 export const routeTree = rootRouteImport

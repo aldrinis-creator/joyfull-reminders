@@ -95,6 +95,13 @@ function VendorPortal() {
             </p>
           </section>
 
+          <CoverageSection
+            vendorId={data.shop.id}
+            pincode={data.shop.pincode ?? ""}
+            pins={data.shop.serviceable_pincodes}
+            onSaved={refresh}
+          />
+
           <section className="bg-card shadow-card rounded-3xl p-5">
             <h2 className="text-xl">Your catalogue</h2>
             <ul className="mt-3 space-y-2">
@@ -168,6 +175,85 @@ function VendorPortal() {
   );
 }
 
+function CoverageSection({
+  vendorId,
+  pincode,
+  pins,
+  onSaved,
+}: {
+  vendorId: string;
+  pincode: string;
+  pins: string[];
+  onSaved: () => void;
+}) {
+  const [pin, setPin] = useState(pincode);
+  const [list, setList] = useState(pins.join(", "));
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <section className="bg-card shadow-card rounded-3xl p-5">
+      <h2 className="text-xl">Delivery coverage</h2>
+      <p className="text-muted-foreground text-sm">
+        Customers gifting someone see you first when their pincode is on this list.
+      </p>
+      <form
+        className="mt-4 space-y-3"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setSaving(true);
+          const { error } = await supabase
+            .from("vendors")
+            .update({ pincode: pin.trim() || null, serviceable_pincodes: parsePincodes(list, pin) })
+            .eq("id", vendorId);
+          setSaving(false);
+          if (error) {
+            toast.error("Could not save your coverage.");
+            return;
+          }
+          toast.success("Coverage updated");
+          onSaved();
+        }}
+      >
+        <div className="space-y-1">
+          <Label htmlFor="c-shop-pin" className="text-sm">
+            Shop pincode
+          </Label>
+          <Input
+            id="c-shop-pin"
+            inputMode="numeric"
+            maxLength={6}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+            className="h-12"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="c-shop-pins" className="text-sm">
+            Pincodes you deliver to
+          </Label>
+          <Textarea
+            id="c-shop-pins"
+            value={list}
+            maxLength={600}
+            onChange={(e) => setList(e.target.value)}
+            rows={2}
+          />
+        </div>
+        <Button type="submit" variant="secondary" className="h-12 w-full" disabled={saving}>
+          {saving ? "Saving…" : "Save coverage"}
+        </Button>
+      </form>
+    </section>
+  );
+}
+
+function parsePincodes(raw: string, own: string): string[] {
+  const all = [...raw.split(/[^0-9]+/), own]
+    .map((p) => p.trim())
+    .filter((p) => /^[1-9][0-9]{5}$/.test(p));
+  return [...new Set(all)].slice(0, 60);
+}
+
 function RegisterShop({ onSaved }: { onSaved: () => void }) {
   const [name, setName] = useState("");
   const [kind, setKind] = useState<VendorKind>("bakery");
@@ -175,6 +261,8 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
   const [radius, setRadius] = useState("5");
+  const [pincode, setPincode] = useState("");
+  const [servicePins, setServicePins] = useState("");
   const [allIndia, setAllIndia] = useState(false);
   const [saving, setSaving] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -212,6 +300,8 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
           address: parsed.data.address || null,
           description: parsed.data.description || null,
           service_radius_km: Math.min(50, Math.max(1, Number(radius) || 5)),
+          pincode: pincode.trim() || null,
+          serviceable_pincodes: parsePincodes(servicePins, pincode),
           ships_all_india: allIndia,
           latitude: coords?.lat ?? null,
           longitude: coords?.lng ?? null,
@@ -276,6 +366,29 @@ function RegisterShop({ onSaved }: { onSaved: () => void }) {
           value={description}
           maxLength={500}
           onChange={(e) => setDescription(e.target.value)}
+          rows={2}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="v-pin">Shop pincode</Label>
+        <Input
+          id="v-pin"
+          inputMode="numeric"
+          maxLength={6}
+          value={pincode}
+          onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+          placeholder="400069"
+          className="h-12"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="v-pins">Pincodes you deliver to (comma separated)</Label>
+        <Textarea
+          id="v-pins"
+          value={servicePins}
+          maxLength={600}
+          onChange={(e) => setServicePins(e.target.value)}
+          placeholder="400069, 400059, 400053"
           rows={2}
         />
       </div>
