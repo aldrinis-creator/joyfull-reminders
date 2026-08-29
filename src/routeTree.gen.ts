@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedFamilyIndexRouteImport } from './routes/_authenticated/family.index'
+import { Route as AuthenticatedFamilyMemberIdRouteImport } from './routes/_authenticated/family.$memberId'
 import { Route as AuthenticatedRemindersNewRouteImport } from './routes/_authenticated/reminders.new'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +42,12 @@ const AuthenticatedFamilyIndexRoute =
     path: '/family/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFamilyMemberIdRoute =
+  AuthenticatedFamilyMemberIdRouteImport.update({
+    id: '/family/$memberId',
+    path: '/family/$memberId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRemindersNewRoute =
   AuthenticatedRemindersNewRouteImport.update({
     id: '/reminders/new',
@@ -52,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family/': typeof AuthenticatedFamilyIndexRoute
 }
@@ -59,6 +67,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family': typeof AuthenticatedFamilyIndexRoute
 }
@@ -68,20 +77,29 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/_authenticated/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/_authenticated/family/': typeof AuthenticatedFamilyIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/home' | '/reminders/new' | '/family/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/home'
+    | '/family/$memberId'
+    | '/reminders/new'
+    | '/family/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/home' | '/reminders/new' | '/family'
+  to:
+    '/' | '/auth' | '/home' | '/family/$memberId' | '/reminders/new' | '/family'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/home'
+    | '/_authenticated/family/$memberId'
     | '/_authenticated/reminders/new'
     | '/_authenticated/family/'
   fileRoutesById: FileRoutesById
@@ -129,6 +147,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFamilyIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/family/$memberId': {
+      id: '/_authenticated/family/$memberId'
+      path: '/family/$memberId'
+      fullPath: '/family/$memberId'
+      preLoaderRoute: typeof AuthenticatedFamilyMemberIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/reminders/new': {
       id: '/_authenticated/reminders/new'
       path: '/reminders/new'
@@ -141,12 +166,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedFamilyMemberIdRoute: typeof AuthenticatedFamilyMemberIdRoute
   AuthenticatedRemindersNewRoute: typeof AuthenticatedRemindersNewRoute
   AuthenticatedFamilyIndexRoute: typeof AuthenticatedFamilyIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedFamilyMemberIdRoute: AuthenticatedFamilyMemberIdRoute,
   AuthenticatedRemindersNewRoute: AuthenticatedRemindersNewRoute,
   AuthenticatedFamilyIndexRoute: AuthenticatedFamilyIndexRoute,
 }
