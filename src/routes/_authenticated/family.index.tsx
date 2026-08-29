@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useFamilyMembers, useSpecialDates } from "@/lib/queries";
+import { useT } from "@/hooks/useLanguage";
 import {
   SPECIAL_DATE_KINDS,
   formatDate,
@@ -70,12 +71,13 @@ const RELATIONSHIPS = [
 ];
 
 const memberSchema = z.object({
-  full_name: z.string().trim().min(1, "Name is required").max(100),
+  full_name: z.string().trim().min(1, "family.errName").max(100),
   relationship: z.string().trim().min(1).max(40),
   gift_hints: z.string().trim().max(500).optional(),
 });
 
 function FamilyPage() {
+  const t = useT();
   const { data: members, isLoading } = useFamilyMembers();
   const { data: dates } = useSpecialDates();
 
@@ -108,8 +110,8 @@ function FamilyPage() {
 
   return (
     <AppShell
-      title="Family"
-      subtitle="The people you never want to disappoint"
+      title={t("nav.family")}
+      subtitle={t("family.subtitle")}
       action={<AddMemberDialog />}
     >
       {isLoading ? (
@@ -121,11 +123,8 @@ function FamilyPage() {
       ) : sorted.length === 0 ? (
         <div className="bg-card shadow-card rounded-3xl px-6 py-12 text-center">
           <Heart className="text-primary mx-auto size-12" aria-hidden />
-          <h2 className="mt-4 text-2xl">Build your family circle</h2>
-          <p className="text-muted-foreground mt-2">
-            Add your parents, spouse, children and closest friends with their special dates and what
-            makes them happy.
-          </p>
+          <h2 className="mt-4 text-2xl">{t("family.emptyTitle")}</h2>
+          <p className="text-muted-foreground mt-2">{t("family.emptyBody")}</p>
           <div className="mt-6 flex justify-center">
             <AddMemberDialog />
           </div>
@@ -150,14 +149,14 @@ function FamilyPage() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <h2 className="text-xl">{m.full_name}</h2>
-                    <p className="text-muted-foreground text-sm font-semibold">{m.relationship}</p>
+                    <p className="text-muted-foreground text-sm font-semibold">{t(`family.rel.${m.relationship}`)}</p>
                     {next ? (
                       <p className="mt-2 text-base">
                         {kindMeta?.emoji} {next.title} · {formatDate(next.when)}
-                        {next.age ? ` · turning ${next.age}` : ""}
+                        {next.age ? ` · ${t("family.turning", { age: next.age })}` : ""}
                       </p>
                     ) : (
-                      <p className="text-muted-foreground mt-2 text-sm">No dates added yet</p>
+                      <p className="text-muted-foreground mt-2 text-sm">{t("family.noDates")}</p>
                     )}
                     {m.likes.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-1.5">
@@ -188,6 +187,7 @@ function FamilyPage() {
 }
 
 function AddMemberDialog() {
+  const t = useT();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -207,27 +207,27 @@ function AddMemberDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="lg" className="bg-indigo text-indigo-foreground h-12 shadow-lifted">
-          <Plus className="size-5" aria-hidden /> Add
+          <Plus className="size-5" aria-hidden /> {t("nav.add")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Add a family member</DialogTitle>
+          <DialogTitle className="text-2xl">{t("family.addTitle")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="m-name">Full name</Label>
+            <Label htmlFor="m-name">{t("family.fullName")}</Label>
             <Input
               id="m-name"
               value={fullName}
               maxLength={100}
               onChange={(e) => setFullName(e.target.value)}
               className="h-12"
-              placeholder="Sunita Sharma"
+              placeholder={t("family.namePlaceholder")}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="m-rel">Relationship</Label>
+            <Label htmlFor="m-rel">{t("family.relationship")}</Label>
             <Select value={relationship} onValueChange={setRelationship}>
               <SelectTrigger id="m-rel" className="h-12">
                 <SelectValue />
@@ -235,14 +235,14 @@ function AddMemberDialog() {
               <SelectContent>
                 {RELATIONSHIPS.map((r) => (
                   <SelectItem key={r} value={r}>
-                    {r}
+                    {t(`family.rel.${r}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="m-dob">Date of birth</Label>
+            <Label htmlFor="m-dob">{t("family.dob")}</Label>
             <Input
               id="m-dob"
               type="date"
@@ -253,48 +253,46 @@ function AddMemberDialog() {
 
           </div>
           <div className="space-y-2">
-            <Label htmlFor="m-likes">What do they love? (comma separated)</Label>
+            <Label htmlFor="m-likes">{t("family.likes")}</Label>
             <Input
               id="m-likes"
               value={likes}
               maxLength={300}
               onChange={(e) => setLikes(e.target.value)}
-              placeholder="Filter coffee, gardening, sarees"
+              placeholder={t("family.likesPlaceholder")}
               className="h-12"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="m-music">Music they enjoy</Label>
+            <Label htmlFor="m-music">{t("family.music")}</Label>
             <Input
               id="m-music"
               value={music}
               maxLength={200}
               onChange={(e) => setMusic(e.target.value)}
-              placeholder="Carnatic, old Hindi film songs"
+              placeholder={t("family.musicPlaceholder")}
               className="h-12"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="m-gift">Gift hints</Label>
+            <Label htmlFor="m-gift">{t("family.giftHints")}</Label>
             <Textarea
               id="m-gift"
               value={giftHints}
               maxLength={500}
               onChange={(e) => setGiftHints(e.target.value)}
-              placeholder="Loves yellow roses, allergic to lilies."
+              placeholder={t("family.giftHintsPlaceholder")}
               rows={2}
             />
           </div>
 
           <div className="bg-muted/60 space-y-4 rounded-2xl p-4">
             <div>
-              <h3 className="text-lg">Greetings &amp; delivery</h3>
-              <p className="text-muted-foreground text-sm">
-                Optional. Needed to send greetings and to find shops near them.
-              </p>
+              <h3 className="text-lg">{t("family.greetingsSection")}</h3>
+              <p className="text-muted-foreground text-sm">{t("family.greetingsSectionBody")}</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="m-email">Email</Label>
+              <Label htmlFor="m-email">{t("family.email")}</Label>
               <Input
                 id="m-email"
                 type="email"
@@ -307,7 +305,7 @@ function AddMemberDialog() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="m-wa">WhatsApp number</Label>
+              <Label htmlFor="m-wa">{t("family.whatsapp")}</Label>
               <Input
                 id="m-wa"
                 inputMode="tel"
@@ -320,7 +318,7 @@ function AddMemberDialog() {
             </div>
             <div className="flex gap-3">
               <div className="flex-1 space-y-2">
-                <Label htmlFor="m-pin">Their pincode</Label>
+                <Label htmlFor="m-pin">{t("family.theirPincode")}</Label>
                 <Input
                   id="m-pin"
                   inputMode="numeric"
@@ -332,19 +330,19 @@ function AddMemberDialog() {
                 />
               </div>
               <div className="flex-1 space-y-2">
-                <Label htmlFor="m-city">Their city</Label>
+                <Label htmlFor="m-city">{t("family.theirCity")}</Label>
                 <Input
                   id="m-city"
                   value={city}
                   maxLength={80}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="Mumbai"
+                  placeholder={t("family.cityPlaceholder")}
                   className="h-12"
                 />
               </div>
             </div>
             <label className="flex min-h-11 items-center justify-between gap-3 text-base font-semibold">
-              Allow greetings to this person
+              {t("family.allowGreetings")}
               <Switch checked={greetingsEnabled} onCheckedChange={setGreetingsEnabled} />
             </label>
           </div>
@@ -357,7 +355,7 @@ function AddMemberDialog() {
             onClick={async () => {
               const parsed = memberSchema.safeParse({ full_name: fullName, relationship, gift_hints: giftHints });
               if (!parsed.success) {
-                toast.error(parsed.error.issues[0]?.message ?? "Please check the details");
+                toast.error(t(parsed.error.issues[0]?.message ?? "family.errDetails"));
                 return;
               }
               setSaving(true);
@@ -365,7 +363,7 @@ function AddMemberDialog() {
               const userId = userData.user?.id;
               if (!userId) {
                 setSaving(false);
-                toast.error("Please sign in again");
+                toast.error(t("reminders.errSignIn"));
                 return;
               }
               const { data: member, error } = await supabase
@@ -398,7 +396,7 @@ function AddMemberDialog() {
 
               if (error || !member) {
                 setSaving(false);
-                toast.error("Could not save that person.");
+                toast.error(t("family.errSavePerson"));
                 return;
               }
 
@@ -438,10 +436,10 @@ function AddMemberDialog() {
               void queryClient.invalidateQueries({ queryKey: ["family_members"] });
               void queryClient.invalidateQueries({ queryKey: ["special_dates"] });
               void queryClient.invalidateQueries({ queryKey: ["reminders"] });
-              toast.success("Added to your family circle");
+              toast.success(t("family.addedToast"));
             }}
           >
-            Save
+            {saving ? t("saving") : t("save")}
           </Button>
         </DialogFooter>
       </DialogContent>
