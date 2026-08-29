@@ -20,6 +20,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { createGiftOrder } from "@/lib/orders.functions";
 import { useFamilyMembers, useVendor } from "@/lib/queries";
 import { VENDOR_KINDS, rupees, type VendorProduct } from "@/lib/ereminder";
+import { useT } from "@/hooks/useLanguage";
 
 type VendorSearch = { pin?: string | undefined; for?: string | undefined };
 
@@ -43,16 +44,17 @@ export const Route = createFileRoute("/_authenticated/market/$vendorId")({
 });
 
 const orderSchema = z.object({
-  recipient: z.string().trim().min(1, "Who is it for?").max(100),
-  address: z.string().trim().min(6, "Add a delivery address").max(400),
-  city: z.string().trim().min(2, "Add the delivery city").max(80),
-  pincode: z.string().trim().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit pincode"),
-  date: z.string().min(1, "Pick a delivery date"),
+  recipient: z.string().trim().min(1, "market.errRecipient").max(100),
+  address: z.string().trim().min(6, "market.errAddress").max(400),
+  city: z.string().trim().min(2, "market.errCity").max(80),
+  pincode: z.string().trim().regex(/^[1-9]\d{5}$/, "family.errPincode"),
+  date: z.string().min(1, "market.errDate"),
   message: z.string().trim().max(300).optional(),
 });
 
 
 function VendorPage() {
+  const t = useT();
   const { vendorId } = Route.useParams();
   const { data, isLoading } = useVendor(vendorId);
   const { pin, for: forMemberId } = Route.useSearch();
@@ -65,12 +67,12 @@ function VendorPage() {
 
   return (
     <AppShell
-      title={vendor?.name ?? "Shop"}
+      title={vendor?.name ?? t("market.shop")}
       subtitle={vendor?.description ?? undefined}
       action={
         <Button asChild variant="secondary" size="lg" className="h-12">
           <Link to="/market">
-            <ArrowLeft className="size-5" aria-hidden /> Back
+            <ArrowLeft className="size-5" aria-hidden /> {t("back")}
           </Link>
         </Button>
       }
@@ -83,7 +85,7 @@ function VendorPage() {
         </div>
       ) : !vendor ? (
         <p className="bg-card shadow-card rounded-3xl px-6 py-12 text-center">
-          This shop is no longer available.
+          {t("market.shopGone")}
         </p>
       ) : (
         <div className="space-y-4 pb-8">
@@ -95,19 +97,21 @@ function VendorPage() {
               <MapPin className="size-4" aria-hidden /> {vendor.address}, {vendor.city}
             </span>
             <span>
-              {VENDOR_KINDS.find((k) => k.value === vendor.kind)?.emoji} Delivers within{" "}
-              {vendor.service_radius_km} km
-              {vendor.ships_all_india ? " · ships all India" : ""}
+              {VENDOR_KINDS.find((k) => k.value === vendor.kind)?.emoji}{" "}
+              {t("market.deliversWithin", { km: vendor.service_radius_km })}
+              {vendor.ships_all_india ? ` · ${t("market.shipsAllIndia")}` : ""}
             </span>
           </div>
 
           {recipientPin ? (
             <p className="bg-accent/30 rounded-3xl px-5 py-4 font-semibold">
               {vendor.serviceable_pincodes.includes(recipientPin) || vendor.pincode === recipientPin
-                ? `Delivers to ${recipientPin}${recipient ? ` — ${recipient.full_name}'s area` : ""}.`
+                ? `${t("market.deliversTo", { pincode: recipientPin })}${
+                    recipient ? ` — ${t("market.theirArea", { name: recipient.full_name })}` : ""
+                  }.`
                 : vendor.ships_all_india
-                  ? `Ships pan-India, so ${recipientPin} is covered by courier.`
-                  : `This shop may not deliver to ${recipientPin}.`}
+                  ? t("market.courierCovered", { pincode: recipientPin })
+                  : t("market.mayNotDeliver", { pincode: recipientPin })}
             </p>
           ) : null}
 
@@ -130,14 +134,14 @@ function VendorPage() {
                 className="mt-4 h-13 w-full text-base"
                 onClick={() => setSelected(p)}
               >
-                Order this
+                {t("market.orderThis")}
               </Button>
             </article>
           ))}
 
           {(data?.products.length ?? 0) === 0 ? (
             <p className="text-muted-foreground bg-card shadow-card rounded-3xl px-6 py-12 text-center">
-              This shop hasn't listed anything yet.
+              {t("market.noProducts")}
             </p>
           ) : null}
         </div>
@@ -172,6 +176,7 @@ function OrderDialog({
   recipientPin: string;
   recipientCity: string;
 }) {
+  const t = useT();
   const navigate = useNavigate();
   const { data: members } = useFamilyMembers();
   const [recipient, setRecipient] = useState(recipientName);
@@ -193,14 +198,14 @@ function OrderDialog({
         <p className="text-xl font-bold">{rupees(product.price_paise)}</p>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="o-recipient">Deliver to</Label>
+            <Label htmlFor="o-recipient">{t("market.deliverTo")}</Label>
             <Input
               id="o-recipient"
               list="family-names"
               value={recipient}
               maxLength={100}
               onChange={(e) => setRecipient(e.target.value)}
-              placeholder="Amma"
+              placeholder={t("market.recipientPlaceholder")}
               className="h-12"
             />
             <datalist id="family-names">
@@ -211,7 +216,7 @@ function OrderDialog({
           </div>
           <AddressAutocomplete
             id="o-address"
-            label="Delivery address"
+            label={t("market.deliveryAddress")}
             value={address}
             onChange={setAddress}
             onResolved={(a) => {
@@ -219,23 +224,23 @@ function OrderDialog({
               if (a.pincode) setPincode(a.pincode);
             }}
             multiline
-            placeholder="Flat 302, Sai Residency, Andheri East"
-            hint="Type a few characters and pick the address — city and pincode fill in for you."
+            placeholder={t("market.addressPlaceholder")}
+            hint={t("market.addressHint")}
           />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="space-y-2">
-              <Label htmlFor="o-city">City</Label>
+              <Label htmlFor="o-city">{t("family.city")}</Label>
               <Input
                 id="o-city"
                 value={city}
                 maxLength={80}
                 onChange={(e) => setCity(e.target.value)}
                 className="h-12 w-full min-w-0"
-                placeholder="Mumbai"
+                placeholder={t("family.cityPlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="o-pin">Pincode</Label>
+              <Label htmlFor="o-pin">{t("family.pincode")}</Label>
               <Input
                 id="o-pin"
                 value={pincode}
@@ -248,7 +253,7 @@ function OrderDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="o-date">Delivery date</Label>
+            <Label htmlFor="o-date">{t("market.deliveryDate")}</Label>
             <Input
               id="o-date"
               type="date"
@@ -259,13 +264,13 @@ function OrderDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="o-message">Gift message</Label>
+            <Label htmlFor="o-message">{t("market.giftMessage")}</Label>
             <Input
               id="o-message"
               value={message}
               maxLength={300}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Happy birthday Amma, love you!"
+              placeholder={t("market.giftMessagePlaceholder")}
               className="h-12"
             />
           </div>
@@ -285,7 +290,7 @@ function OrderDialog({
                 message,
               });
               if (!parsed.success) {
-                toast.error(parsed.error.issues[0]?.message ?? "Please check the details");
+                toast.error(t(parsed.error.issues[0]?.message ?? "family.errDetails"));
                 return;
               }
               setSaving(true);
@@ -311,11 +316,11 @@ function OrderDialog({
                 navigate({ to: "/orders/$orderId", params: { orderId } });
               } catch {
                 setSaving(false);
-                toast.error("Could not create that order.");
+                toast.error(t("market.errCreateOrder"));
               }
             }}
           >
-            Continue to payment
+            {saving ? t("saving") : t("market.continuePayment")}
           </Button>
         </DialogFooter>
       </DialogContent>
