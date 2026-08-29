@@ -5,7 +5,8 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFamilyMembers, useProfile, useVendors } from "@/lib/queries";
-import { VENDOR_KINDS, haversineKm, type VendorKind } from "@/lib/ereminder";
+import { VENDOR_KINDS, haversineKm, vendorKindLabel, type VendorKind } from "@/lib/ereminder";
+import { useT } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 
 type MarketSearch = { pin?: string | undefined; for?: string | undefined };
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/_authenticated/market/")({
 });
 
 function MarketPage() {
+  const t = useT();
   const { data: vendors, isLoading } = useVendors();
   const { data: profile } = useProfile();
   const { data: members } = useFamilyMembers();
@@ -85,14 +87,14 @@ function MarketPage() {
   }, [vendors, filter, nearbyOnly, origin, recipientPin]);
 
   return (
-    <AppShell title="Marketplace" subtitle="Cake, flowers and gifts, delivered">
+    <AppShell title={t("market.title")} subtitle={t("market.subtitle")}>
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-3">
         <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
-          All shops
+          {t("market.allShops")}
         </FilterChip>
         {VENDOR_KINDS.map((k) => (
           <FilterChip key={k.value} active={filter === k.value} onClick={() => setFilter(k.value)}>
-            {k.emoji} {k.label}
+            {k.emoji} {vendorKindLabel(k.value)}
           </FilterChip>
         ))}
       </div>
@@ -100,18 +102,16 @@ function MarketPage() {
       {recipientPin || recipient ? (
         <div className="bg-accent/30 mb-4 rounded-3xl px-5 py-4">
           <p className="font-semibold">
-            Gifting {recipient ? recipient.full_name : "someone"}
-            {recipientPin ? ` · pincode ${recipientPin}` : ""}
+            {t("market.gifting", { name: recipient ? recipient.full_name : t("market.someone") })}
+            {recipientPin ? ` · ${t("market.pincodeLabel", { pincode: recipientPin })}` : ""}
           </p>
           <p className="text-muted-foreground text-sm">
-            {recipientPin
-              ? "Showing shops that deliver to that pincode first, then pan-India sellers."
-              : "Add their pincode on their family page to see shops within a few kilometres of them."}
+            {recipientPin ? t("market.pinHintYes") : t("market.pinHintNo")}
           </p>
           {recipient && !recipientPin ? (
             <Button asChild variant="secondary" className="mt-3 h-11">
               <Link to="/family/$memberId" params={{ memberId: recipient.id }}>
-                Add their pincode
+                {t("market.addTheirPincode")}
               </Link>
             </Button>
           ) : null}
@@ -121,12 +121,10 @@ function MarketPage() {
       <div className="bg-card shadow-card mb-4 flex items-center justify-between gap-3 rounded-3xl px-5 py-4">
         <div className="min-w-0">
           <p className="font-semibold">
-            {origin ? "Showing shops around your saved location" : "Location not set"}
+            {origin ? t("market.locOn") : t("market.locOff")}
           </p>
           <p className="text-muted-foreground text-sm">
-            {origin
-              ? "Nearby means within each shop's delivery radius."
-              : "Add your location in Profile to sort shops by distance."}
+            {origin ? t("market.locOnHint") : t("market.locOffHint")}
           </p>
         </div>
         <Button
@@ -134,7 +132,7 @@ function MarketPage() {
           className="h-12 shrink-0"
           onClick={() => setNearbyOnly((v) => !v)}
         >
-          Nearby
+          {t("market.nearby")}
         </Button>
       </div>
 
@@ -146,7 +144,7 @@ function MarketPage() {
         </div>
       ) : list.length === 0 ? (
         <p className="text-muted-foreground bg-card shadow-card rounded-3xl px-6 py-12 text-center">
-          No shops match that filter yet.
+          {t("market.noShops")}
         </p>
       ) : (
         <div className="space-y-3 pb-6">
@@ -162,7 +160,7 @@ function MarketPage() {
                 <div className="min-w-0">
                   <span className="bg-muted rounded-full px-2.5 py-1 text-xs font-bold">
                     {VENDOR_KINDS.find((k) => k.value === vendor.kind)?.emoji}{" "}
-                    {VENDOR_KINDS.find((k) => k.value === vendor.kind)?.label}
+                    {vendorKindLabel(vendor.kind)}
                   </span>
                   <h2 className="mt-2 text-xl">{vendor.name}</h2>
                   <p className="text-muted-foreground text-sm">{vendor.description}</p>
@@ -172,11 +170,11 @@ function MarketPage() {
                       {distance != null ? ` · ${distance.toFixed(1)} km` : ""}
                     </span>
                     {recipientPin && serviceable ? (
-                      <span className="text-primary font-bold">Delivers to {recipientPin}</span>
+                      <span className="text-primary font-bold">{t("market.deliversTo", { pincode: recipientPin })}</span>
                     ) : null}
                     {vendor.ships_all_india ? (
                       <span className="inline-flex items-center gap-1">
-                        <Truck className="size-4" aria-hidden /> All India
+                        <Truck className="size-4" aria-hidden /> {t("market.allIndia")}
                       </span>
                     ) : null}
                   </p>

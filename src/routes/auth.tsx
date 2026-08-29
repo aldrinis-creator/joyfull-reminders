@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { useT } from "@/hooks/useLanguage";
 import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/otp.functions";
 import { phoneSchema } from "@/lib/otp.schemas";
 
@@ -33,12 +34,13 @@ export const Route = createFileRoute("/auth")({
 });
 
 const emailSchema = z.object({
-  email: z.string().trim().email("Enter a valid email").max(255),
-  password: z.string().min(8, "Use at least 8 characters").max(72),
+  email: z.string().trim().email("public.errEmail").max(255),
+  password: z.string().min(8, "public.errPassword").max(72),
   fullName: z.string().trim().max(100).optional(),
 });
 
 function AuthPage() {
+  const t = useT();
   const navigate = useNavigate();
   const { session, loading } = useAuth();
   const [busy, setBusy] = useState(false);
@@ -50,9 +52,9 @@ function AuthPage() {
   return (
     <div className="bg-background flex min-h-screen flex-col">
       <div className="gradient-warm rounded-b-[2.5rem] px-6 pt-14 pb-12 text-center">
-        <h1 className="text-primary-foreground text-4xl">e-Reminder</h1>
+        <h1 className="text-primary-foreground text-4xl">{t("appName")}</h1>
         <p className="text-primary-foreground/95 mt-2 text-base">
-          Your milestones, deadlines and celebrations in one place.
+          {t("public.authTagline")}
         </p>
       </div>
 
@@ -71,25 +73,26 @@ function AuthPage() {
               });
               if (result.error) {
                 setBusy(false);
-                toast.error("Google sign-in failed. Please try another method.");
+                toast.error(t("public.errGoogle"));
                 return;
               }
               if (result.redirected) return;
               navigate({ to: "/home" });
             }}
           >
-            Continue with Google
+            {t("public.continueGoogle")}
           </Button>
 
           <div className="text-muted-foreground my-5 flex items-center gap-3 text-xs font-semibold tracking-wider uppercase">
-            <span className="bg-border h-px flex-1" /> or <span className="bg-border h-px flex-1" />
+            <span className="bg-border h-px flex-1" /> {t("public.or")}{" "}
+            <span className="bg-border h-px flex-1" />
           </div>
 
           <Tabs defaultValue="signin">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="signin">Sign in</TabsTrigger>
-              <TabsTrigger value="signup">Sign up</TabsTrigger>
-              <TabsTrigger value="phone">Phone</TabsTrigger>
+              <TabsTrigger value="signin">{t("public.signIn")}</TabsTrigger>
+              <TabsTrigger value="signup">{t("public.signUp")}</TabsTrigger>
+              <TabsTrigger value="phone">{t("profile.phone")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin">
@@ -117,6 +120,7 @@ function EmailForm({
   busy: boolean;
   setBusy: (v: boolean) => void;
 }) {
+  const t = useT();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -129,7 +133,7 @@ function EmailForm({
         e.preventDefault();
         const parsed = emailSchema.safeParse({ email, password, fullName });
         if (!parsed.success) {
-          toast.error(parsed.error.issues[0]?.message ?? "Please check your details");
+          toast.error(t(parsed.error.issues[0]?.message ?? "profile.errDetails"));
           return;
         }
         setBusy(true);
@@ -148,10 +152,10 @@ function EmailForm({
             return;
           }
           if (!data.session) {
-            toast.success("Almost there — tap the confirmation link we just emailed you.");
+            toast.success(t("public.confirmEmail"));
             return;
           }
-          toast.success("Account created. Welcome to e-Reminder!");
+          toast.success(t("public.accountCreated"));
           navigate({ to: "/home" });
         } else {
           const { error } = await supabase.auth.signInWithPassword({
@@ -169,19 +173,19 @@ function EmailForm({
     >
       {mode === "signup" ? (
         <div className="space-y-2">
-          <Label htmlFor="fullName">Your name</Label>
+          <Label htmlFor="fullName">{t("public.yourName")}</Label>
           <Input
             id="fullName"
             value={fullName}
             maxLength={100}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="Aarti Sharma"
+            placeholder={t("public.namePlaceholder")}
             className="h-12"
           />
         </div>
       ) : null}
       <div className="space-y-2">
-        <Label htmlFor={`${mode}-email`}>Email</Label>
+        <Label htmlFor={`${mode}-email`}>{t("family.email")}</Label>
         <Input
           id={`${mode}-email`}
           type="email"
@@ -194,7 +198,7 @@ function EmailForm({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${mode}-password`}>Password</Label>
+        <Label htmlFor={`${mode}-password`}>{t("public.password")}</Label>
         <Input
           id={`${mode}-password`}
           type="password"
@@ -202,18 +206,19 @@ function EmailForm({
           value={password}
           maxLength={72}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="At least 8 characters"
+          placeholder={t("public.passwordPlaceholder")}
           className="h-12"
         />
       </div>
       <Button type="submit" size="lg" className="h-13 w-full text-base" disabled={busy}>
-        {mode === "signup" ? "Create account" : "Sign in"}
+        {mode === "signup" ? t("public.createAccountShort") : t("public.signIn")}
       </Button>
     </form>
   );
 }
 
 function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => void }) {
+  const t = useT();
   const navigate = useNavigate();
   const requestOtp = useServerFn(requestPhoneOtp);
   const verifyOtp = useServerFn(verifyPhoneOtp);
@@ -225,7 +230,7 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
   async function send(pickedChannel: "sms" | "whatsapp") {
     const parsed = phoneSchema.safeParse(phone);
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Enter a valid phone number");
+      toast.error(t(parsed.error.issues[0]?.message ?? "public.errPhone"));
       return;
     }
     setBusy(true);
@@ -238,10 +243,10 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
       setChannel(pickedChannel);
       setStep("code");
       toast.success(
-        pickedChannel === "sms" ? "Code sent by SMS" : "Code sent on WhatsApp",
+        pickedChannel === "sms" ? t("profile.codeSms") : t("profile.codeWhatsapp"),
       );
     } catch {
-      toast.error("Could not send the code. Please try again.");
+      toast.error(t("profile.errSendCode"));
     } finally {
       setBusy(false);
     }
@@ -251,7 +256,7 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
     return (
       <div className="mt-5 space-y-4">
         <p className="text-muted-foreground text-sm">
-          How would you like to receive your one-time code for <strong>{phone}</strong>?
+          {t("public.otpQuestionFor")} <strong>{phone}</strong>
         </p>
         <Button
           type="button"
@@ -260,7 +265,7 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
           disabled={busy}
           onClick={() => void send("sms")}
         >
-          Text me on SMS
+          {t("profile.otpSms")}
         </Button>
         <Button
           type="button"
@@ -270,7 +275,7 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
           disabled={busy}
           onClick={() => void send("whatsapp")}
         >
-          Send it on WhatsApp
+          {t("profile.otpWhatsapp")}
         </Button>
         <Button
           type="button"
@@ -279,7 +284,7 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
           disabled={busy}
           onClick={() => setStep("phone")}
         >
-          Change number
+          {t("public.changeNumber")}
         </Button>
       </div>
     );
@@ -305,19 +310,19 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
               refresh_token: result.refreshToken,
             });
             if (error) {
-              toast.error("Signed in, but the session could not be saved.");
+              toast.error(t("public.errSession"));
               return;
             }
             navigate({ to: "/home" });
           } catch {
-            toast.error("Could not verify that code. Please try again.");
+            toast.error(t("public.errVerify"));
           } finally {
             setBusy(false);
           }
         }}
       >
         <div className="space-y-2">
-          <Label htmlFor="otp">6-digit code</Label>
+          <Label htmlFor="otp">{t("profile.sixDigitCode")}</Label>
           <Input
             id="otp"
             inputMode="numeric"
@@ -328,11 +333,13 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
             className="h-12 text-center text-2xl tracking-[0.4em]"
           />
           <p className="text-muted-foreground text-xs">
-            Sent to {phone} {channel === "sms" ? "by SMS" : "on WhatsApp"}. It expires in 10 minutes.
+            {channel === "sms"
+              ? t("public.otpSentSms", { phone })
+              : t("public.otpSentWhatsapp", { phone })}
           </p>
         </div>
         <Button type="submit" size="lg" className="h-13 w-full text-base" disabled={busy}>
-          Verify and continue
+          {t("public.verifyContinue")}
         </Button>
         <div className="flex gap-2">
           <Button
@@ -342,7 +349,7 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
             disabled={busy}
             onClick={() => void send(channel)}
           >
-            Resend
+            {t("public.resend")}
           </Button>
           <Button
             type="button"
@@ -351,7 +358,7 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
             disabled={busy}
             onClick={() => void send(channel === "sms" ? "whatsapp" : "sms")}
           >
-            {channel === "sms" ? "Send on WhatsApp" : "Send by SMS"}
+            {channel === "sms" ? t("profile.switchWhatsapp") : t("profile.switchSms")}
           </Button>
         </div>
         <Button
@@ -364,7 +371,7 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
             setStep("phone");
           }}
         >
-          Use a different number
+          {t("public.differentNumber")}
         </Button>
       </form>
     );
@@ -377,14 +384,14 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
         e.preventDefault();
         const parsed = phoneSchema.safeParse(phone);
         if (!parsed.success) {
-          toast.error(parsed.error.issues[0]?.message ?? "Enter a valid phone number");
+          toast.error(t(parsed.error.issues[0]?.message ?? "public.errPhone"));
           return;
         }
         setStep("channel");
       }}
     >
       <div className="space-y-2">
-        <Label htmlFor="phone">Mobile number</Label>
+        <Label htmlFor="phone">{t("public.mobileNumber")}</Label>
         <Input
           id="phone"
           type="tel"
@@ -397,10 +404,10 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
         />
       </div>
       <Button type="submit" size="lg" className="h-13 w-full text-base" disabled={busy}>
-        Continue
+        {t("public.continue")}
       </Button>
       <p className="text-muted-foreground text-xs">
-        We'll ask whether you'd like your code by SMS or WhatsApp.
+        {t("public.otpChoiceHint")}
       </p>
     </form>
   );

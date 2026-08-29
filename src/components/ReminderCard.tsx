@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { GreetingComposer } from "@/components/GreetingComposer";
 import { cn } from "@/lib/utils";
 import { buildIcs } from "@/lib/ics";
+import { useT } from "@/hooks/useLanguage";
 import {
+  categoryLabel,
+  categoryShortLabel,
   categoryMeta,
   formatDateTime,
   relativeDay,
@@ -26,6 +29,7 @@ export function ReminderCard({
   memberName?: string | undefined;
   member?: FamilyMember | undefined;
 }) {
+  const t = useT();
   const meta = categoryMeta(reminder.category);
   const isGiftable = reminder.category === "personal_family";
   const [composerOpen, setComposerOpen] = useState(false);
@@ -44,7 +48,7 @@ export function ReminderCard({
           start: occurrence,
           durationMinutes: 30,
           summary: `${meta.emoji} ${reminder.title}`,
-          description: [meta.label, reminder.description].filter(Boolean).join(" — "),
+          description: [categoryLabel(reminder.category), reminder.description].filter(Boolean).join(" — "),
         },
       ],
     });
@@ -69,13 +73,13 @@ export function ReminderCard({
             className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold text-white"
             style={{ backgroundColor: meta.colorVar }}
           >
-            {meta.emoji} {meta.short}
+            {meta.emoji} {categoryShortLabel(reminder.category)}
           </span>
           <h3 className={cn("mt-2 text-xl", reminder.completed && "line-through opacity-60")}>
             {reminder.title}
           </h3>
           {memberName ? (
-            <p className="text-muted-foreground text-sm font-semibold">for {memberName}</p>
+            <p className="text-muted-foreground text-sm font-semibold">{t("home.forMember", { name: memberName })}</p>
           ) : null}
           <p className="text-muted-foreground mt-1 text-sm">{formatDateTime(occurrence)}</p>
           {reminder.description ? (
@@ -93,7 +97,7 @@ export function ReminderCard({
       <div className="mt-4 flex flex-wrap gap-2">
         {onComplete && !reminder.completed ? (
           <Button size="sm" variant="secondary" className="h-11" onClick={() => onComplete(reminder)}>
-            <Check className="size-4" aria-hidden /> Mark done
+            <Check className="size-4" aria-hidden /> {t("home.markDone")}
           </Button>
         ) : null}
         {member && member.greetings_enabled ? (
@@ -103,11 +107,11 @@ export function ReminderCard({
             className="h-11"
             onClick={() => setComposerOpen(true)}
           >
-            <MessageCircleHeart className="size-4" aria-hidden /> Send greeting
+            <MessageCircleHeart className="size-4" aria-hidden /> {t("home.sendGreeting")}
           </Button>
         ) : null}
         <Button size="sm" variant="outline" className="h-11" onClick={downloadIcs}>
-          <CalendarPlus className="size-4" aria-hidden /> Add to calendar
+          <CalendarPlus className="size-4" aria-hidden /> {t("home.addToCalendar")}
         </Button>
         {isGiftable ? (
           <Button asChild size="sm" variant="outline" className="h-11">
@@ -115,7 +119,7 @@ export function ReminderCard({
               to="/market"
               search={{ pin: member?.pincode ?? undefined, for: member?.id }}
             >
-              <Gift className="size-4" aria-hidden /> Send a gift
+              <Gift className="size-4" aria-hidden /> {t("home.sendGift")}
             </Link>
           </Button>
         ) : null}

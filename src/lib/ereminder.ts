@@ -1,4 +1,6 @@
 import type { Database } from "@/integrations/supabase/types";
+import { activeLocale, translate } from "@/lib/i18n";
+
 
 export type ReminderCategory = Database["public"]["Enums"]["reminder_category"];
 export type RecurrenceKind = Database["public"]["Enums"]["recurrence_kind"];
@@ -143,18 +145,22 @@ export function daysUntil(iso: string | Date, from: Date = new Date()): number {
 
 export function relativeDay(iso: string | Date, from: Date = new Date()): string {
   const diff = daysUntil(iso, from);
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Tomorrow";
-  if (diff === -1) return "Yesterday";
-  if (diff < 0) return `${Math.abs(diff)} days ago`;
-  if (diff < 7) return `In ${diff} days`;
-  if (diff < 30) return `In ${Math.round(diff / 7)} week${diff >= 14 ? "s" : ""}`;
-  return `In ${Math.round(diff / 30)} month${diff >= 60 ? "s" : ""}`;
+  if (diff === 0) return translate("day.today");
+  if (diff === 1) return translate("day.tomorrow");
+  if (diff === -1) return translate("day.yesterday");
+  if (diff < 0) return translate("day.daysAgo", { count: Math.abs(diff) });
+  if (diff < 7) return translate("day.inDays", { count: diff });
+  if (diff < 30) {
+    const weeks = Math.round(diff / 7);
+    return weeks <= 1 ? translate("day.inWeek") : translate("day.inWeeks", { count: weeks });
+  }
+  const months = Math.round(diff / 30);
+  return months <= 1 ? translate("day.inMonth") : translate("day.inMonths", { count: months });
 }
 
 export function formatDateTime(iso: string | Date): string {
   const d = typeof iso === "string" ? new Date(iso) : iso;
-  return d.toLocaleString("en-IN", {
+  return d.toLocaleString(activeLocale(), {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -165,8 +171,42 @@ export function formatDateTime(iso: string | Date): string {
 
 export function formatDate(iso: string | Date): string {
   const d = typeof iso === "string" ? new Date(iso) : iso;
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return d.toLocaleDateString(activeLocale(), { day: "numeric", month: "short", year: "numeric" });
 }
+
+/** Localised label helpers — use these in UI instead of the English constants. */
+export function categoryLabel(value: ReminderCategory): string {
+  return translate(`cat.${value}`);
+}
+
+export function categoryShortLabel(value: ReminderCategory): string {
+  return translate(`cat.short.${value}`);
+}
+
+export function recurrenceLabel(value: RecurrenceKind): string {
+  return translate(`recurrence.${value}`);
+}
+
+export function alertPresetLabel(minutes: number): string {
+  return translate(`alert.${minutes}`);
+}
+
+export function specialDateKindLabel(value: SpecialDateKind): string {
+  return translate(`special.${value}`);
+}
+
+export function vendorKindLabel(value: VendorKind): string {
+  return translate(`vendorKind.${value}`);
+}
+
+export function orderStatusLabel(value: OrderStatus): string {
+  return translate(`order.${value}`);
+}
+
+export function bucketLabel(value: UrgencyBucket): string {
+  return translate(`bucket.${value}`);
+}
+
 
 /** Next occurrence of a month/day, this year or next. */
 export function nextAnniversary(eventDate: string, from: Date = new Date()): Date {

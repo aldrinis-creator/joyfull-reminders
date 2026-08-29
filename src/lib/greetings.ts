@@ -1,4 +1,5 @@
 import type { Database } from "@/integrations/supabase/types";
+import { translate } from "@/lib/i18n";
 
 export type GreetingChannel = Database["public"]["Enums"]["greeting_channel"];
 export type GreetingStatus = Database["public"]["Enums"]["greeting_status"];
@@ -50,22 +51,13 @@ export function defaultMessage(params: {
 }): string {
   const first = params.name.split(" ")[0] ?? params.name;
   const from = params.senderName ? `\n\n— ${params.senderName}` : "";
-  switch (params.occasion) {
-    case "birthday":
-      return `Happy birthday, ${first}! ${
-        params.turning ? `${params.turning} looks wonderful on you. ` : ""
-      }Wishing you a year full of good health, laughter and everything you love.${from}`;
-    case "anniversary":
-      return `Happy anniversary, ${first}! Here's to many more years of love, patience and shared cups of chai.${from}`;
-    case "exam":
-      return `All the very best, ${first}! Stay calm, trust your preparation — you've got this.${from}`;
-    case "festival":
-      return `Wishing you and your family light, sweets and joy this festive season, ${first}.${from}`;
-    case "milestone":
-      return `Congratulations, ${first}! So proud of you — enjoy every bit of this moment.${from}`;
-    default:
-      return `Thinking of you today, ${first}. Hope your day is as lovely as you are.${from}`;
-  }
+  const known = ["birthday", "anniversary", "exam", "festival", "milestone"];
+  const key = known.includes(params.occasion) ? params.occasion : "thinking_of_you";
+  const age =
+    key === "birthday" && params.turning
+      ? `${translate("family.msg.turning", { age: params.turning })} `
+      : "";
+  return `${translate(`family.msg.${key}`, { name: first, age })}${from}`;
 }
 
 export function greetingShareUrl(params: {

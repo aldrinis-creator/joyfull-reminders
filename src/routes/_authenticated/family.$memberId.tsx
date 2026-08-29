@@ -18,8 +18,10 @@ import { Switch } from "@/components/ui/switch";
 import { GreetingComposer } from "@/components/GreetingComposer";
 import { supabase } from "@/integrations/supabase/client";
 import { isValidPincode } from "@/lib/greetings";
+import { useT } from "@/hooks/useLanguage";
 import {
   SPECIAL_DATE_KINDS,
+  specialDateKindLabel,
   formatDate,
   nextAnniversary,
   relativeDay,
@@ -46,6 +48,7 @@ export const Route = createFileRoute("/_authenticated/family/$memberId")({
 });
 
 function MemberPage() {
+  const t = useT();
   const { memberId } = Route.useParams();
   const queryClient = useQueryClient();
 
@@ -79,19 +82,19 @@ function MemberPage() {
 
   return (
     <AppShell
-      title={member?.full_name ?? "Family member"}
-      subtitle={member?.relationship ?? undefined}
+      title={member?.full_name ?? t("family.memberFallback")}
+      subtitle={member?.relationship ? t(`family.rel.${member.relationship}`) : undefined}
       action={
         <Button asChild variant="secondary" size="lg" className="h-12">
           <Link to="/family">
-            <ArrowLeft className="size-5" aria-hidden /> Back
+            <ArrowLeft className="size-5" aria-hidden /> {t("back")}
           </Link>
         </Button>
       }
     >
       <div className="space-y-4 pb-8">
         <section className="bg-card shadow-card rounded-3xl p-5">
-          <h2 className="text-xl">Special dates</h2>
+          <h2 className="text-xl">{t("family.specialDates")}</h2>
           <ul className="mt-3 space-y-2">
             {(data?.dates ?? []).map((d) => {
               const when = d.recurring ? nextAnniversary(d.event_date) : new Date(d.event_date);
@@ -108,7 +111,7 @@ function MemberPage() {
                     </p>
                     <p className="text-muted-foreground text-sm">
                       {formatDate(when)}
-                      {age ? ` · turning ${age}` : ""}
+                      {age ? ` · ${t("family.turning", { age })}` : ""}
                     </p>
                   </div>
                   <span className="text-sm font-bold">{relativeDay(when)}</span>
@@ -116,7 +119,7 @@ function MemberPage() {
               );
             })}
             {(data?.dates.length ?? 0) === 0 ? (
-              <li className="text-muted-foreground text-sm">No dates yet.</li>
+              <li className="text-muted-foreground text-sm">{t("family.noDatesYet")}</li>
             ) : null}
           </ul>
           <AddDateForm memberId={memberId} memberName={member?.full_name ?? ""} onSaved={refresh} />
@@ -124,14 +127,14 @@ function MemberPage() {
 
         {member ? (
           <section className="bg-card shadow-card rounded-3xl p-5">
-            <h2 className="text-xl">What makes them happy</h2>
+            <h2 className="text-xl">{t("family.happyTitle")}</h2>
             {member.likes.length === 0 && member.music_genres.length === 0 && !member.gift_hints ? (
-              <p className="text-muted-foreground mt-2 text-sm">Nothing noted yet.</p>
+              <p className="text-muted-foreground mt-2 text-sm">{t("family.nothingNoted")}</p>
             ) : null}
             {member.likes.length > 0 ? (
               <div className="mt-3">
                 <p className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
-                  Likes
+                  {t("family.likesLabel")}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {member.likes.map((l) => (
@@ -145,7 +148,7 @@ function MemberPage() {
             {member.music_genres.length > 0 ? (
               <div className="mt-4">
                 <p className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
-                  Music
+                  {t("family.musicLabel")}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {member.music_genres.map((g) => (
@@ -158,7 +161,7 @@ function MemberPage() {
             ) : null}
             {member.gift_hints ? (
               <p className="mt-4 text-base">
-                <span className="font-semibold">Gift hints: </span>
+                <span className="font-semibold">{t("family.giftHintsLabel")} </span>
                 {member.gift_hints}
               </p>
             ) : null}
@@ -169,7 +172,7 @@ function MemberPage() {
                   search={{ pin: member.pincode ?? undefined, for: member.id }}
                 >
                   <Gift className="size-5" aria-hidden />
-                  {member.pincode ? `Find a gift near ${member.pincode}` : "Find a gift"}
+                  {member.pincode ? t("family.findGiftNear", { pincode: member.pincode }) : t("family.findGift")}
                 </Link>
               </Button>
               <Button
@@ -178,7 +181,7 @@ function MemberPage() {
                 className="h-13 w-full text-base"
                 onClick={() => setComposerOpen(true)}
               >
-                <MessageCircleHeart className="size-5" aria-hidden /> Send a greeting
+                <MessageCircleHeart className="size-5" aria-hidden /> {t("family.sendGreeting")}
               </Button>
             </div>
           </section>
@@ -189,7 +192,7 @@ function MemberPage() {
         ) : null}
 
         <section className="bg-card shadow-card rounded-3xl p-5">
-          <h2 className="text-xl">Wishlist</h2>
+          <h2 className="text-xl">{t("family.wishlist")}</h2>
           <ul className="mt-3 space-y-2">
             {(data?.wishes ?? []).map((w) => (
               <li
@@ -201,7 +204,7 @@ function MemberPage() {
                   {w.price_paise ? <span className="text-sm">{rupees(w.price_paise)}</span> : null}
                   <button
                     type="button"
-                    aria-label={`Remove ${w.title}`}
+                    aria-label={t("family.removeWish", { title: w.title })}
                     onClick={async () => {
                       await supabase.from("wishlist_items").delete().eq("id", w.id);
                       void refresh();
@@ -213,7 +216,7 @@ function MemberPage() {
               </li>
             ))}
             {(data?.wishes.length ?? 0) === 0 ? (
-              <li className="text-muted-foreground text-sm">No wishes added yet.</li>
+              <li className="text-muted-foreground text-sm">{t("family.noWishes")}</li>
             ) : null}
           </ul>
           <AddWishForm memberId={memberId} onSaved={refresh} />
@@ -232,6 +235,7 @@ function MemberPage() {
 }
 
 function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: () => void }) {
+  const t = useT();
   const [email, setEmail] = useState(member.email ?? "");
   const [whatsapp, setWhatsapp] = useState(member.whatsapp_phone ?? "");
   const [pincode, setPincode] = useState(member.pincode ?? "");
@@ -241,31 +245,32 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
 
   async function requestPincode() {
     const url = `${window.location.origin}/pincode/${member.id}`;
-    const text = `Hi ${member.full_name.split(" ")[0]}, I'd like to send you something. Could you share your delivery pincode here? ${url}`;
+    const text = t("family.pincodeRequestText", {
+      name: member.full_name.split(" ")[0] ?? member.full_name,
+      url,
+    });
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Share your pincode", text });
+        await navigator.share({ title: t("family.pincodeShareTitle"), text });
         return;
       } catch {
         /* dismissed */
       }
     }
     await navigator.clipboard.writeText(text);
-    toast.success("Request link copied — send it to them.");
+    toast.success(t("family.pincodeCopied"));
   }
 
   return (
     <section className="bg-card shadow-card rounded-3xl p-5">
-      <h2 className="text-xl">Greetings &amp; delivery</h2>
-      <p className="text-muted-foreground text-sm">
-        We only store what's needed to greet them and to find shops close by.
-      </p>
+      <h2 className="text-xl">{t("family.greetingsSection")}</h2>
+      <p className="text-muted-foreground text-sm">{t("family.contactPrivacy")}</p>
       <form
         className="mt-4 space-y-3"
         onSubmit={async (e) => {
           e.preventDefault();
           if (pincode && !isValidPincode(pincode)) {
-            toast.error("Enter a valid 6-digit pincode");
+            toast.error(t("family.errPincode"));
             return;
           }
           setSaving(true);
@@ -281,16 +286,16 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
             .eq("id", member.id);
           setSaving(false);
           if (error) {
-            toast.error("Could not save those details.");
+            toast.error(t("family.errSaveDetails"));
             return;
           }
-          toast.success("Contact details saved");
+          toast.success(t("family.contactSaved"));
           onSaved();
         }}
       >
         <div className="space-y-1">
           <Label htmlFor="c-email" className="text-sm">
-            Email
+            {t("family.email")}
           </Label>
           <Input
             id="c-email"
@@ -303,7 +308,7 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
         </div>
         <div className="space-y-1">
           <Label htmlFor="c-wa" className="text-sm">
-            WhatsApp number
+            {t("family.whatsapp")}
           </Label>
           <Input
             id="c-wa"
@@ -318,7 +323,7 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
         <div className="flex gap-2">
           <div className="flex-1 space-y-1">
             <Label htmlFor="c-pin" className="text-sm">
-              Pincode
+              {t("family.pincode")}
             </Label>
             <Input
               id="c-pin"
@@ -331,7 +336,7 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
           </div>
           <div className="flex-1 space-y-1">
             <Label htmlFor="c-city" className="text-sm">
-              City
+              {t("family.city")}
             </Label>
             <Input
               id="c-city"
@@ -343,15 +348,15 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
           </div>
         </div>
         <label className="flex min-h-11 items-center justify-between gap-3 text-base font-semibold">
-          Allow greetings
+          {t("family.allowGreetingsShort")}
           <Switch checked={enabled} onCheckedChange={setEnabled} />
         </label>
         <div className="flex gap-2">
           <Button type="submit" variant="secondary" className="h-12 flex-1" disabled={saving}>
-            {saving ? "Saving…" : "Save details"}
+            {saving ? t("saving") : t("family.saveDetails")}
           </Button>
           <Button type="button" variant="outline" className="h-12" onClick={requestPincode}>
-            <Share2 className="size-4" aria-hidden /> Ask for pincode
+            <Share2 className="size-4" aria-hidden /> {t("family.askPincode")}
           </Button>
         </div>
       </form>
@@ -368,6 +373,7 @@ function AddDateForm({
   memberName: string;
   onSaved: () => void;
 }) {
+  const t = useT();
   const [kind, setKind] = useState<SpecialDateKind>("anniversary");
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -378,7 +384,7 @@ function AddDateForm({
       onSubmit={async (e) => {
         e.preventDefault();
         if (!date) {
-          toast.error("Pick a date");
+          toast.error(t("reminders.errDate"));
           return;
         }
         const { data: userData } = await supabase.auth.getUser();
@@ -386,7 +392,7 @@ function AddDateForm({
         if (!userId) return;
         const finalTitle =
           title.trim().slice(0, 120) ||
-          `${memberName}'s ${SPECIAL_DATE_KINDS.find((k) => k.value === kind)?.label.toLowerCase()}`;
+          `${memberName}'s ${(SPECIAL_DATE_KINDS.find((k) => k.value === kind)?.label ?? "date").toLowerCase()}`;
         const { error } = await supabase.from("special_dates").insert({
           user_id: userId,
           family_member_id: memberId,
@@ -396,7 +402,7 @@ function AddDateForm({
           recurring: kind !== "exam",
         });
         if (error) {
-          toast.error("Could not save that date.");
+          toast.error(t("family.errSaveDate"));
           return;
         }
         await supabase.from("reminders").insert({
@@ -410,14 +416,14 @@ function AddDateForm({
         });
         setTitle("");
         setDate("");
-        toast.success("Date added");
+        toast.success(t("family.dateAdded"));
         onSaved();
       }}
     >
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-1">
           <Label htmlFor="sd-kind" className="text-sm">
-            Occasion
+            {t("family.occasion")}
           </Label>
           <Select value={kind} onValueChange={(v) => setKind(v as SpecialDateKind)}>
             <SelectTrigger id="sd-kind" className="h-12">
@@ -426,7 +432,7 @@ function AddDateForm({
             <SelectContent>
               {SPECIAL_DATE_KINDS.map((k) => (
                 <SelectItem key={k.value} value={k.value}>
-                  {k.emoji} {k.label}
+                  {k.emoji} {specialDateKindLabel(k.value)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -434,7 +440,7 @@ function AddDateForm({
         </div>
         <div className="space-y-1">
           <Label htmlFor="sd-date" className="text-sm">
-            Date
+            {t("reminders.fieldDate")}
           </Label>
           <Input
             id="sd-date"
@@ -447,21 +453,22 @@ function AddDateForm({
         </div>
       </div>
       <Input
-        aria-label="Title"
+        aria-label={t("family.titleLabel")}
         value={title}
         maxLength={120}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Wedding anniversary (optional)"
+        placeholder={t("family.titlePlaceholder")}
         className="h-12"
       />
       <Button type="submit" variant="secondary" className="h-12 w-full">
-        <Plus className="size-4" aria-hidden /> Add date
+        <Plus className="size-4" aria-hidden /> {t("family.addDate")}
       </Button>
     </form>
   );
 }
 
 function AddWishForm({ memberId, onSaved }: { memberId: string; onSaved: () => void }) {
+  const t = useT();
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
 
@@ -482,7 +489,7 @@ function AddWishForm({ memberId, onSaved }: { memberId: string; onSaved: () => v
           price_paise: price ? Math.round(Number(price) * 100) : null,
         });
         if (error) {
-          toast.error("Could not add that wish.");
+          toast.error(t("family.errAddWish"));
           return;
         }
         setTitle("");
@@ -491,15 +498,15 @@ function AddWishForm({ memberId, onSaved }: { memberId: string; onSaved: () => v
       }}
     >
       <Input
-        aria-label="Wishlist item"
+        aria-label={t("family.wishItem")}
         value={title}
         maxLength={120}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Noise-cancelling headphones"
+        placeholder={t("family.wishPlaceholder")}
         className="h-12 flex-1"
       />
       <Input
-        aria-label="Approximate price in rupees"
+        aria-label={t("family.priceAria")}
         value={price}
         inputMode="numeric"
         maxLength={7}
@@ -508,7 +515,7 @@ function AddWishForm({ memberId, onSaved }: { memberId: string; onSaved: () => v
         className="h-12 w-24"
       />
       <Button type="submit" variant="secondary" className="h-12">
-        Add
+        {t("nav.add")}
       </Button>
     </form>
   );

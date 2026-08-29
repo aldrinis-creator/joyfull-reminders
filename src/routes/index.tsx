@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { BellRing, CalendarHeart, Gift, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useT } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,29 +26,14 @@ export const Route = createFileRoute("/")({
 });
 
 const FEATURES = [
-  {
-    icon: CalendarHeart,
-    title: "Family milestones first",
-    body: "Birthdays, anniversaries, memorials and exam dates for everyone you love — with the age they're turning.",
-  },
-  {
-    icon: BellRing,
-    title: "Alarms you can't sleep through",
-    body: "A full-screen alert with a 60-second chime, snooze options and a one-tap way to act on it.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Every deadline covered",
-    body: "IT returns, FD maturity, insurance, PUC expiry, rent, SIPs, OTT trials and exam forms.",
-  },
-  {
-    icon: Gift,
-    title: "Gifting built in",
-    body: "Order cake, flowers or a hamper from shops near you and track it to the doorstep.",
-  },
-];
+  { icon: CalendarHeart, key: "milestones" },
+  { icon: BellRing, key: "alarms" },
+  { icon: ShieldCheck, key: "deadlines" },
+  { icon: Gift, key: "gifting" },
+] as const;
 
 function Landing() {
+  const t = useT();
   const { session, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -59,24 +45,23 @@ function Landing() {
     <div className="min-h-screen bg-background">
       <section className="gradient-warm rounded-b-[2.5rem] px-6 pt-16 pb-14 text-center">
         <p className="text-primary-foreground/90 text-sm font-bold tracking-widest uppercase">
-          e-Reminder
+          {t("appName")}
         </p>
         <h1 className="text-primary-foreground mx-auto mt-4 max-w-xl text-4xl sm:text-5xl">
-          Never miss a moment that matters.
+          {t("public.heroTitle")}
         </h1>
         <p className="text-primary-foreground/95 mx-auto mt-4 max-w-md text-lg">
-          Birthdays, bills, PUC, tax filings, exam forms — remembered for you, and celebrated with
-          cake and flowers when the day arrives.
+          {t("public.heroBody")}
         </p>
         <div className="mt-8 flex flex-col items-center gap-3">
           <Button asChild size="lg" className="bg-indigo text-indigo-foreground h-14 w-64 text-lg">
-            <Link to="/auth">Create your account</Link>
+            <Link to="/auth">{t("public.createAccount")}</Link>
           </Button>
           <Link
             to="/auth"
             className="text-primary-foreground text-base font-semibold underline underline-offset-4"
           >
-            I already have an account
+            {t("public.haveAccount")}
           </Link>
         </div>
       </section>
@@ -84,17 +69,19 @@ function Landing() {
       <section className="mx-auto max-w-2xl px-5 py-12">
         <div className="grid gap-4 sm:grid-cols-2">
           {FEATURES.map((f) => (
-            <article key={f.title} className="bg-card shadow-card rounded-3xl p-6">
+            <article key={f.key} className="bg-card shadow-card rounded-3xl p-6">
               <f.icon className="text-primary size-8" aria-hidden />
-              <h2 className="mt-3 text-xl">{f.title}</h2>
-              <p className="text-muted-foreground mt-2 text-base">{f.body}</p>
+              <h2 className="mt-3 text-xl">{t(`public.feature.${f.key}.title`)}</h2>
+              <p className="text-muted-foreground mt-2 text-base">
+                {t(`public.feature.${f.key}.body`)}
+              </p>
             </article>
           ))}
         </div>
       </section>
 
       <footer className="text-muted-foreground px-5 pb-12 text-center text-sm">
-        Made for busy families across India.
+        {t("public.footer")}
       </footer>
     </div>
   );

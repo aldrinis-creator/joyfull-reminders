@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CARD_STYLES, OCCASIONS } from "@/lib/greetings";
+import { useT } from "@/hooks/useLanguage";
 
 type Search = {
   to?: string | undefined;
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/greeting")({
 });
 
 function GreetingCardPage() {
+  const t = useT();
   const { to, m, s, o } = Route.useSearch();
   const style = CARD_STYLES.find((c) => c.value === s) ?? CARD_STYLES[0]!;
   const occasion = OCCASIONS.find((x) => x.value === o);
@@ -46,12 +48,13 @@ function GreetingCardPage() {
           {occasion?.emoji ?? style.emoji}
         </p>
         <h1 className="mt-4 text-3xl">
-          {occasion?.label ?? "A greeting"} {to ? `for ${to}` : ""}
+          {occasion ? t(`family.occ.${occasion.value}`) : t("public.aGreeting")}{" "}
+          {to ? t("public.forName", { name: to }) : ""}
         </h1>
         <p className="mt-4 text-lg whitespace-pre-line">
-          {m ?? "Wishing you a wonderful day."}
+          {m ?? t("public.defaultWish")}
         </p>
-        <p className="mt-8 text-sm font-bold opacity-90">Sent with e-Reminder</p>
+        <p className="mt-8 text-sm font-bold opacity-90">{t("public.sentWith")}</p>
       </article>
     </main>
   );

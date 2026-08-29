@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { createCheckoutSession } from "@/lib/payments.functions";
-import { ORDER_STATUS_LABEL, ORDER_STEPS, formatDate, rupees } from "@/lib/ereminder";
+import { ORDER_STEPS, formatDate, orderStatusLabel, rupees } from "@/lib/ereminder";
+import { useT } from "@/hooks/useLanguage";
+import { activeLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/orders/$orderId")({
@@ -41,6 +43,7 @@ const STEP_ICON = {
 } as const;
 
 function OrderPage() {
+  const t = useT();
   const { orderId } = Route.useParams();
   const queryClient = useQueryClient();
   const startCheckout = useServerFn(createCheckoutSession);
@@ -83,11 +86,11 @@ function OrderPage() {
     try {
       const session = await startCheckout({ data: { orderId } });
       if (!session.configured) {
-        toast.error("Payments aren't switched on yet. Add your Razorpay keys to enable checkout.");
+        toast.error(t("market.errPaymentsOff"));
         return;
       }
       if (!window.Razorpay) {
-        toast.error("Checkout is still loading. Try again in a moment.");
+        toast.error(t("market.errCheckoutLoading"));
         return;
       }
       const checkout = new window.Razorpay({
@@ -103,14 +106,14 @@ function OrderPage() {
         },
         theme: { color: "#ff6b57" },
         handler: () => {
-          toast.success("Payment submitted — confirming with the bank…");
+          toast.success(t("market.paySubmitted"));
           void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
         },
       });
       checkout.open();
     } catch (err) {
       console.error(err);
-      toast.error("Could not start the payment. Please try again.");
+      toast.error(t("market.errPayStart"));
     } finally {
       setPaying(false);
     }
@@ -120,12 +123,12 @@ function OrderPage() {
 
   return (
     <AppShell
-      title="Your order"
-      subtitle={order ? ORDER_STATUS_LABEL[order.status] : undefined}
+      title={t("market.yourOrder")}
+      subtitle={order ? orderStatusLabel(order.status) : undefined}
       action={
         <Button asChild variant="secondary" size="lg" className="h-12">
           <Link to="/market">
-            <ArrowLeft className="size-5" aria-hidden /> Shop
+            <ArrowLeft className="size-5" aria-hidden /> {t("market.shop")}
           </Link>
         </Button>
       }
@@ -133,31 +136,31 @@ function OrderPage() {
       {isLoading ? (
         <Skeleton className="h-64 rounded-3xl" />
       ) : !order ? (
-        <p className="bg-card shadow-card rounded-3xl px-6 py-12 text-center">Order not found.</p>
+        <p className="bg-card shadow-card rounded-3xl px-6 py-12 text-center">{t("market.orderNotFound")}</p>
       ) : (
         <div className="space-y-4 pb-8">
           <section className="bg-card shadow-card rounded-3xl p-5">
-            <h2 className="text-xl">{order.vendor_products?.name ?? "Gift"}</h2>
-            <p className="text-muted-foreground text-sm">from {order.vendors?.name}</p>
+            <h2 className="text-xl">{order.vendor_products?.name ?? t("market.gift")}</h2>
+            <p className="text-muted-foreground text-sm">{t("market.fromShop", { name: order.vendors?.name ?? "" })}</p>
             <dl className="mt-4 space-y-2 text-base">
-              <Row label="Amount" value={rupees(order.amount_paise)} />
-              <Row label="For" value={order.recipient_name ?? "—"} />
+              <Row label={t("market.amount")} value={rupees(order.amount_paise)} />
+              <Row label={t("market.for")} value={order.recipient_name ?? "—"} />
               <Row
-                label="Delivery date"
+                label={t("market.deliveryDate")}
                 value={order.delivery_date ? formatDate(order.delivery_date) : "—"}
               />
-              <Row label="Address" value={order.delivery_address ?? "—"} />
-              {order.gift_message ? <Row label="Message" value={order.gift_message} /> : null}
+              <Row label={t("market.address")} value={order.delivery_address ?? "—"} />
+              {order.gift_message ? <Row label={t("market.message")} value={order.gift_message} /> : null}
             </dl>
           </section>
 
           {order.status === "pending_payment" ? (
             <Button size="lg" className="h-15 w-full text-lg" disabled={paying} onClick={pay}>
-              <CreditCard className="size-5" aria-hidden /> Pay {rupees(order.amount_paise)} now
+              <CreditCard className="size-5" aria-hidden /> {t("market.payNow", { amount: rupees(order.amount_paise) })}
             </Button>
           ) : (
             <section className="bg-card shadow-card rounded-3xl p-5">
-              <h2 className="text-xl">Delivery tracking</h2>
+              <h2 className="text-xl">{t("market.tracking")}</h2>
               <ol className="mt-4 space-y-4">
                 {ORDER_STEPS.map((step, i) => {
                   const Icon = STEP_ICON[step as keyof typeof STEP_ICON];
@@ -173,7 +176,7 @@ function OrderPage() {
                         <Icon className="size-5" aria-hidden />
                       </span>
                       <span className={cn("font-semibold", !done && "text-muted-foreground")}>
-                        {ORDER_STATUS_LABEL[step]}
+                        {orderStatusLabel(step)}
                       </span>
                     </li>
                   );
@@ -181,7 +184,7 @@ function OrderPage() {
               </ol>
               {order.status === "delivered" ? (
                 <p className="bg-success/15 text-success mt-5 rounded-2xl px-4 py-3 text-center font-bold">
-                  Delivered. Hope it made them smile!
+                  {t("market.deliveredNote")}
                 </p>
               ) : null}
             </section>
@@ -189,13 +192,13 @@ function OrderPage() {
 
           {(data?.events.length ?? 0) > 0 ? (
             <section className="bg-card shadow-card rounded-3xl p-5">
-              <h2 className="text-xl">Updates</h2>
+              <h2 className="text-xl">{t("market.updates")}</h2>
               <ul className="mt-3 space-y-2">
                 {data!.events.map((e) => (
                   <li key={e.id} className="bg-muted rounded-2xl px-4 py-3">
-                    <p className="font-semibold">{ORDER_STATUS_LABEL[e.status]}</p>
+                    <p className="font-semibold">{orderStatusLabel(e.status)}</p>
                     <p className="text-muted-foreground text-sm">
-                      {e.note ?? ""} · {new Date(e.created_at).toLocaleString("en-IN")}
+                      {e.note ?? ""} · {new Date(e.created_at).toLocaleString(activeLocale())}
                     </p>
                   </li>
                 ))}
