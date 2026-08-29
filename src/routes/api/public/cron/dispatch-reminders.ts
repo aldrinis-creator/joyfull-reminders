@@ -165,8 +165,12 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           try {
             const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
             const candidate = authUser.user?.email ?? null;
-            // Phone-only accounts get an internal shadow email — never mail those.
-            email = candidate && !candidate.endsWith(".phone.ereminder.internal") ? candidate : null;
+            // Phone-only accounts get an internal shadow email (see shadowEmail()
+            // in src/lib/otp.server.ts) — never mail those.
+            email =
+              candidate && !candidate.toLowerCase().endsWith("@phone.ereminder.app")
+                ? candidate
+                : null;
           } catch {
             email = null;
           }
