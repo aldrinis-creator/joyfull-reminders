@@ -16,6 +16,7 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedFamilyIndexRouteImport } from './routes/_authenticated/family.index'
 import { Route as AuthenticatedFamilyMemberIdRouteImport } from './routes/_authenticated/family.$memberId'
 import { Route as AuthenticatedMarketIndexRouteImport } from './routes/_authenticated/market.index'
+import { Route as AuthenticatedMarketVendorIdRouteImport } from './routes/_authenticated/market.$vendorId'
 import { Route as AuthenticatedRemindersNewRouteImport } from './routes/_authenticated/reminders.new'
 
 const IndexRoute = IndexRouteImport.update({
@@ -55,6 +56,12 @@ const AuthenticatedMarketIndexRoute =
     path: '/market/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketVendorIdRoute =
+  AuthenticatedMarketVendorIdRouteImport.update({
+    id: '/market/$vendorId',
+    path: '/market/$vendorId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRemindersNewRoute =
   AuthenticatedRemindersNewRouteImport.update({
     id: '/reminders/new',
@@ -67,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/home': typeof AuthenticatedHomeRoute
   '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
+  '/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family/': typeof AuthenticatedFamilyIndexRoute
   '/market/': typeof AuthenticatedMarketIndexRoute
@@ -76,6 +84,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/home': typeof AuthenticatedHomeRoute
   '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
+  '/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family': typeof AuthenticatedFamilyIndexRoute
   '/market': typeof AuthenticatedMarketIndexRoute
@@ -87,6 +96,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
+  '/_authenticated/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
   '/_authenticated/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/_authenticated/family/': typeof AuthenticatedFamilyIndexRoute
   '/_authenticated/market/': typeof AuthenticatedMarketIndexRoute
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/home'
     | '/family/$memberId'
+    | '/market/$vendorId'
     | '/reminders/new'
     | '/family/'
     | '/market/'
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/home'
     | '/family/$memberId'
+    | '/market/$vendorId'
     | '/reminders/new'
     | '/family'
     | '/market'
@@ -117,6 +129,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/home'
     | '/_authenticated/family/$memberId'
+    | '/_authenticated/market/$vendorId'
     | '/_authenticated/reminders/new'
     | '/_authenticated/family/'
     | '/_authenticated/market/'
@@ -179,6 +192,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/market/$vendorId': {
+      id: '/_authenticated/market/$vendorId'
+      path: '/market/$vendorId'
+      fullPath: '/market/$vendorId'
+      preLoaderRoute: typeof AuthenticatedMarketVendorIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/reminders/new': {
       id: '/_authenticated/reminders/new'
       path: '/reminders/new'
@@ -192,6 +212,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedFamilyMemberIdRoute: typeof AuthenticatedFamilyMemberIdRoute
+  AuthenticatedMarketVendorIdRoute: typeof AuthenticatedMarketVendorIdRoute
   AuthenticatedRemindersNewRoute: typeof AuthenticatedRemindersNewRoute
   AuthenticatedFamilyIndexRoute: typeof AuthenticatedFamilyIndexRoute
   AuthenticatedMarketIndexRoute: typeof AuthenticatedMarketIndexRoute
@@ -200,6 +221,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedFamilyMemberIdRoute: AuthenticatedFamilyMemberIdRoute,
+  AuthenticatedMarketVendorIdRoute: AuthenticatedMarketVendorIdRoute,
   AuthenticatedRemindersNewRoute: AuthenticatedRemindersNewRoute,
   AuthenticatedFamilyIndexRoute: AuthenticatedFamilyIndexRoute,
   AuthenticatedMarketIndexRoute: AuthenticatedMarketIndexRoute,
