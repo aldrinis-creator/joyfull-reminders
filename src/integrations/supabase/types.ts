@@ -53,49 +53,136 @@ export type Database = {
         Row: {
           birth_date: string | null
           birth_year: number | null
+          city: string | null
           created_at: string
+          email: string | null
           full_name: string
           gift_hints: string | null
+          greetings_enabled: boolean
           id: string
           likes: string[]
           music_genres: string[]
           notes: string | null
           photo_url: string | null
+          pincode: string | null
           relationship: string
           updated_at: string
           user_id: string
+          whatsapp_phone: string | null
         }
         Insert: {
           birth_date?: string | null
           birth_year?: number | null
+          city?: string | null
           created_at?: string
+          email?: string | null
           full_name: string
           gift_hints?: string | null
+          greetings_enabled?: boolean
           id?: string
           likes?: string[]
           music_genres?: string[]
           notes?: string | null
           photo_url?: string | null
+          pincode?: string | null
           relationship?: string
           updated_at?: string
           user_id: string
+          whatsapp_phone?: string | null
         }
         Update: {
           birth_date?: string | null
           birth_year?: number | null
+          city?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string
           gift_hints?: string | null
+          greetings_enabled?: boolean
           id?: string
           likes?: string[]
           music_genres?: string[]
           notes?: string | null
           photo_url?: string | null
+          pincode?: string | null
           relationship?: string
           updated_at?: string
           user_id?: string
+          whatsapp_phone?: string | null
         }
         Relationships: []
+      }
+      greetings: {
+        Row: {
+          card_style: string
+          channel: Database["public"]["Enums"]["greeting_channel"]
+          created_at: string
+          error_message: string | null
+          family_member_id: string | null
+          id: string
+          message: string
+          occasion: string
+          occasion_key: string
+          provider_message_id: string | null
+          recipient: string | null
+          reminder_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["greeting_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_style?: string
+          channel?: Database["public"]["Enums"]["greeting_channel"]
+          created_at?: string
+          error_message?: string | null
+          family_member_id?: string | null
+          id?: string
+          message: string
+          occasion?: string
+          occasion_key: string
+          provider_message_id?: string | null
+          recipient?: string | null
+          reminder_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["greeting_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_style?: string
+          channel?: Database["public"]["Enums"]["greeting_channel"]
+          created_at?: string
+          error_message?: string | null
+          family_member_id?: string | null
+          id?: string
+          message?: string
+          occasion?: string
+          occasion_key?: string
+          provider_message_id?: string | null
+          recipient?: string | null
+          reminder_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["greeting_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "greetings_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "greetings_reminder_id_fkey"
+            columns: ["reminder_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_events: {
         Row: {
@@ -261,6 +348,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pincodes: {
+        Row: {
+          city: string
+          code: string
+          created_at: string
+          latitude: number
+          longitude: number
+          state: string
+        }
+        Insert: {
+          city: string
+          code: string
+          created_at?: string
+          latitude: number
+          longitude: number
+          state: string
+        }
+        Update: {
+          city?: string
+          code?: string
+          created_at?: string
+          latitude?: number
+          longitude?: number
+          state?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -606,8 +720,10 @@ export type Database = {
           name: string
           owner_id: string | null
           phone: string | null
+          pincode: string | null
           rating: number
           service_radius_km: number
+          serviceable_pincodes: string[]
           ships_all_india: boolean
           updated_at: string
         }
@@ -626,8 +742,10 @@ export type Database = {
           name: string
           owner_id?: string | null
           phone?: string | null
+          pincode?: string | null
           rating?: number
           service_radius_km?: number
+          serviceable_pincodes?: string[]
           ships_all_india?: boolean
           updated_at?: string
         }
@@ -646,8 +764,10 @@ export type Database = {
           name?: string
           owner_id?: string | null
           phone?: string | null
+          pincode?: string | null
           rating?: number
           service_radius_km?: number
+          serviceable_pincodes?: string[]
           ships_all_india?: boolean
           updated_at?: string
         }
@@ -712,6 +832,8 @@ export type Database = {
     }
     Enums: {
       app_role: "user" | "vendor" | "admin"
+      greeting_channel: "email" | "whatsapp" | "share"
+      greeting_status: "draft" | "sent" | "failed" | "skipped"
       occurrence_status:
         | "pending"
         | "snoozed"
@@ -880,6 +1002,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["user", "vendor", "admin"],
+      greeting_channel: ["email", "whatsapp", "share"],
+      greeting_status: ["draft", "sent", "failed", "skipped"],
       occurrence_status: [
         "pending",
         "snoozed",
