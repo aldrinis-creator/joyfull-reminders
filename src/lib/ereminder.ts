@@ -1,4 +1,6 @@
 import type { Database } from "@/integrations/supabase/types";
+import { activeLocale, translate } from "@/lib/i18n";
+
 
 export type ReminderCategory = Database["public"]["Enums"]["reminder_category"];
 export type RecurrenceKind = Database["public"]["Enums"]["recurrence_kind"];
