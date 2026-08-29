@@ -7,7 +7,7 @@ export const Route = createFileRoute("/paytest")({ component: PayTest });
 const demo = {
   id: "demo",
   title: "Electricity bill",
-  category: "household_utilities",
+  category: "household",
   description: "BESCOM",
   due_at: new Date().toISOString(),
   completed: false,
