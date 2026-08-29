@@ -33,6 +33,7 @@ import {
 } from "@/lib/greetings";
 import type { FamilyMember } from "@/lib/ereminder";
 import { cn } from "@/lib/utils";
+import { useT } from "@/hooks/useLanguage";
 
 export function GreetingComposer({
   member,
@@ -49,6 +50,7 @@ export function GreetingComposer({
   reminderId?: string | null;
   senderName?: string | null | undefined;
 }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const send = useServerFn(sendGreeting);
 
@@ -96,7 +98,7 @@ export function GreetingComposer({
       });
       if (result.ok) {
         toast.success(
-          channel === "share" ? "Greeting saved — share it now." : "Greeting sent. Lovely.",
+          channel === "share" ? t("family.greetSavedShare") : t("family.greetSent"),
         );
         queryClient.invalidateQueries({ queryKey: ["greetings"] });
         if (channel === "share") {
@@ -110,7 +112,7 @@ export function GreetingComposer({
         }
       }
     } catch {
-      toast.error("Could not send that greeting.");
+      toast.error(t("family.greetFailed"));
     } finally {
       setBusy(false);
     }
@@ -120,26 +122,26 @@ export function GreetingComposer({
     const text = `${message}\n\n${shareUrl}`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: `A greeting for ${member.full_name}`, text });
+        await navigator.share({ title: t("family.greetShareTitle", { name: member.full_name }), text });
         return;
       } catch {
         /* user dismissed */
       }
     }
     await navigator.clipboard.writeText(text);
-    toast.success("Greeting copied — paste it anywhere.");
+    toast.success(t("family.greetCopied"));
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Send a greeting to {member.full_name}</DialogTitle>
+          <DialogTitle className="text-2xl">{t("family.greetTitle", { name: member.full_name })}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="g-occasion">Occasion</Label>
+            <Label htmlFor="g-occasion">{t("family.occasion")}</Label>
             <Select value={occasion} onValueChange={regenerate}>
               <SelectTrigger id="g-occasion" className="h-12">
                 <SelectValue />
@@ -147,7 +149,7 @@ export function GreetingComposer({
               <SelectContent>
                 {OCCASIONS.map((o) => (
                   <SelectItem key={o.value} value={o.value}>
-                    {o.emoji} {o.label}
+                    {o.emoji} {t(`family.occ.${o.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -155,7 +157,7 @@ export function GreetingComposer({
           </div>
 
           <div className="space-y-2">
-            <Label>Card style</Label>
+            <Label>{t("family.cardStyle")}</Label>
             <div className="flex flex-wrap gap-2">
               {CARD_STYLES.map((s) => (
                 <button
@@ -171,7 +173,7 @@ export function GreetingComposer({
                   )}
                   style={style === s.value ? { backgroundImage: s.gradient } : undefined}
                 >
-                  {s.emoji} {s.label}
+                  {s.emoji} {t(`family.style.${s.value}`)}
                 </button>
               ))}
             </div>
@@ -182,13 +184,13 @@ export function GreetingComposer({
             style={{ backgroundImage: styleMeta.gradient }}
           >
             <p className="text-sm font-bold tracking-wide uppercase opacity-90">
-              {OCCASIONS.find((o) => o.value === occasion)?.label}
+              {t(`family.occ.${occasion}`)}
             </p>
             <p className="mt-2 text-lg whitespace-pre-line">{message}</p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="g-message">Your message</Label>
+            <Label htmlFor="g-message">{t("family.yourMessage")}</Label>
             <Textarea
               id="g-message"
               rows={5}
@@ -202,12 +204,12 @@ export function GreetingComposer({
               className="h-11"
               onClick={() => regenerate(occasion)}
             >
-              <Sparkles className="size-4" aria-hidden /> Rewrite for me
+              <Sparkles className="size-4" aria-hidden /> {t("family.rewrite")}
             </Button>
           </div>
 
           <div className="space-y-2">
-            <Label>Send by</Label>
+            <Label>{t("family.sendBy")}</Label>
             <div className="flex flex-wrap gap-2">
               {CHANNELS.map((c) => {
                 const disabled =
@@ -227,13 +229,13 @@ export function GreetingComposer({
                         : "bg-muted text-foreground",
                     )}
                   >
-                    {c.label}
+                    {t(`family.channel.${c.value}`)}
                   </button>
                 );
               })}
             </div>
             <p className="text-muted-foreground text-sm">
-              {CHANNELS.find((c) => c.value === channel)?.hint}
+              {t(`family.channelHint.${channel}`)}
             </p>
           </div>
         </div>
@@ -245,10 +247,10 @@ export function GreetingComposer({
             ) : (
               <Copy className="size-5" aria-hidden />
             )}
-            Share myself
+            {t("family.channel.share")}
           </Button>
           <Button className="h-13 flex-1 text-base" disabled={busy} onClick={handleSend}>
-            <Send className="size-5" aria-hidden /> {busy ? "Sending…" : "Send greeting"}
+            <Send className="size-5" aria-hidden /> {busy ? t("family.sending") : t("home.sendGreeting")}
           </Button>
         </DialogFooter>
       </DialogContent>
