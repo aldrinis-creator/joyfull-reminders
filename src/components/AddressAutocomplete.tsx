@@ -42,6 +42,7 @@ export function AddressAutocomplete({
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
   const sessionToken = useRef(newSessionToken());
   const skipNext = useRef(false);
 
@@ -61,11 +62,15 @@ export function AddressAutocomplete({
       void search({ data: { query: q, sessionToken: sessionToken.current } })
         .then((res) => {
           if (cancelled) return;
+          setUnavailable(Boolean(res.unavailable));
           setSuggestions(res.suggestions);
           setOpen(res.suggestions.length > 0);
         })
         .catch(() => {
-          if (!cancelled) setSuggestions([]);
+          if (!cancelled) {
+            setSuggestions([]);
+            setUnavailable(true);
+          }
         })
         .finally(() => {
           if (!cancelled) setBusy(false);
@@ -157,7 +162,13 @@ export function AddressAutocomplete({
           </ul>
         ) : null}
       </div>
-      {hint ? <p className="text-muted-foreground text-xs">{hint}</p> : null}
+      {unavailable ? (
+        <p className="text-muted-foreground text-xs">
+          Address suggestions are unavailable right now — please type the address manually.
+        </p>
+      ) : hint ? (
+        <p className="text-muted-foreground text-xs">{hint}</p>
+      ) : null}
     </div>
   );
 }
