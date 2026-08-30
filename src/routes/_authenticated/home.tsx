@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Flame, PartyPopper } from "lucide-react";
+import { Plus, Flame, PartyPopper, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { AlarmOverlay } from "@/components/AlarmOverlay";
@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useFamilyMembers, useProfile, useReminders, useStreak } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
+import { fetchActiveSnoozes, readSnoozes, recordSnooze, snoozeLocally } from "@/lib/snooze";
 import {
   bucketLabel,
   advanceOccurrence,
@@ -47,6 +48,35 @@ function HomePage() {
   const t = useT();
   const queryClient = useQueryClient();
   const [snoozedIds, setSnoozedIds] = useState<Record<string, number>>({});
+  const [showLater, setShowLater] = useState(false);
+
+  // Snoozes persist across reloads: hydrate from localStorage, then the server.
+  useEffect(() => {
+    setSnoozedIds((prev) => ({ ...readSnoozes(), ...prev }));
+    void fetchActiveSnoozes().then((remote) =>
+      setSnoozedIds((prev) => {
+        const next = { ...prev };
+        for (const [id, until] of Object.entries(remote)) {
+          if (until > (next[id] ?? 0)) next[id] = until;
+        }
+        return next;
+      }),
+    );
+  }, []);
+
+  const remove = useMutation({
+    mutationFn: async (reminder: Reminder) => {
+      await supabase.from("reminder_alerts").delete().eq("reminder_id", reminder.id);
+      await supabase.from("reminder_occurrences").delete().eq("reminder_id", reminder.id);
+      const { error } = await supabase.from("reminders").delete().eq("id", reminder.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(t("home.deleted"));
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
+    onError: () => toast.error(t("home.deleteFailed")),
+  });
 
   const complete = useMutation({
     mutationFn: async (reminder: Reminder) => {
@@ -131,6 +161,18 @@ function HomePage() {
     [reminders],
   );
 
+  const now0 = new Date();
+  const monthEnd = new Date(now0.getFullYear(), now0.getMonth() + 1, 1).getTime();
+
+  const thisMonth = useMemo(
+    () => active.filter(({ occurrence }) => occurrence.getTime() < monthEnd),
+    [active, monthEnd],
+  );
+  const later = useMemo(
+    () => active.filter(({ occurrence }) => occurrence.getTime() >= monthEnd),
+    [active, monthEnd],
+  );
+
   const grouped = useMemo(() => {
     const map: Record<UrgencyBucket, typeof active> = {
       overdue: [],
@@ -138,9 +180,9 @@ function HomePage() {
       week: [],
       later: [],
     };
-    active.forEach((item) => map[bucketFor(item.occurrence)].push(item));
+    thisMonth.forEach((item) => map[bucketFor(item.occurrence)].push(item));
     return map;
-  }, [active]);
+  }, [thisMonth]);
 
   const now = Date.now();
   const dueAlarm = active.find(
@@ -157,10 +199,10 @@ function HomePage() {
       <AppShell
         title={firstName ? t("home.greeting", { name: firstName }) : t("home.title")}
         subtitle={
-          active.length === 1
+          thisMonth.length === 1
             ? t("home.subtitleOne")
-            : active.length
-              ? t("home.subtitleMany", { count: active.length })
+            : thisMonth.length
+              ? t("home.subtitleMany", { count: thisMonth.length })
               : t("home.subtitleEmpty")
         }
         action={
@@ -210,11 +252,52 @@ function HomePage() {
                           : undefined
                       }
                       onComplete={(r) => complete.mutate(r)}
+                      onDelete={(r) => remove.mutate(r)}
                     />
                   ))}
                 </div>
               </section>
             ))}
+
+            {later.length ? (
+              <section>
+                <button
+                  type="button"
+                  onClick={() => setShowLater((v) => !v)}
+                  aria-expanded={showLater}
+                  className="bg-card shadow-card flex min-h-13 w-full items-center justify-between rounded-3xl px-5 py-4 text-left font-semibold"
+                >
+                  {t("home.laterSection", { count: later.length })}
+                  <ChevronDown
+                    className={`size-5 transition-transform ${showLater ? "rotate-180" : ""}`}
+                    aria-hidden
+                  />
+                </button>
+                {showLater ? (
+                  <div className="mt-3 space-y-3">
+                    {later.map(({ reminder, occurrence }) => (
+                      <ReminderCard
+                        key={reminder.id}
+                        reminder={reminder}
+                        occurrence={occurrence}
+                        memberName={
+                          reminder.family_member_id
+                            ? memberName.get(reminder.family_member_id)
+                            : undefined
+                        }
+                        member={
+                          reminder.family_member_id
+                            ? (members ?? []).find((m) => m.id === reminder.family_member_id)
+                            : undefined
+                        }
+                        onComplete={(r) => complete.mutate(r)}
+                        onDelete={(r) => remove.mutate(r)}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
           </div>
         )}
       </AppShell>
@@ -223,12 +306,10 @@ function HomePage() {
         <AlarmOverlay
           reminder={dueAlarm.reminder}
           onDismiss={() => complete.mutate(dueAlarm.reminder)}
-          onSnooze={(minutes) =>
-            setSnoozedIds((prev) => ({
-              ...prev,
-              [dueAlarm.reminder.id]: Date.now() + minutes * 60_000,
-            }))
-          }
+          onSnooze={(minutes) => {
+            setSnoozedIds(snoozeLocally(dueAlarm.reminder.id, minutes));
+            void recordSnooze(dueAlarm.reminder.id, dueAlarm.occurrence, minutes);
+          }}
         />
       ) : null}
     </>

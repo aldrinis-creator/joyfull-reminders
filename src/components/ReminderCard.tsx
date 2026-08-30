@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { CalendarPlus, Check, Gift, MessageCircleHeart } from "lucide-react";
+import { CalendarPlus, Check, Gift, MessageCircleHeart, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { GreetingComposer } from "@/components/GreetingComposer";
 import { PayNowButtons } from "@/components/PayNowButtons";
 import { cn } from "@/lib/utils";
@@ -22,12 +32,14 @@ export function ReminderCard({
   reminder,
   occurrence,
   onComplete,
+  onDelete,
   memberName,
   member,
 }: {
   reminder: Reminder;
   occurrence: Date;
   onComplete?: ((r: Reminder) => void) | undefined;
+  onDelete?: ((r: Reminder) => void) | undefined;
   memberName?: string | undefined;
   member?: FamilyMember | undefined;
 }) {
@@ -35,6 +47,7 @@ export function ReminderCard({
   const meta = categoryMeta(reminder.category);
   const isGiftable = reminder.category === "personal_family";
   const [composerOpen, setComposerOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const occasion = /anniversar/i.test(reminder.title)
     ? "anniversary"
     : /exam/i.test(reminder.title)
@@ -117,6 +130,22 @@ export function ReminderCard({
           <CalendarPlus className="size-4" aria-hidden /> {t("home.addToCalendar")}
         </Button>
 
+        <Button asChild size="sm" variant="outline" className="h-11">
+          <Link to="/reminders/$reminderId/edit" params={{ reminderId: reminder.id }}>
+            <Pencil className="size-4" aria-hidden /> {t("home.edit")}
+          </Link>
+        </Button>
+        {onDelete ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-destructive h-11"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <Trash2 className="size-4" aria-hidden /> {t("home.delete")}
+          </Button>
+        ) : null}
+
         {isGiftable ? (
           <Button asChild size="sm" variant="outline" className="h-11">
             <Link
@@ -128,6 +157,23 @@ export function ReminderCard({
           </Button>
         ) : null}
       </div>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("home.deleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("home.deleteBody", { title: reminder.title })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => onDelete?.(reminder)}>
+              {t("home.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {member ? (
         <GreetingComposer
