@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Store } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { isValidUpiId } from "@/lib/pay-link";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,13 @@ function VendorPortal() {
             vendorId={data.shop.id}
             pincode={data.shop.pincode ?? ""}
             pins={data.shop.serviceable_pincodes}
+            onSaved={refresh}
+          />
+
+          <PaymentSection
+            vendorId={data.shop.id}
+            upiId={data.shop.upi_id ?? ""}
+            payeeName={data.shop.upi_payee_name ?? ""}
             onSaved={refresh}
           />
 
@@ -244,6 +252,82 @@ function CoverageSection({
         </div>
         <Button type="submit" variant="secondary" className="h-12 w-full" disabled={saving}>
           {saving ? t("saving") : t("market.saveCoverage")}
+        </Button>
+      </form>
+    </section>
+  );
+}
+
+function PaymentSection({
+  vendorId,
+  upiId,
+  payeeName,
+  onSaved,
+}: {
+  vendorId: string;
+  upiId: string;
+  payeeName: string;
+  onSaved: () => void;
+}) {
+  const t = useT();
+  const [upi, setUpi] = useState(upiId);
+  const [name, setName] = useState(payeeName);
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <section className="bg-card shadow-card rounded-3xl p-5">
+      <h2 className="text-xl">{t("market.upiSection")}</h2>
+      <p className="text-muted-foreground text-sm">{t("market.upiHint")}</p>
+      <form
+        className="mt-4 space-y-3"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const value = upi.trim();
+          if (value && !isValidUpiId(value)) {
+            toast.error(t("market.errUpiId"));
+            return;
+          }
+          setSaving(true);
+          const { error } = await supabase
+            .from("vendors")
+            .update({ upi_id: value || null, upi_payee_name: name.trim() || null })
+            .eq("id", vendorId);
+          setSaving(false);
+          if (error) {
+            toast.error(t("market.errUpiSave"));
+            return;
+          }
+          toast.success(t("saved"));
+          onSaved();
+        }}
+      >
+        <div className="space-y-1">
+          <Label htmlFor="v-upi" className="text-sm">
+            {t("market.upiId")}
+          </Label>
+          <Input
+            id="v-upi"
+            value={upi}
+            maxLength={80}
+            onChange={(e) => setUpi(e.target.value)}
+            placeholder="shopname@okicici"
+            className="h-12"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="v-upi-name" className="text-sm">
+            {t("market.upiPayeeName")}
+          </Label>
+          <Input
+            id="v-upi-name"
+            value={name}
+            maxLength={80}
+            onChange={(e) => setName(e.target.value)}
+            className="h-12"
+          />
+        </div>
+        <Button type="submit" variant="secondary" className="h-12 w-full" disabled={saving}>
+          {saving ? t("saving") : t("save")}
         </Button>
       </form>
     </section>
