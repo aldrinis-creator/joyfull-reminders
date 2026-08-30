@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -210,10 +211,11 @@ function AddMemberDialog() {
           <Plus className="size-5" aria-hidden /> {t("nav.add")}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-2xl">{t("family.addTitle")}</DialogTitle>
         </DialogHeader>
+        <DialogBody className="space-y-4">
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="m-name">{t("family.fullName")}</Label>
@@ -347,6 +349,7 @@ function AddMemberDialog() {
             </label>
           </div>
         </div>
+        </DialogBody>
         <DialogFooter>
           <Button
             size="lg"
