@@ -1,0 +1,414 @@
+import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useFamilyMembers } from "@/lib/queries";
+import { useT } from "@/hooks/useLanguage";
+import { isValidUpiId, safePaymentUrl } from "@/lib/pay-link";
+
+import {
+  ALERT_PRESETS,
+  CATEGORIES,
+  RECURRENCES,
+  alertPresetLabel,
+  categoryLabel,
+  recurrenceLabel,
+  type RecurrenceKind,
+  type Reminder,
+  type ReminderCategory,
+} from "@/lib/ereminder";
+
+const schema = z.object({
+  title: z.string().trim().min(1, "reminders.errTitle").max(120),
+  description: z.string().trim().max(1000).optional(),
+  dueDate: z.string().min(1, "reminders.errDate"),
+  dueTime: z.string().min(1, "reminders.errTime"),
+  birthYear: z.string().trim().max(4).optional(),
+});
+
+/** Local date/time parts for the two inputs (never UTC — see the streak fix). */
+function localParts(iso: string): { date: string; time: string } {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  };
+}
+
+/**
+ * One form for both creating and editing a reminder. When `existing` is set we
+ * update that row (and replace its alert rows) instead of inserting.
+ */
+export function ReminderForm({
+  existing,
+  existingAlerts,
+}: {
+  existing?: Reminder | undefined;
+  existingAlerts?: number[] | undefined;
+}) {
+  const t = useT();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { data: members } = useFamilyMembers();
+
+  const initial = existing ? localParts(existing.due_at) : null;
+
+  const [title, setTitle] = useState(existing?.title ?? "");
+  const [category, setCategory] = useState<ReminderCategory>(
+    existing?.category ?? "personal_family",
+  );
+  const [description, setDescription] = useState(existing?.description ?? "");
+  const [dueDate, setDueDate] = useState(initial?.date ?? new Date().toISOString().slice(0, 10));
+  const [dueTime, setDueTime] = useState(initial?.time ?? "09:00");
+  const [recurrence, setRecurrence] = useState<RecurrenceKind>(existing?.recurrence ?? "once");
+  const [intervalDays, setIntervalDays] = useState(
+    existing?.recurrence_interval_days ? String(existing.recurrence_interval_days) : "30",
+  );
+  const [birthYear, setBirthYear] = useState(existing?.birth_year ? String(existing.birth_year) : "");
+  const [memberId, setMemberId] = useState<string>(existing?.family_member_id ?? "none");
+  const [highPriority, setHighPriority] = useState((existing?.priority ?? "high") === "high");
+  const [alerts, setAlerts] = useState<number[]>(existingAlerts ?? [1440, 0]);
+  const [paymentUrl, setPaymentUrl] = useState(existing?.payment_url ?? "");
+  const [upiId, setUpiId] = useState(existing?.upi_id ?? "");
+  const [upiPayee, setUpiPayee] = useState(existing?.upi_payee_name ?? "");
+  const [payAmount, setPayAmount] = useState(
+    existing?.payment_amount != null ? String(existing.payment_amount) : "",
+  );
+  const [saving, setSaving] = useState(false);
+
+  const toggleAlert = (minutes: number) =>
+    setAlerts((prev) =>
+      prev.includes(minutes) ? prev.filter((m) => m !== minutes) : [...prev, minutes],
+    );
+
+  return (
+    <form
+      className="space-y-5 pb-8"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const parsed = schema.safeParse({ title, description, dueDate, dueTime, birthYear });
+        if (!parsed.success) {
+          toast.error(t(parsed.error.issues[0]?.message ?? "reminders.errForm"));
+          return;
+        }
+        const dueAt = new Date(`${dueDate}T${dueTime}`);
+        if (Number.isNaN(dueAt.getTime())) {
+          toast.error(t("reminders.errInvalidDate"));
+          return;
+        }
+        const trimmedUrl = paymentUrl.trim();
+        const normalizedUrl = trimmedUrl ? safePaymentUrl(trimmedUrl) : null;
+        if (trimmedUrl && !normalizedUrl) {
+          toast.error(t("reminders.errPaymentUrl"));
+          return;
+        }
+        const trimmedUpi = upiId.trim();
+        if (trimmedUpi && !isValidUpiId(trimmedUpi)) {
+          toast.error(t("reminders.errUpiId"));
+          return;
+        }
+        setSaving(true);
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id;
+        if (!userId) {
+          setSaving(false);
+          toast.error(t("reminders.errSignIn"));
+          return;
+        }
+
+        const payload = {
+          title: parsed.data.title,
+          category,
+          description: parsed.data.description || null,
+          due_at: dueAt.toISOString(),
+          recurrence,
+          recurrence_interval_days:
+            recurrence === "custom" ? Math.max(1, Number(intervalDays) || 30) : null,
+          birth_year: birthYear ? Number(birthYear) : null,
+          family_member_id: memberId === "none" ? null : memberId,
+          priority: highPriority ? ("high" as const) : ("normal" as const),
+          payment_url: normalizedUrl,
+          upi_id: trimmedUpi || null,
+          upi_payee_name: upiPayee.trim() || null,
+          payment_amount: payAmount.trim() ? Number(payAmount) || null : null,
+        };
+
+        let reminderId = existing?.id ?? "";
+
+        if (existing) {
+          const { error } = await supabase.from("reminders").update(payload).eq("id", existing.id);
+          if (error) {
+            setSaving(false);
+            toast.error(t("reminders.errSave"));
+            return;
+          }
+          await supabase.from("reminder_alerts").delete().eq("reminder_id", existing.id);
+        } else {
+          const { data: created, error } = await supabase
+            .from("reminders")
+            .insert({ user_id: userId, ...payload })
+            .select("id")
+            .single();
+          if (error || !created) {
+            setSaving(false);
+            toast.error(t("reminders.errSave"));
+            return;
+          }
+          reminderId = created.id;
+        }
+
+        if (alerts.length) {
+          await supabase.from("reminder_alerts").insert(
+            alerts.map((offset) => ({
+              user_id: userId,
+              reminder_id: reminderId,
+              offset_minutes: offset,
+              label: ALERT_PRESETS.find((a) => a.minutes === offset)?.label ?? null,
+            })),
+          );
+        }
+
+        setSaving(false);
+        void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+        void queryClient.invalidateQueries({ queryKey: ["reminder", reminderId] });
+        toast.success(existing ? t("reminders.updated") : t("reminders.saved"));
+        navigate({ to: "/home" });
+      }}
+    >
+      <Field label={t("reminders.fieldTitle")} htmlFor="title">
+        <Input
+          id="title"
+          value={title}
+          maxLength={120}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder={t("reminders.titlePlaceholder")}
+          className="h-13 text-lg"
+        />
+      </Field>
+
+      <Field label={t("reminders.fieldCategory")} htmlFor="category">
+        <Select value={category} onValueChange={(v) => setCategory(v as ReminderCategory)}>
+          <SelectTrigger id="category" className="h-13 text-base">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CATEGORIES.map((c) => (
+              <SelectItem key={c.value} value={c.value}>
+                {c.emoji} {categoryLabel(c.value)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <Field label={t("reminders.fieldDate")} htmlFor="date">
+          <Input
+            id="date"
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            className="h-13 w-full min-w-0 text-base"
+          />
+        </Field>
+        <Field label={t("reminders.fieldTime")} htmlFor="time">
+          <Input
+            id="time"
+            type="time"
+            value={dueTime}
+            onChange={(e) => setDueTime(e.target.value)}
+            className="h-13 w-full min-w-0 text-base"
+          />
+        </Field>
+      </div>
+
+      <Field label={t("reminders.fieldRepeats")} htmlFor="recurrence">
+        <Select value={recurrence} onValueChange={(v) => setRecurrence(v as RecurrenceKind)}>
+          <SelectTrigger id="recurrence" className="h-13 text-base">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {RECURRENCES.map((r) => (
+              <SelectItem key={r.value} value={r.value}>
+                {recurrenceLabel(r.value)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+
+      {recurrence === "custom" ? (
+        <Field label={t("reminders.fieldInterval")} htmlFor="interval">
+          <Input
+            id="interval"
+            inputMode="numeric"
+            value={intervalDays}
+            onChange={(e) => setIntervalDays(e.target.value)}
+            className="h-13 text-base"
+          />
+        </Field>
+      ) : null}
+
+      <Field label={t("reminders.fieldBirthYear")} htmlFor="birthYear">
+        <Input
+          id="birthYear"
+          inputMode="numeric"
+          maxLength={4}
+          value={birthYear}
+          onChange={(e) => setBirthYear(e.target.value.replace(/\D/g, ""))}
+          placeholder="1968"
+          className="h-13 text-base"
+        />
+      </Field>
+
+      {members && members.length > 0 ? (
+        <Field label={t("reminders.fieldFor")} htmlFor="member">
+          <Select value={memberId} onValueChange={setMemberId}>
+            <SelectTrigger id="member" className="h-13 text-base">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">{t("reminders.justMe")}</SelectItem>
+              {members.map((m) => (
+                <SelectItem key={m.id} value={m.id}>
+                  {m.full_name} · {m.relationship}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      ) : null}
+
+      <Field label={t("reminders.fieldNotes")} htmlFor="notes">
+        <Textarea
+          id="notes"
+          value={description}
+          maxLength={1000}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder={t("reminders.notesPlaceholder")}
+          rows={3}
+          className="text-base"
+        />
+      </Field>
+
+      <details className="bg-card shadow-card rounded-3xl p-5" open={Boolean(paymentUrl || upiId)}>
+        <summary className="cursor-pointer text-base font-semibold">
+          {t("reminders.paymentSection")}
+        </summary>
+        <p className="text-muted-foreground mt-1 text-sm">{t("reminders.paymentHint")}</p>
+        <div className="mt-4 space-y-4">
+          <Field label={t("reminders.fieldPaymentUrl")} htmlFor="paymentUrl">
+            <Input
+              id="paymentUrl"
+              inputMode="url"
+              value={paymentUrl}
+              onChange={(e) => setPaymentUrl(e.target.value)}
+              placeholder="https://bill.example.com/pay"
+              className="h-13 text-base"
+            />
+          </Field>
+          <Field label={t("reminders.fieldUpiId")} htmlFor="upiId">
+            <Input
+              id="upiId"
+              value={upiId}
+              onChange={(e) => setUpiId(e.target.value)}
+              placeholder="biller@upi"
+              className="h-13 text-base"
+            />
+          </Field>
+          <Field label={t("reminders.fieldPayee")} htmlFor="upiPayee">
+            <Input
+              id="upiPayee"
+              value={upiPayee}
+              onChange={(e) => setUpiPayee(e.target.value)}
+              placeholder={t("reminders.payeePlaceholder")}
+              className="h-13 text-base"
+            />
+          </Field>
+          <Field label={t("reminders.fieldAmount")} htmlFor="payAmount">
+            <Input
+              id="payAmount"
+              inputMode="decimal"
+              value={payAmount}
+              onChange={(e) => setPayAmount(e.target.value.replace(/[^\d.]/g, ""))}
+              placeholder="1499"
+              className="h-13 text-base"
+            />
+          </Field>
+        </div>
+      </details>
+
+      <fieldset className="bg-card shadow-card rounded-3xl p-5">
+        <legend className="px-2 text-sm font-bold tracking-widest uppercase">
+          {t("reminders.alertMe")}
+        </legend>
+        <div className="mt-2 space-y-2">
+          {ALERT_PRESETS.map((preset) => {
+            const on = alerts.includes(preset.minutes);
+            return (
+              <button
+                key={preset.minutes}
+                type="button"
+                onClick={() => toggleAlert(preset.minutes)}
+                aria-pressed={on}
+                className={
+                  on
+                    ? "bg-primary text-primary-foreground min-h-13 w-full rounded-2xl px-4 text-left text-base font-semibold"
+                    : "bg-muted text-foreground min-h-13 w-full rounded-2xl px-4 text-left text-base font-semibold"
+                }
+              >
+                {alertPresetLabel(preset.minutes)}
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      <div className="bg-card shadow-card flex items-center justify-between gap-4 rounded-3xl p-5">
+        <div>
+          <p className="font-semibold">{t("reminders.alarmTitle")}</p>
+          <p className="text-muted-foreground text-sm">{t("reminders.alarmBody")}</p>
+        </div>
+        <Switch checked={highPriority} onCheckedChange={setHighPriority} />
+      </div>
+
+      <Button type="submit" size="lg" className="h-15 w-full text-lg" disabled={saving}>
+        {saving ? t("saving") : existing ? t("reminders.updateCta") : t("reminders.saveCta")}
+      </Button>
+    </form>
+  );
+}
+
+function Field({
+  label,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={htmlFor} className="text-base">
+        {label}
+      </Label>
+      {children}
+    </div>
+  );
+}
