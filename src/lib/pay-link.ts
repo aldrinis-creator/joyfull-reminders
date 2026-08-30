@@ -30,8 +30,7 @@ export function isValidUpiId(raw: string | null | undefined): boolean {
   return /^[a-z0-9.\-_]{2,64}@[a-z][a-z0-9.\-_]{1,64}$/i.test(raw.trim());
 }
 
-/** upi://pay?pa=…&pn=…&am=…&cu=INR&tn=… */
-export function buildUpiLink(shortcut: PaymentShortcut): string | null {
+function upiQuery(shortcut: PaymentShortcut): string | null {
   const pa = shortcut.upi_id?.trim();
   if (!pa) return null;
   const params = new URLSearchParams({ pa });
@@ -44,8 +43,21 @@ export function buildUpiLink(shortcut: PaymentShortcut): string | null {
   params.set("cu", "INR");
   const tn = shortcut.title?.trim();
   if (tn) params.set("tn", tn.slice(0, 50));
-  return `upi://pay?${params.toString().replace(/\+/g, "%20")}`;
+  return params.toString().replace(/\+/g, "%20");
 }
+
+/** upi://pay?pa=…&pn=…&am=…&cu=INR&tn=… */
+export function buildUpiLink(shortcut: PaymentShortcut): string | null {
+  const query = upiQuery(shortcut);
+  return query ? `upi://pay?${query}` : null;
+}
+
+/** Google Pay's own UPI deep link — same parameters, GPay-specific scheme. */
+export function buildGpayLink(shortcut: PaymentShortcut): string | null {
+  const query = upiQuery(shortcut);
+  return query ? `tez://upi/pay?${query}` : null;
+}
+
 
 /** The link the "Pay now" button should open, link first then UPI. */
 export function paymentTarget(
