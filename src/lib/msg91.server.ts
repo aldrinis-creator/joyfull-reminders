@@ -5,8 +5,11 @@
 
 export const MSG91_SMS_OTP_TEMPLATE_ID = "69ce5c76e1a28470900ffe46";
 export const MSG91_WA_OTP_TEMPLATE = "verification_otp";
+export const MSG91_WA_OTP_NAMESPACE = "e67e5302_b6d0_403e_b3cc_8fa6e8accb01";
 
-export type OtpDispatchResult = { ok: true } | { ok: false; detail: string };
+export type OtpDispatchResult =
+  | { ok: true; providerMessageId: string | null; providerStatus: "accepted" }
+  | { ok: false; detail: string };
 
 function authKey(): string | undefined {
   return process.env["MSG91_AUTH_KEY"];
@@ -46,7 +49,7 @@ export async function sendOtpSms(phone: string, code: string): Promise<OtpDispat
     } catch {
       /* non-JSON success body is fine */
     }
-    return { ok: true };
+    return { ok: true, providerMessageId: null, providerStatus: "accepted" };
   } catch {
     return { ok: false, detail: "Could not reach the SMS provider." };
   }
@@ -58,11 +61,8 @@ export async function sendOtpWhatsapp(phone: string, code: string): Promise<OtpD
   if (!key || !integratedNumber) return { ok: false, detail: "WhatsApp is not configured yet." };
 
   const templateName = process.env["MSG91_WA_OTP_TEMPLATE"] ?? MSG91_WA_OTP_TEMPLATE;
-  const namespace = process.env["MSG91_WA_NAMESPACE"];
-  const languageCode = process.env["MSG91_WA_OTP_LANGUAGE"] ?? "en_US";
-  // Authentication templates without a copy-code button reject the button
-  // component outright, so it is opt-in.
-  const withButton = process.env["MSG91_WA_OTP_BUTTON"] === "1";
+  const namespace = process.env["MSG91_WA_NAMESPACE"] ?? MSG91_WA_OTP_NAMESPACE;
+  const languageCode = process.env["MSG91_WA_OTP_LANGUAGE"] ?? "en";
 
   const payload = {
     integrated_number: integratedNumber,
@@ -73,15 +73,13 @@ export async function sendOtpWhatsapp(phone: string, code: string): Promise<OtpD
       template: {
         name: templateName,
         language: { code: languageCode, policy: "deterministic" },
-        ...(namespace ? { namespace } : {}),
+        namespace,
         to_and_components: [
           {
             to: [toMsg91Number(phone)],
             components: {
               body_1: { type: "text", value: code },
-              ...(withButton
-                ? { button_1: { subtype: "url", type: "text", value: code } }
-                : {}),
+              button_1: { subtype: "url", type: "text", value: code },
             },
           },
         ],
@@ -91,7 +89,7 @@ export async function sendOtpWhatsapp(phone: string, code: string): Promise<OtpD
 
   try {
     const res = await fetch(
-      "https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/bulk/",
+      "https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/bulk/",
       {
         method: "POST",
         headers: { "Content-Type": "application/json", authkey: key },
@@ -103,19 +101,47 @@ export async function sendOtpWhatsapp(phone: string, code: string): Promise<OtpD
       console.error("[msg91] whatsapp otp http error", res.status, text.slice(0, 300));
       return { ok: false, detail: text.slice(0, 300) };
     }
-    // MSG91 answers 200 with an error body when it rejects a template.
+    // MSG91 frequently answers 200 even when the template or recipient failed.
     try {
-      const parsed = JSON.parse(text) as { type?: string; status?: string; message?: unknown };
-      if (parsed.type === "error" || parsed.status === "error") {
-        const detail =
-          typeof parsed.message === "string" ? parsed.message : JSON.stringify(parsed.message);
+      const parsed = JSON.parse(text) as {
+        hasError?: boolean;
+        type?: string;
+        status?: string;
+        message?: unknown;
+        errors?: unknown;
+        data?: unknown;
+        request_id?: string;
+        requestId?: string;
+      };
+      const nested = JSON.stringify(parsed.errors ?? parsed.data ?? "");
+      const nestedFailure = /(?:error|failed|rejected|invalid)/i.test(nested);
+      if (
+        parsed.hasError === true ||
+        parsed.type === "error" ||
+        parsed.status === "error" ||
+        parsed.status === "failed" ||
+        nestedFailure
+      ) {
+        const detail = typeof parsed.message === "string" ? parsed.message : nested;
         console.error("[msg91] whatsapp otp rejected", detail?.slice(0, 300));
         return { ok: false, detail: detail?.slice(0, 300) ?? "WhatsApp message rejected." };
       }
+      const data =
+        parsed.data && typeof parsed.data === "object"
+          ? (parsed.data as { message_id?: string; request_id?: string })
+          : null;
+      const providerMessageId =
+        parsed.request_id ?? parsed.requestId ?? data?.message_id ?? data?.request_id ?? null;
+      if (!providerMessageId) {
+        console.error("[msg91] whatsapp otp response missing request id", text.slice(0, 300));
+        return { ok: false, detail: "WhatsApp provider did not confirm the request." };
+      }
+      console.info("[msg91] whatsapp otp accepted", providerMessageId);
+      return { ok: true, providerMessageId, providerStatus: "accepted" };
     } catch {
-      /* non-JSON success body is fine */
+      console.error("[msg91] whatsapp otp invalid response", text.slice(0, 300));
+      return { ok: false, detail: "WhatsApp provider returned an invalid response." };
     }
-    return { ok: true };
   } catch {
     return { ok: false, detail: "Could not reach the WhatsApp provider." };
   }

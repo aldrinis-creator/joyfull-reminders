@@ -73,7 +73,11 @@ export async function issueOtp(
   if (!sent.ok) {
     await supabaseAdmin
       .from("phone_otp_challenges")
-      .update({ consumed_at: new Date().toISOString() })
+      .update({
+        consumed_at: new Date().toISOString(),
+        provider_status: "rejected",
+        provider_error: sent.detail.slice(0, 500),
+      })
       .eq("id", id);
     const notConfigured = sent.detail.includes("not configured");
     return {
@@ -86,6 +90,15 @@ export async function issueOtp(
           : "The WhatsApp message could not be sent. Try SMS instead.",
     };
   }
+
+  await supabaseAdmin
+    .from("phone_otp_challenges")
+    .update({
+      provider_message_id: sent.providerMessageId,
+      provider_status: sent.providerStatus,
+      provider_error: null,
+    })
+    .eq("id", id);
 
   return { ok: true, channel, expiresInSeconds: OTP_TTL_SECONDS };
 }
