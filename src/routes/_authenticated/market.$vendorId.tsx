@@ -222,20 +222,24 @@ function OrderDialog({
                 <option key={m.id} value={m.full_name} />
               ))}
             </datalist>
+            <ErrText field="recipient" />
           </div>
-          <AddressAutocomplete
-            id="o-address"
-            label={t("market.deliveryAddress")}
-            value={address}
-            onChange={setAddress}
-            onResolved={(a) => {
-              if (a.city) setCity(a.city);
-              if (a.pincode) setPincode(a.pincode);
-            }}
-            multiline
-            placeholder={t("market.addressPlaceholder")}
-            hint={t("market.addressHint")}
-          />
+          <div>
+            <AddressAutocomplete
+              id="o-address"
+              label={t("market.deliveryAddress")}
+              value={address}
+              onChange={setAddress}
+              onResolved={(a) => {
+                if (a.city) setCity(a.city);
+                if (a.pincode) setPincode(a.pincode);
+              }}
+              multiline
+              placeholder={t("market.addressPlaceholder")}
+              hint={t("market.addressHint")}
+            />
+            <ErrText field="address" />
+          </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="space-y-2">
               <Label htmlFor="o-city">{t("family.city")}</Label>
@@ -247,6 +251,7 @@ function OrderDialog({
                 className="h-12 w-full min-w-0"
                 placeholder={t("family.cityPlaceholder")}
               />
+              <ErrText field="city" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="o-pin">{t("family.pincode")}</Label>
@@ -259,6 +264,7 @@ function OrderDialog({
                 className="h-12 w-full min-w-0"
                 placeholder="400069"
               />
+              <ErrText field="pincode" />
             </div>
           </div>
           <div className="space-y-2">
@@ -270,6 +276,7 @@ function OrderDialog({
               onChange={(e) => setDate(e.target.value)}
               className="h-12 w-full min-w-0"
             />
+            <ErrText field="date" />
           </div>
 
           <div className="space-y-2">
@@ -284,6 +291,7 @@ function OrderDialog({
             />
           </div>
         </div>
+        </DialogBody>
         <DialogFooter>
           <Button
             size="lg"
@@ -299,9 +307,13 @@ function OrderDialog({
                 message,
               });
               if (!parsed.success) {
-                toast.error(t(parsed.error.issues[0]?.message ?? "family.errDetails"));
+                const issue = parsed.error.issues[0];
+                const message = t(issue?.message ?? "family.errDetails");
+                setFieldError({ field: String(issue?.path[0] ?? ""), message });
+                toast.error(message);
                 return;
               }
+              setFieldError(null);
               setSaving(true);
               const match = (members ?? []).find(
                 (m) => m.full_name.toLowerCase() === parsed.data.recipient.toLowerCase(),
@@ -323,15 +335,18 @@ function OrderDialog({
 
                 setSaving(false);
                 navigate({ to: "/orders/$orderId", params: { orderId } });
-              } catch {
+              } catch (err) {
                 setSaving(false);
-                toast.error(t("market.errCreateOrder"));
+                console.error("createGiftOrder failed", err);
+                const detail = err instanceof Error ? err.message : "";
+                toast.error(detail ? `${t("market.errCreateOrder")} — ${detail}` : t("market.errCreateOrder"));
               }
             }}
           >
             {saving ? t("saving") : t("market.continuePayment")}
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
