@@ -369,6 +369,9 @@ export type Database = {
           id: string
           ip: string | null
           phone: string
+          provider_error: string | null
+          provider_message_id: string | null
+          provider_status: string
           purpose: string
           updated_at: string
           user_id: string | null
@@ -383,6 +386,9 @@ export type Database = {
           id?: string
           ip?: string | null
           phone: string
+          provider_error?: string | null
+          provider_message_id?: string | null
+          provider_status?: string
           purpose?: string
           updated_at?: string
           user_id?: string | null
@@ -397,6 +403,9 @@ export type Database = {
           id?: string
           ip?: string | null
           phone?: string
+          provider_error?: string | null
+          provider_message_id?: string | null
+          provider_status?: string
           purpose?: string
           updated_at?: string
           user_id?: string | null
