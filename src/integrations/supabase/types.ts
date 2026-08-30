@@ -813,6 +813,8 @@ export type Database = {
           serviceable_pincodes: string[]
           ships_all_india: boolean
           updated_at: string
+          upi_id: string | null
+          upi_payee_name: string | null
         }
         Insert: {
           address?: string | null
@@ -835,6 +837,8 @@ export type Database = {
           serviceable_pincodes?: string[]
           ships_all_india?: boolean
           updated_at?: string
+          upi_id?: string | null
+          upi_payee_name?: string | null
         }
         Update: {
           address?: string | null
@@ -857,6 +861,8 @@ export type Database = {
           serviceable_pincodes?: string[]
           ships_all_india?: boolean
           updated_at?: string
+          upi_id?: string | null
+          upi_payee_name?: string | null
         }
         Relationships: []
       }

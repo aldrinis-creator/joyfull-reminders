@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -134,10 +135,11 @@ export function GreetingComposer({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-2xl">{t("family.greetTitle", { name: member.full_name })}</DialogTitle>
         </DialogHeader>
+        <DialogBody className="space-y-4">
 
         <div className="space-y-4">
           <div className="space-y-2">
@@ -240,6 +242,7 @@ export function GreetingComposer({
           </div>
         </div>
 
+        </DialogBody>
         <DialogFooter className="gap-2">
           <Button type="button" variant="outline" className="h-13" onClick={shareCard}>
             {typeof navigator !== "undefined" && "share" in navigator ? (

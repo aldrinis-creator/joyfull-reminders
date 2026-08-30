@@ -4,6 +4,7 @@ import { Loader2, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useT } from "@/hooks/useLanguage";
 import { resolveAddress, searchAddresses } from "@/lib/places.functions";
 import type { AddressSuggestion, ResolvedAddress } from "@/lib/places.schemas";
 
@@ -36,12 +37,14 @@ export function AddressAutocomplete({
   multiline = false,
   hint,
 }: AddressAutocompleteProps) {
+  const t = useT();
   const listId = useId();
   const search = useServerFn(searchAddresses);
   const resolve = useServerFn(resolveAddress);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
   const sessionToken = useRef(newSessionToken());
   const skipNext = useRef(false);
 
@@ -61,11 +64,15 @@ export function AddressAutocomplete({
       void search({ data: { query: q, sessionToken: sessionToken.current } })
         .then((res) => {
           if (cancelled) return;
+          setUnavailable(Boolean(res.unavailable));
           setSuggestions(res.suggestions);
           setOpen(res.suggestions.length > 0);
         })
         .catch(() => {
-          if (!cancelled) setSuggestions([]);
+          if (!cancelled) {
+            setSuggestions([]);
+            setUnavailable(true);
+          }
         })
         .finally(() => {
           if (!cancelled) setBusy(false);
@@ -157,7 +164,13 @@ export function AddressAutocomplete({
           </ul>
         ) : null}
       </div>
-      {hint ? <p className="text-muted-foreground text-xs">{hint}</p> : null}
+      {unavailable ? (
+        <p className="text-muted-foreground text-xs">
+          {t("addressUnavailable")}
+        </p>
+      ) : hint ? (
+        <p className="text-muted-foreground text-xs">{hint}</p>
+      ) : null}
     </div>
   );
 }

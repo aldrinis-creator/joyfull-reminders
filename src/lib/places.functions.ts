@@ -43,9 +43,10 @@ type DetailsResponse = {
 export const searchAddresses = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => addressSearchSchema.parse(data))
-  .handler(async ({ data, context }): Promise<{ suggestions: AddressSuggestion[] }> => {
-    const key = process.env["GOOGLE_API_KEY"];
-    if (!key) return { suggestions: [] };
+  .handler(
+    async ({ data, context }): Promise<{ suggestions: AddressSuggestion[]; unavailable?: boolean }> => {
+    const key = process.env["GOOGLE_PLACES_SERVER_KEY"] ?? process.env["GOOGLE_API_KEY"];
+    if (!key) return { suggestions: [], unavailable: true };
     if (!allow(context.userId)) return { suggestions: [] };
 
     try {
@@ -59,7 +60,10 @@ export const searchAddresses = createServerFn({ method: "POST" })
           sessionToken: data.sessionToken,
         }),
       });
-      if (!res.ok) return { suggestions: [] };
+      if (!res.ok) {
+        console.error("[places] autocomplete failed", res.status, (await res.text()).slice(0, 300));
+        return { suggestions: [], unavailable: true };
+      }
       const json = (await res.json()) as AutocompleteResponse;
       const suggestions = (json.suggestions ?? [])
         .map((s) => s.placePrediction)
@@ -71,16 +75,18 @@ export const searchAddresses = createServerFn({ method: "POST" })
           secondary: p.structuredFormat?.secondaryText?.text ?? "",
         }));
       return { suggestions };
-    } catch {
-      return { suggestions: [] };
+    } catch (err) {
+      console.error("[places] autocomplete error", err);
+      return { suggestions: [], unavailable: true };
     }
-  });
+  },
+  );
 
 export const resolveAddress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => addressResolveSchema.parse(data))
   .handler(async ({ data, context }): Promise<{ address: ResolvedAddress | null }> => {
-    const key = process.env["GOOGLE_API_KEY"];
+    const key = process.env["GOOGLE_PLACES_SERVER_KEY"] ?? process.env["GOOGLE_API_KEY"];
     if (!key) return { address: null };
     if (!allow(context.userId)) return { address: null };
 
@@ -95,7 +101,10 @@ export const resolveAddress = createServerFn({ method: "POST" })
           "X-Goog-FieldMask": "formattedAddress,addressComponents,location",
         },
       });
-      if (!res.ok) return { address: null };
+      if (!res.ok) {
+        console.error("[places] details failed", res.status, (await res.text()).slice(0, 300));
+        return { address: null };
+      }
       const json = (await res.json()) as DetailsResponse;
       const parts = json.addressComponents ?? [];
       const pick = (...types: string[]) =>
@@ -124,7 +133,8 @@ export const resolveAddress = createServerFn({ method: "POST" })
           lng: json.location?.longitude ?? null,
         },
       };
-    } catch {
+    } catch (err) {
+      console.error("[places] details error", err);
       return { address: null };
     }
   });

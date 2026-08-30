@@ -22,6 +22,7 @@ const common: Namespace = {
     copy: "Copy",
     copied: "Copied",
     somethingWentWrong: "Something went wrong",
+    addressUnavailable: "Address suggestions are unavailable right now — please type the address manually.",
     saved: "Saved",
 
     // Navigation
@@ -129,6 +130,8 @@ const common: Namespace = {
     no: "नहीं",
     copy: "कॉपी करें",
     copied: "कॉपी हो गया",
+    addressUnavailable:
+      "पता सुझाव अभी उपलब्ध नहीं हैं — कृपया पता स्वयं टाइप करें।",
     somethingWentWrong: "कुछ गड़बड़ हो गई",
     saved: "सहेज लिया गया",
 
