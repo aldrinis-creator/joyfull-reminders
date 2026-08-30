@@ -135,7 +135,23 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           return new Date(row.last_notified_occurrence_at).getTime() !== dueAt;
         });
 
-        summary.checked = due.length;
+        // One message per reminder occurrence, never one per alert row: a
+        // reminder usually has several alerts (e.g. 1 day before + at due time)
+        // and once the due moment passes every one of their windows is open.
+        // We keep the alert closest to the due time and stamp all the siblings.
+        const perReminder = new Map<string, { chosen: (typeof due)[number] }>();
+        for (const row of due) {
+          const key = `${row.reminder_id}|${row.reminders?.due_at}`;
+          const entry = perReminder.get(key);
+          if (!entry) {
+            perReminder.set(key, { chosen: row });
+            continue;
+          }
+          if (row.offset_minutes < entry.chosen.offset_minutes) entry.chosen = row;
+        }
+        const batches = [...perReminder.values()];
+
+        summary.checked = batches.length;
 
         // Cache profile + auth email lookups per owner across the batch.
         const ownerCache = new Map<
@@ -186,7 +202,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           return owner;
         }
 
-        for (const row of due) {
+        for (const { chosen: row } of batches) {
           const reminder = row.reminders;
           if (!reminder) continue;
           try {
@@ -232,7 +248,9 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
             const { error: stampError } = await supabaseAdmin
               .from("reminder_alerts")
               .update({ last_notified_occurrence_at: reminder.due_at })
-              .eq("id", row.id);
+              // Every alert of this reminder is stamped for this occurrence, so
+              // no sibling row can send a second message for the same event.
+              .eq("reminder_id", row.reminder_id);
             if (stampError) {
               summary.failed += 1;
               continue;
