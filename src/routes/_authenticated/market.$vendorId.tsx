@@ -189,14 +189,23 @@ function OrderDialog({
   const [saving, setSaving] = useState(false);
   const placeOrder = useServerFn(createGiftOrder);
 
+  const [fieldError, setFieldError] = useState<{ field: string; message: string } | null>(null);
+  const errFor = (f: string) => (fieldError?.field === f ? fieldError.message : null);
+  const ErrText = ({ field }: { field: string }) =>
+    errFor(field) ? (
+      <p className="text-destructive text-sm font-semibold">{errFor(field)}</p>
+    ) : null;
+
   return (
     <Dialog open onOpenChange={(o) => (!o ? onClose() : undefined)}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-2xl">{product.name}</DialogTitle>
         </DialogHeader>
-        <p className="text-xl font-bold">{rupees(product.price_paise)}</p>
+        <DialogBody className="space-y-4">
+          <p className="text-xl font-bold">{rupees(product.price_paise)}</p>
         <div className="space-y-4">
+
           <div className="space-y-2">
             <Label htmlFor="o-recipient">{t("market.deliverTo")}</Label>
             <Input
