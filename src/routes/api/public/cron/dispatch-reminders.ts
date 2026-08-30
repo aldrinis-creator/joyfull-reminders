@@ -250,10 +250,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
               .update({ last_notified_occurrence_at: reminder.due_at })
               // Every alert of this reminder is stamped for this occurrence, so
               // no sibling row can send a second message for the same event.
-              .eq("reminder_id", row.reminder_id)
-              .or(
-                `last_notified_occurrence_at.is.null,last_notified_occurrence_at.neq.${reminder.due_at}`,
-              );
+              .eq("reminder_id", row.reminder_id);
             if (stampError) {
               summary.failed += 1;
               continue;
