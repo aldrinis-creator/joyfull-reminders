@@ -139,15 +139,14 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
         // reminder usually has several alerts (e.g. 1 day before + at due time)
         // and once the due moment passes every one of their windows is open.
         // We keep the alert closest to the due time and stamp all the siblings.
-        const perReminder = new Map<string, { chosen: (typeof due)[number]; rows: typeof due }>();
+        const perReminder = new Map<string, { chosen: (typeof due)[number] }>();
         for (const row of due) {
           const key = `${row.reminder_id}|${row.reminders?.due_at}`;
           const entry = perReminder.get(key);
           if (!entry) {
-            perReminder.set(key, { chosen: row, rows: [row] });
+            perReminder.set(key, { chosen: row });
             continue;
           }
-          entry.rows.push(row);
           if (row.offset_minutes < entry.chosen.offset_minutes) entry.chosen = row;
         }
         const batches = [...perReminder.values()];
@@ -203,7 +202,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           return owner;
         }
 
-        for (const { chosen: row, rows: siblings } of batches) {
+        for (const { chosen: row } of batches) {
           const reminder = row.reminders;
           if (!reminder) continue;
           try {
@@ -249,9 +248,11 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
             const { error: stampError } = await supabaseAdmin
               .from("reminder_alerts")
               .update({ last_notified_occurrence_at: reminder.due_at })
-              .in(
-                "id",
-                siblings.map((s) => s.id),
+              // Every alert of this reminder is stamped for this occurrence, so
+              // no sibling row can send a second message for the same event.
+              .eq("reminder_id", row.reminder_id)
+              .or(
+                `last_notified_occurrence_at.is.null,last_notified_occurrence_at.neq.${reminder.due_at}`,
               );
             if (stampError) {
               summary.failed += 1;
