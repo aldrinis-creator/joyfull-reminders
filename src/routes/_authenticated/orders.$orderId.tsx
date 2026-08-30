@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { createCheckoutSession } from "@/lib/payments.functions";
+import { buildGpayLink, buildUpiLink } from "@/lib/pay-link";
 import { ORDER_STEPS, formatDate, orderStatusLabel, rupees } from "@/lib/ereminder";
 import { useT } from "@/hooks/useLanguage";
 import { activeLocale } from "@/lib/i18n";
@@ -55,7 +56,7 @@ function OrderPage() {
       const [order, events] = await Promise.all([
         supabase
           .from("orders")
-          .select("*, vendors(name, phone, city), vendor_products(name, description)")
+          .select("*, vendors(name, phone, city, upi_id, upi_payee_name), vendor_products(name, description)")
           .eq("id", orderId)
           .maybeSingle(),
         supabase
@@ -155,9 +156,49 @@ function OrderPage() {
           </section>
 
           {order.status === "pending_payment" ? (
-            <Button size="lg" className="h-15 w-full text-lg" disabled={paying} onClick={pay}>
-              <CreditCard className="size-5" aria-hidden /> {t("market.payNow", { amount: rupees(order.amount_paise) })}
-            </Button>
+            <div className="space-y-3">
+              <Button size="lg" className="h-15 w-full text-lg" disabled={paying} onClick={pay}>
+                <CreditCard className="size-5" aria-hidden /> {t("market.payNow", { amount: rupees(order.amount_paise) })}
+              </Button>
+              {(() => {
+                const shortcut = {
+                  payment_url: null,
+                  upi_id: order.vendors?.upi_id ?? null,
+                  upi_payee_name: order.vendors?.upi_payee_name ?? order.vendors?.name ?? null,
+                  payment_amount: order.amount_paise / 100,
+                  title: `${t("market.yourOrder")} ${order.id.slice(0, 8)}`,
+                };
+                const gpay = buildGpayLink(shortcut);
+                const upi = buildUpiLink(shortcut);
+                if (!gpay || !upi) return null;
+                return (
+                  <div className="bg-card shadow-card space-y-3 rounded-3xl p-5">
+                    <Button
+                      size="lg"
+                      variant="secondary"
+                      className="h-14 w-full text-base"
+                      onClick={() => {
+                        const fallback = window.setTimeout(() => {
+                          window.location.href = upi;
+                        }, 1200);
+                        window.addEventListener(
+                          "pagehide",
+                          () => window.clearTimeout(fallback),
+                          { once: true },
+                        );
+                        window.location.href = gpay;
+                      }}
+                    >
+                      {t("market.payWithGpay", { amount: rupees(order.amount_paise) })}
+                    </Button>
+                    <a className="block text-center text-sm font-semibold underline" href={upi}>
+                      {t("market.payOtherUpi")}
+                    </a>
+                    <p className="text-muted-foreground text-sm">{t("market.upiHandoffNote")}</p>
+                  </div>
+                );
+              })()}
+            </div>
           ) : (
             <section className="bg-card shadow-card rounded-3xl p-5">
               <h2 className="text-xl">{t("market.tracking")}</h2>
