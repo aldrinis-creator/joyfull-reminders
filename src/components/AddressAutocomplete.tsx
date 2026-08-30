@@ -4,6 +4,7 @@ import { Loader2, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useT } from "@/hooks/useLanguage";
 import { resolveAddress, searchAddresses } from "@/lib/places.functions";
 import type { AddressSuggestion, ResolvedAddress } from "@/lib/places.schemas";
 
@@ -36,6 +37,7 @@ export function AddressAutocomplete({
   multiline = false,
   hint,
 }: AddressAutocompleteProps) {
+  const t = useT();
   const listId = useId();
   const search = useServerFn(searchAddresses);
   const resolve = useServerFn(resolveAddress);
@@ -164,7 +166,7 @@ export function AddressAutocomplete({
       </div>
       {unavailable ? (
         <p className="text-muted-foreground text-xs">
-          Address suggestions are unavailable right now — please type the address manually.
+          {t("addressUnavailable")}
         </p>
       ) : hint ? (
         <p className="text-muted-foreground text-xs">{hint}</p>
