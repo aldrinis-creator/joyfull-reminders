@@ -19,17 +19,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFamilyMembers } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import { isValidUpiId, safePaymentUrl } from "@/lib/pay-link";
+import { VoiceReminderButton } from "@/components/VoiceReminderButton";
+import type { ParsedReminder } from "@/lib/voice-reminder.schemas";
 
 import {
   ALERT_PRESETS,
   CATEGORIES,
   RECURRENCES,
+  SPECIAL_DATE_KINDS,
   alertPresetLabel,
+  categoryFields,
   categoryLabel,
   recurrenceLabel,
+  specialDateKindLabel,
   type RecurrenceKind,
   type Reminder,
   type ReminderCategory,
+  type SpecialDateKind,
 } from "@/lib/ereminder";
 
 const schema = z.object({
