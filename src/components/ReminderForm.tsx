@@ -161,6 +161,7 @@ export function ReminderForm({
           return;
         }
 
+        // Only persist what the chosen category actually asks for.
         const payload = {
           title: parsed.data.title,
           category,
@@ -169,14 +170,20 @@ export function ReminderForm({
           recurrence,
           recurrence_interval_days:
             recurrence === "custom" ? Math.max(1, Number(intervalDays) || 30) : null,
-          birth_year: birthYear ? Number(birthYear) : null,
-          family_member_id: memberId === "none" ? null : memberId,
+          birth_year: fields.occasion && occasionKind === "birthday" && birthYear ? Number(birthYear) : null,
+          family_member_id: fields.familyMember && memberId !== "none" ? memberId : null,
+          occasion_kind: fields.occasion ? occasionKind : null,
+          location: fields.location ? location.trim() || null : null,
+          participants: fields.participants ? participants.trim() || null : null,
+          vehicle_number: fields.vehicle ? vehicleNumber.trim() || null : null,
+          institution: fields.institution ? institution.trim() || null : null,
           priority: highPriority ? ("high" as const) : ("normal" as const),
-          payment_url: normalizedUrl,
-          upi_id: trimmedUpi || null,
-          upi_payee_name: upiPayee.trim() || null,
-          payment_amount: payAmount.trim() ? Number(payAmount) || null : null,
+          payment_url: fields.payment ? normalizedUrl : null,
+          upi_id: fields.payment ? trimmedUpi || null : null,
+          upi_payee_name: fields.payment ? upiPayee.trim() || null : null,
+          payment_amount: fields.payment && payAmount.trim() ? Number(payAmount) || null : null,
         };
+
 
         let reminderId = existing?.id ?? "";
 
