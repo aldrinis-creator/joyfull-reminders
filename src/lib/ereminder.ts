@@ -84,7 +84,7 @@ export const CATEGORIES: {
 ];
 
 export function categoryMeta(value: ReminderCategory) {
-  return CATEGORIES.find((c) => c.value === value) ?? CATEGORIES[CATEGORIES.length - 1]!;
+  return CATEGORIES.find((c) => c.value === value) ?? CATEGORIES.find((c) => c.value === "custom")!;
 }
 
 /**
