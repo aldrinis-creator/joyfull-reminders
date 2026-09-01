@@ -1,12 +1,11 @@
-import { Mail, MessageCircle, Share2 } from "lucide-react";
-import { toast } from "sonner";
+import { Mail, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/hooks/useLanguage";
 import { formatDateTime, type Reminder } from "@/lib/ereminder";
 
 /**
- * Share a reminder as plain text. Native share sheet when available,
- * with WhatsApp and Email always offered so desktop users aren't stuck.
+ * Share a reminder as plain text via WhatsApp and Email — always shown,
+ * regardless of device or native share sheet support.
  */
 export function ShareReminderButtons({
   reminder,
@@ -23,29 +22,8 @@ export function ShareReminderButtons({
     : t("home.shareText", { title: reminder.title, when });
   const subject = t("home.shareSubject", { title: reminder.title });
 
-  const canNativeShare =
-    typeof navigator !== "undefined" && typeof navigator.share === "function";
-
   return (
     <>
-      {canNativeShare ? (
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-11"
-          onClick={async () => {
-            try {
-              await navigator.share({ title: subject, text });
-            } catch (error) {
-              if ((error as { name?: string })?.name === "AbortError") return;
-              toast.error(t("home.shareFailed"));
-            }
-          }}
-        >
-          <Share2 className="size-4" aria-hidden /> {t("home.shareNative")}
-        </Button>
-      ) : null}
-
       <Button asChild size="sm" variant="outline" className="h-11">
         <a
           href={`https://wa.me/?text=${encodeURIComponent(text)}`}
