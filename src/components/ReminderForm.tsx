@@ -227,13 +227,14 @@ export function ReminderForm({
         navigate({ to: "/home" });
       }}
     >
+      {existing ? null : <VoiceReminderButton onParsed={applyParsed} />}
+
       <Field label={t("reminders.fieldTitle")} htmlFor="title">
         <Input
           id="title"
           value={title}
           maxLength={120}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder={t("reminders.titlePlaceholder")}
           className="h-13 text-lg"
         />
       </Field>
