@@ -141,13 +141,13 @@ export function ReminderForm({
           toast.error(t("reminders.errInvalidDate"));
           return;
         }
-        const trimmedUrl = paymentUrl.trim();
+        const trimmedUrl = fields.payment ? paymentUrl.trim() : "";
         const normalizedUrl = trimmedUrl ? safePaymentUrl(trimmedUrl) : null;
         if (trimmedUrl && !normalizedUrl) {
           toast.error(t("reminders.errPaymentUrl"));
           return;
         }
-        const trimmedUpi = upiId.trim();
+        const trimmedUpi = fields.payment ? upiId.trim() : "";
         if (trimmedUpi && !isValidUpiId(trimmedUpi)) {
           toast.error(t("reminders.errUpiId"));
           return;
