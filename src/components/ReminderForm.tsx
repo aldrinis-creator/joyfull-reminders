@@ -519,10 +519,12 @@ export function ReminderForm({
 function Field({
   label,
   htmlFor,
+  hint,
   children,
 }: {
   label: string;
   htmlFor: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -531,6 +533,7 @@ function Field({
         {label}
       </Label>
       {children}
+      {hint ? <p className="text-muted-foreground text-sm">{hint}</p> : null}
     </div>
   );
 }
