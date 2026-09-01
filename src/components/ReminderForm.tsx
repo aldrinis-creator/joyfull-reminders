@@ -95,12 +95,36 @@ export function ReminderForm({
   const [payAmount, setPayAmount] = useState(
     existing?.payment_amount != null ? String(existing.payment_amount) : "",
   );
+  const [occasionKind, setOccasionKind] = useState<SpecialDateKind>(
+    existing?.occasion_kind ?? "birthday",
+  );
+  const [location, setLocation] = useState(existing?.location ?? "");
+  const [participants, setParticipants] = useState(existing?.participants ?? "");
+  const [vehicleNumber, setVehicleNumber] = useState(existing?.vehicle_number ?? "");
+  const [institution, setInstitution] = useState(existing?.institution ?? "");
   const [saving, setSaving] = useState(false);
+
+  const fields = categoryFields(category);
 
   const toggleAlert = (minutes: number) =>
     setAlerts((prev) =>
       prev.includes(minutes) ? prev.filter((m) => m !== minutes) : [...prev, minutes],
     );
+
+  /** Fills only what the voice step was confident about — never clears the rest. */
+  function applyParsed(parsed: ParsedReminder) {
+    if (parsed.title) setTitle(parsed.title.slice(0, 120));
+    if (parsed.category) setCategory(parsed.category);
+    if (parsed.date) setDueDate(parsed.date);
+    if (parsed.time) setDueTime(parsed.time);
+    if (parsed.recurrence) setRecurrence(parsed.recurrence);
+    if (parsed.description) setDescription(parsed.description.slice(0, 1000));
+    if (parsed.location) setLocation(parsed.location);
+    if (parsed.participants) setParticipants(parsed.participants);
+    if (parsed.vehicleNumber) setVehicleNumber(parsed.vehicleNumber);
+    if (parsed.institution) setInstitution(parsed.institution);
+  }
+
 
   return (
     <form
