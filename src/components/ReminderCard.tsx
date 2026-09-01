@@ -129,6 +129,8 @@ export function ReminderCard({
         <Button size="sm" variant="outline" className="h-11" onClick={downloadIcs}>
           <CalendarPlus className="size-4" aria-hidden /> {t("home.addToCalendar")}
         </Button>
+        <ShareReminderButtons reminder={reminder} occurrence={occurrence} />
+
 
         <Button asChild size="sm" variant="outline" className="h-11">
           <Link to="/reminders/$reminderId/edit" params={{ reminderId: reminder.id }}>
