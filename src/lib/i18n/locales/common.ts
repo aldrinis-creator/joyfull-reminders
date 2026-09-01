@@ -46,6 +46,8 @@ const common: Namespace = {
     "cat.health": "Health",
     "cat.household": "Household & Utilities",
     "cat.custom": "Custom",
+    "cat.appointment": "Appointments",
+    "cat.meeting": "Meetings",
     "cat.short.personal_family": "Family",
     "cat.short.finance_tax": "Finance",
     "cat.short.automotive": "Vehicle",
@@ -54,6 +56,8 @@ const common: Namespace = {
     "cat.short.health": "Health",
     "cat.short.household": "Home",
     "cat.short.custom": "Custom",
+    "cat.short.appointment": "Appt",
+    "cat.short.meeting": "Meeting",
 
     // Recurrence
     "recurrence.once": "Once",
@@ -154,6 +158,8 @@ const common: Namespace = {
     "cat.health": "स्वास्थ्य",
     "cat.household": "घर और बिल",
     "cat.custom": "अन्य",
+    "cat.appointment": "अपॉइंटमेंट",
+    "cat.meeting": "मीटिंग",
     "cat.short.personal_family": "परिवार",
     "cat.short.finance_tax": "वित्त",
     "cat.short.automotive": "वाहन",
@@ -162,6 +168,8 @@ const common: Namespace = {
     "cat.short.health": "स्वास्थ्य",
     "cat.short.household": "घर",
     "cat.short.custom": "अन्य",
+    "cat.short.appointment": "अपॉइंटमेंट",
+    "cat.short.meeting": "मीटिंग",
 
     "recurrence.once": "एक बार",
     "recurrence.daily": "रोज़",

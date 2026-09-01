@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { GreetingComposer } from "@/components/GreetingComposer";
 import { PayNowButtons } from "@/components/PayNowButtons";
+import { ShareReminderButtons } from "@/components/ShareReminderButtons";
 import { cn } from "@/lib/utils";
 import { buildIcs } from "@/lib/ics";
 import { useT } from "@/hooks/useLanguage";
@@ -129,6 +130,8 @@ export function ReminderCard({
         <Button size="sm" variant="outline" className="h-11" onClick={downloadIcs}>
           <CalendarPlus className="size-4" aria-hidden /> {t("home.addToCalendar")}
         </Button>
+        <ShareReminderButtons reminder={reminder} occurrence={occurrence} />
+
 
         <Button asChild size="sm" variant="outline" className="h-11">
           <Link to="/reminders/$reminderId/edit" params={{ reminderId: reminder.id }}>

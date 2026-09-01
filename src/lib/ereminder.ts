@@ -67,10 +67,71 @@ export const CATEGORIES: {
     emoji: "🏠",
   },
   { value: "custom", label: "Custom", short: "Custom", colorVar: "var(--cat-custom)", emoji: "✨" },
+  {
+    value: "appointment",
+    label: "Appointments",
+    short: "Appt",
+    colorVar: "var(--cat-appointment)",
+    emoji: "📅",
+  },
+  {
+    value: "meeting",
+    label: "Meetings",
+    short: "Meeting",
+    colorVar: "var(--cat-meeting)",
+    emoji: "🤝",
+  },
 ];
 
 export function categoryMeta(value: ReminderCategory) {
-  return CATEGORIES.find((c) => c.value === value) ?? CATEGORIES[CATEGORIES.length - 1]!;
+  return CATEGORIES.find((c) => c.value === value) ?? CATEGORIES.find((c) => c.value === "custom")!;
+}
+
+/**
+ * Which optional fields each category actually needs. Anything not listed here
+ * stays hidden so the form only asks what matters for the chosen category.
+ */
+export type CategoryFieldSet = {
+  occasion: boolean;
+  familyMember: boolean;
+  location: boolean;
+  participants: boolean;
+  vehicle: boolean;
+  institution: boolean;
+  payment: boolean;
+};
+
+const NO_FIELDS: CategoryFieldSet = {
+  occasion: false,
+  familyMember: false,
+  location: false,
+  participants: false,
+  vehicle: false,
+  institution: false,
+  payment: false,
+};
+
+export function categoryFields(value: ReminderCategory): CategoryFieldSet {
+  switch (value) {
+    case "personal_family":
+      return { ...NO_FIELDS, occasion: true, familyMember: true };
+    case "appointment":
+      return { ...NO_FIELDS, location: true, participants: true };
+    case "meeting":
+      return { ...NO_FIELDS, location: true, participants: true };
+    case "automotive":
+      return { ...NO_FIELDS, vehicle: true, payment: true };
+    case "academic_career":
+      return { ...NO_FIELDS, institution: true };
+    case "finance_tax":
+    case "household":
+    case "subscription":
+      return { ...NO_FIELDS, payment: true };
+    case "health":
+      return { ...NO_FIELDS, location: true };
+    default:
+      return NO_FIELDS;
+  }
 }
 
 export const RECURRENCES: { value: RecurrenceKind; label: string }[] = [

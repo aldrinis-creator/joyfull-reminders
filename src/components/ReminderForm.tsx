@@ -19,17 +19,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFamilyMembers } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import { isValidUpiId, safePaymentUrl } from "@/lib/pay-link";
+import { VoiceReminderButton } from "@/components/VoiceReminderButton";
+import type { ParsedReminder } from "@/lib/voice-reminder.schemas";
 
 import {
   ALERT_PRESETS,
   CATEGORIES,
   RECURRENCES,
+  SPECIAL_DATE_KINDS,
   alertPresetLabel,
+  categoryFields,
   categoryLabel,
   recurrenceLabel,
+  specialDateKindLabel,
   type RecurrenceKind,
   type Reminder,
   type ReminderCategory,
+  type SpecialDateKind,
 } from "@/lib/ereminder";
 
 const schema = z.object({
@@ -89,12 +95,36 @@ export function ReminderForm({
   const [payAmount, setPayAmount] = useState(
     existing?.payment_amount != null ? String(existing.payment_amount) : "",
   );
+  const [occasionKind, setOccasionKind] = useState<SpecialDateKind>(
+    existing?.occasion_kind ?? "birthday",
+  );
+  const [location, setLocation] = useState(existing?.location ?? "");
+  const [participants, setParticipants] = useState(existing?.participants ?? "");
+  const [vehicleNumber, setVehicleNumber] = useState(existing?.vehicle_number ?? "");
+  const [institution, setInstitution] = useState(existing?.institution ?? "");
   const [saving, setSaving] = useState(false);
+
+  const fields = categoryFields(category);
 
   const toggleAlert = (minutes: number) =>
     setAlerts((prev) =>
       prev.includes(minutes) ? prev.filter((m) => m !== minutes) : [...prev, minutes],
     );
+
+  /** Fills only what the voice step was confident about — never clears the rest. */
+  function applyParsed(parsed: ParsedReminder) {
+    if (parsed.title) setTitle(parsed.title.slice(0, 120));
+    if (parsed.category) setCategory(parsed.category);
+    if (parsed.date) setDueDate(parsed.date);
+    if (parsed.time) setDueTime(parsed.time);
+    if (parsed.recurrence) setRecurrence(parsed.recurrence);
+    if (parsed.description) setDescription(parsed.description.slice(0, 1000));
+    if (parsed.location) setLocation(parsed.location);
+    if (parsed.participants) setParticipants(parsed.participants);
+    if (parsed.vehicleNumber) setVehicleNumber(parsed.vehicleNumber);
+    if (parsed.institution) setInstitution(parsed.institution);
+  }
+
 
   return (
     <form
@@ -111,13 +141,13 @@ export function ReminderForm({
           toast.error(t("reminders.errInvalidDate"));
           return;
         }
-        const trimmedUrl = paymentUrl.trim();
+        const trimmedUrl = fields.payment ? paymentUrl.trim() : "";
         const normalizedUrl = trimmedUrl ? safePaymentUrl(trimmedUrl) : null;
         if (trimmedUrl && !normalizedUrl) {
           toast.error(t("reminders.errPaymentUrl"));
           return;
         }
-        const trimmedUpi = upiId.trim();
+        const trimmedUpi = fields.payment ? upiId.trim() : "";
         if (trimmedUpi && !isValidUpiId(trimmedUpi)) {
           toast.error(t("reminders.errUpiId"));
           return;
@@ -131,6 +161,7 @@ export function ReminderForm({
           return;
         }
 
+        // Only persist what the chosen category actually asks for.
         const payload = {
           title: parsed.data.title,
           category,
@@ -139,14 +170,20 @@ export function ReminderForm({
           recurrence,
           recurrence_interval_days:
             recurrence === "custom" ? Math.max(1, Number(intervalDays) || 30) : null,
-          birth_year: birthYear ? Number(birthYear) : null,
-          family_member_id: memberId === "none" ? null : memberId,
+          birth_year: fields.occasion && occasionKind === "birthday" && birthYear ? Number(birthYear) : null,
+          family_member_id: fields.familyMember && memberId !== "none" ? memberId : null,
+          occasion_kind: fields.occasion ? occasionKind : null,
+          location: fields.location ? location.trim() || null : null,
+          participants: fields.participants ? participants.trim() || null : null,
+          vehicle_number: fields.vehicle ? vehicleNumber.trim() || null : null,
+          institution: fields.institution ? institution.trim() || null : null,
           priority: highPriority ? ("high" as const) : ("normal" as const),
-          payment_url: normalizedUrl,
-          upi_id: trimmedUpi || null,
-          upi_payee_name: upiPayee.trim() || null,
-          payment_amount: payAmount.trim() ? Number(payAmount) || null : null,
+          payment_url: fields.payment ? normalizedUrl : null,
+          upi_id: fields.payment ? trimmedUpi || null : null,
+          upi_payee_name: fields.payment ? upiPayee.trim() || null : null,
+          payment_amount: fields.payment && payAmount.trim() ? Number(payAmount) || null : null,
         };
+
 
         let reminderId = existing?.id ?? "";
 
@@ -190,13 +227,14 @@ export function ReminderForm({
         navigate({ to: "/home" });
       }}
     >
+      {existing ? null : <VoiceReminderButton onParsed={applyParsed} />}
+
       <Field label={t("reminders.fieldTitle")} htmlFor="title">
         <Input
           id="title"
           value={title}
           maxLength={120}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder={t("reminders.titlePlaceholder")}
           className="h-13 text-lg"
         />
       </Field>
@@ -264,19 +302,97 @@ export function ReminderForm({
         </Field>
       ) : null}
 
-      <Field label={t("reminders.fieldBirthYear")} htmlFor="birthYear">
-        <Input
-          id="birthYear"
-          inputMode="numeric"
-          maxLength={4}
-          value={birthYear}
-          onChange={(e) => setBirthYear(e.target.value.replace(/\D/g, ""))}
-          placeholder="1968"
-          className="h-13 text-base"
-        />
-      </Field>
+      {fields.occasion ? (
+        <Field label={t("reminders.fieldOccasion")} htmlFor="occasion">
+          <Select value={occasionKind} onValueChange={(v) => setOccasionKind(v as SpecialDateKind)}>
+            <SelectTrigger id="occasion" className="h-13 text-base">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SPECIAL_DATE_KINDS.map((k) => (
+                <SelectItem key={k.value} value={k.value}>
+                  {k.emoji} {specialDateKindLabel(k.value)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      ) : null}
 
-      {members && members.length > 0 ? (
+      {fields.occasion && occasionKind === "birthday" ? (
+        <Field label={t("reminders.fieldBirthYear")} htmlFor="birthYear" hint={t("reminders.hintBirthYear")}>
+          <Input
+            id="birthYear"
+            inputMode="numeric"
+            maxLength={4}
+            value={birthYear}
+            onChange={(e) => setBirthYear(e.target.value.replace(/\D/g, ""))}
+            className="h-13 text-base"
+          />
+        </Field>
+      ) : null}
+
+      {fields.location ? (
+        <Field
+          label={category === "meeting" ? t("reminders.fieldMeetingLocation") : t("reminders.fieldLocation")}
+          htmlFor="location"
+          hint={category === "meeting" ? t("reminders.hintMeetingLocation") : t("reminders.hintLocation")}
+        >
+          <Input
+            id="location"
+            value={location}
+            maxLength={200}
+            onChange={(e) => setLocation(e.target.value)}
+            className="h-13 text-base"
+          />
+        </Field>
+      ) : null}
+
+      {fields.participants ? (
+        <Field
+          label={category === "meeting" ? t("reminders.fieldAttendees") : t("reminders.fieldWithWhom")}
+          htmlFor="participants"
+          hint={category === "meeting" ? t("reminders.hintAttendees") : t("reminders.hintWithWhom")}
+        >
+          <Input
+            id="participants"
+            value={participants}
+            maxLength={200}
+            onChange={(e) => setParticipants(e.target.value)}
+            className="h-13 text-base"
+          />
+        </Field>
+      ) : null}
+
+      {fields.vehicle ? (
+        <Field label={t("reminders.fieldVehicle")} htmlFor="vehicle" hint={t("reminders.hintVehicle")}>
+          <Input
+            id="vehicle"
+            value={vehicleNumber}
+            maxLength={40}
+            onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
+            className="h-13 text-base"
+          />
+        </Field>
+      ) : null}
+
+      {fields.institution ? (
+        <Field
+          label={t("reminders.fieldInstitution")}
+          htmlFor="institution"
+          hint={t("reminders.hintInstitution")}
+        >
+          <Input
+            id="institution"
+            value={institution}
+            maxLength={120}
+            onChange={(e) => setInstitution(e.target.value)}
+            className="h-13 text-base"
+          />
+        </Field>
+      ) : null}
+
+      {fields.familyMember && members && members.length > 0 ? (
         <Field label={t("reminders.fieldFor")} htmlFor="member">
           <Select value={memberId} onValueChange={setMemberId}>
             <SelectTrigger id="member" className="h-13 text-base">
@@ -294,64 +410,70 @@ export function ReminderForm({
         </Field>
       ) : null}
 
-      <Field label={t("reminders.fieldNotes")} htmlFor="notes">
+      <Field label={t("reminders.fieldNotes")} htmlFor="notes" hint={t("reminders.hintNotes")}>
         <Textarea
           id="notes"
           value={description}
           maxLength={1000}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder={t("reminders.notesPlaceholder")}
           rows={3}
           className="text-base"
         />
       </Field>
 
-      <details className="bg-card shadow-card rounded-3xl p-5" open={Boolean(paymentUrl || upiId)}>
-        <summary className="cursor-pointer text-base font-semibold">
-          {t("reminders.paymentSection")}
-        </summary>
-        <p className="text-muted-foreground mt-1 text-sm">{t("reminders.paymentHint")}</p>
-        <div className="mt-4 space-y-4">
-          <Field label={t("reminders.fieldPaymentUrl")} htmlFor="paymentUrl">
-            <Input
-              id="paymentUrl"
-              inputMode="url"
-              value={paymentUrl}
-              onChange={(e) => setPaymentUrl(e.target.value)}
-              placeholder="https://bill.example.com/pay"
-              className="h-13 text-base"
-            />
-          </Field>
-          <Field label={t("reminders.fieldUpiId")} htmlFor="upiId">
-            <Input
-              id="upiId"
-              value={upiId}
-              onChange={(e) => setUpiId(e.target.value)}
-              placeholder="biller@upi"
-              className="h-13 text-base"
-            />
-          </Field>
-          <Field label={t("reminders.fieldPayee")} htmlFor="upiPayee">
-            <Input
-              id="upiPayee"
-              value={upiPayee}
-              onChange={(e) => setUpiPayee(e.target.value)}
-              placeholder={t("reminders.payeePlaceholder")}
-              className="h-13 text-base"
-            />
-          </Field>
-          <Field label={t("reminders.fieldAmount")} htmlFor="payAmount">
-            <Input
-              id="payAmount"
-              inputMode="decimal"
-              value={payAmount}
-              onChange={(e) => setPayAmount(e.target.value.replace(/[^\d.]/g, ""))}
-              placeholder="1499"
-              className="h-13 text-base"
-            />
-          </Field>
-        </div>
-      </details>
+      {fields.payment ? (
+        <details className="bg-card shadow-card rounded-3xl p-5" open={Boolean(paymentUrl || upiId)}>
+          <summary className="cursor-pointer text-base font-semibold">
+            {t("reminders.paymentSection")}
+          </summary>
+          <p className="text-muted-foreground mt-1 text-sm">{t("reminders.paymentHint")}</p>
+          <div className="mt-4 space-y-4">
+            <Field
+              label={t("reminders.fieldPaymentUrl")}
+              htmlFor="paymentUrl"
+              hint={t("reminders.hintPaymentUrl")}
+            >
+              <Input
+                id="paymentUrl"
+                inputMode="url"
+                value={paymentUrl}
+                onChange={(e) => setPaymentUrl(e.target.value)}
+                className="h-13 text-base"
+              />
+            </Field>
+            <Field label={t("reminders.fieldUpiId")} htmlFor="upiId" hint={t("reminders.hintUpiId")}>
+              <Input
+                id="upiId"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                className="h-13 text-base"
+              />
+            </Field>
+            <Field label={t("reminders.fieldPayee")} htmlFor="upiPayee" hint={t("reminders.hintPayee")}>
+              <Input
+                id="upiPayee"
+                value={upiPayee}
+                onChange={(e) => setUpiPayee(e.target.value)}
+                className="h-13 text-base"
+              />
+            </Field>
+            <Field
+              label={t("reminders.fieldAmount")}
+              htmlFor="payAmount"
+              hint={t("reminders.hintAmount")}
+            >
+              <Input
+                id="payAmount"
+                inputMode="decimal"
+                value={payAmount}
+                onChange={(e) => setPayAmount(e.target.value.replace(/[^\d.]/g, ""))}
+                className="h-13 text-base"
+              />
+            </Field>
+          </div>
+        </details>
+      ) : null}
+
 
       <fieldset className="bg-card shadow-card rounded-3xl p-5">
         <legend className="px-2 text-sm font-bold tracking-widest uppercase">
@@ -397,10 +519,12 @@ export function ReminderForm({
 function Field({
   label,
   htmlFor,
+  hint,
   children,
 }: {
   label: string;
   htmlFor: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -409,6 +533,7 @@ function Field({
         {label}
       </Label>
       {children}
+      {hint ? <p className="text-muted-foreground text-sm">{hint}</p> : null}
     </div>
   );
 }

@@ -591,6 +591,10 @@ export type Database = {
           due_at: string
           family_member_id: string | null
           id: string
+          institution: string | null
+          location: string | null
+          occasion_kind: Database["public"]["Enums"]["special_date_kind"] | null
+          participants: string | null
           payment_amount: number | null
           payment_url: string | null
           priority: Database["public"]["Enums"]["reminder_priority"]
@@ -601,6 +605,7 @@ export type Database = {
           upi_id: string | null
           upi_payee_name: string | null
           user_id: string
+          vehicle_number: string | null
         }
         Insert: {
           action_type?: string | null
@@ -614,6 +619,12 @@ export type Database = {
           due_at: string
           family_member_id?: string | null
           id?: string
+          institution?: string | null
+          location?: string | null
+          occasion_kind?:
+            | Database["public"]["Enums"]["special_date_kind"]
+            | null
+          participants?: string | null
           payment_amount?: number | null
           payment_url?: string | null
           priority?: Database["public"]["Enums"]["reminder_priority"]
@@ -624,6 +635,7 @@ export type Database = {
           upi_id?: string | null
           upi_payee_name?: string | null
           user_id: string
+          vehicle_number?: string | null
         }
         Update: {
           action_type?: string | null
@@ -637,6 +649,12 @@ export type Database = {
           due_at?: string
           family_member_id?: string | null
           id?: string
+          institution?: string | null
+          location?: string | null
+          occasion_kind?:
+            | Database["public"]["Enums"]["special_date_kind"]
+            | null
+          participants?: string | null
           payment_amount?: number | null
           payment_url?: string | null
           priority?: Database["public"]["Enums"]["reminder_priority"]
@@ -647,6 +665,7 @@ export type Database = {
           upi_id?: string | null
           upi_payee_name?: string | null
           user_id?: string
+          vehicle_number?: string | null
         }
         Relationships: [
           {
@@ -958,6 +977,8 @@ export type Database = {
         | "health"
         | "household"
         | "custom"
+        | "appointment"
+        | "meeting"
       reminder_priority: "low" | "normal" | "high"
       special_date_kind:
         | "birthday"
@@ -1131,6 +1152,8 @@ export const Constants = {
         "health",
         "household",
         "custom",
+        "appointment",
+        "meeting",
       ],
       reminder_priority: ["low", "normal", "high"],
       special_date_kind: [
