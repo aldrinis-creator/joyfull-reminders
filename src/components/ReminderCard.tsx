@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { GreetingComposer } from "@/components/GreetingComposer";
+import { ReminderGreetingStatus } from "@/components/ReminderGreetingStatus";
 import { PayNowButtons } from "@/components/PayNowButtons";
 import { ShareReminderButtons } from "@/components/ShareReminderButtons";
 import { cn } from "@/lib/utils";
@@ -161,6 +162,10 @@ export function ReminderCard({
         ) : null}
       </div>
 
+      {member && member.greetings_enabled ? (
+        <ReminderGreetingStatus reminderId={reminder.id} member={member} />
+      ) : null}
+
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -185,6 +190,7 @@ export function ReminderCard({
           onOpenChange={setComposerOpen}
           occasion={occasion}
           reminderId={reminder.id}
+          scheduleDefault={occurrence}
         />
       ) : null}
     </article>

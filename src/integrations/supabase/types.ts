@@ -129,6 +129,7 @@ export type Database = {
           provider_message_id: string | null
           recipient: string | null
           reminder_id: string | null
+          scheduled_for: string | null
           sent_at: string | null
           status: Database["public"]["Enums"]["greeting_status"]
           updated_at: string
@@ -147,6 +148,7 @@ export type Database = {
           provider_message_id?: string | null
           recipient?: string | null
           reminder_id?: string | null
+          scheduled_for?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["greeting_status"]
           updated_at?: string
@@ -165,6 +167,7 @@ export type Database = {
           provider_message_id?: string | null
           recipient?: string | null
           reminder_id?: string | null
+          scheduled_for?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["greeting_status"]
           updated_at?: string
@@ -945,7 +948,13 @@ export type Database = {
     Enums: {
       app_role: "user" | "vendor" | "admin"
       greeting_channel: "email" | "whatsapp" | "share"
-      greeting_status: "draft" | "sent" | "failed" | "skipped"
+      greeting_status:
+        | "draft"
+        | "sent"
+        | "failed"
+        | "skipped"
+        | "scheduled"
+        | "cancelled"
       occurrence_status:
         | "pending"
         | "snoozed"
@@ -1117,7 +1126,14 @@ export const Constants = {
     Enums: {
       app_role: ["user", "vendor", "admin"],
       greeting_channel: ["email", "whatsapp", "share"],
-      greeting_status: ["draft", "sent", "failed", "skipped"],
+      greeting_status: [
+        "draft",
+        "sent",
+        "failed",
+        "skipped",
+        "scheduled",
+        "cancelled",
+      ],
       occurrence_status: [
         "pending",
         "snoozed",
