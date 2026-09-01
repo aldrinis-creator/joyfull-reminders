@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { GreetingComposer } from "@/components/GreetingComposer";
 import { PayNowButtons } from "@/components/PayNowButtons";
+import { ShareReminderButtons } from "@/components/ShareReminderButtons";
 import { cn } from "@/lib/utils";
 import { buildIcs } from "@/lib/ics";
 import { useT } from "@/hooks/useLanguage";
