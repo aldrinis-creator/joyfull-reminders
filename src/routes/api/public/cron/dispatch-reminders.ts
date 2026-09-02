@@ -261,7 +261,18 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           }
         }
 
-        return Response.json({ ok: true, ranAt: nowIso, ...summary });
+        // Scheduled greetings ride along on this same job so no separate
+        // cron schedule (and database wake-up) is needed. A failure here
+        // must not sink the reminder summary.
+        let greetings: unknown = null;
+        try {
+          const { dispatchDueGreetings } = await import("@/lib/greetings.dispatch.server");
+          greetings = await dispatchDueGreetings(supabaseAdmin);
+        } catch {
+          greetings = { error: "greetings_dispatch_failed" };
+        }
+
+        return Response.json({ ok: true, ranAt: nowIso, ...summary, greetings });
       },
     },
   },
