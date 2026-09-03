@@ -181,7 +181,11 @@ export function ReminderForm({
           payment_url: fields.payment ? normalizedUrl : null,
           upi_id: fields.payment ? trimmedUpi || null : null,
           upi_payee_name: fields.payment ? upiPayee.trim() || null : null,
-          payment_amount: fields.payment && payAmount.trim() ? Number(payAmount) || null : null,
+          // Recurring bills change every cycle, so no amount is ever stored for them.
+          payment_amount:
+            fields.payment && recurrence === "once" && payAmount.trim()
+              ? Number(payAmount) || null
+              : null,
         };
 
 
