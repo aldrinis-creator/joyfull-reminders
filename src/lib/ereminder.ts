@@ -90,6 +90,14 @@ export function categoryMeta(value: ReminderCategory) {
   return CATEGORIES.find((c) => c.value === value) ?? CATEGORIES.find((c) => c.value === "custom")!;
 }
 
+/** Categories a user can actually pick (retired ones stay out of the pickers). */
+export const SELECTABLE_CATEGORIES = CATEGORIES.filter((c) => !c.hidden);
+
+/** Subscriptions now live inside "Bills, Subscriptions & Trials". */
+export function normalizeCategory(value: ReminderCategory): ReminderCategory {
+  return value === "subscription" ? "finance_tax" : value;
+}
+
 /**
  * Which optional fields each category actually needs. Anything not listed here
  * stays hidden so the form only asks what matters for the chosen category.
