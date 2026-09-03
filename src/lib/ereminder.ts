@@ -34,8 +34,8 @@ export const CATEGORIES: {
   },
   {
     value: "finance_tax",
-    label: "Finance & Tax",
-    short: "Finance",
+    label: "Bills, Subscriptions & Trials",
+    short: "Bills",
     colorVar: "var(--cat-finance-tax)",
     emoji: "₹",
   },
