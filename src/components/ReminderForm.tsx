@@ -22,9 +22,13 @@ import { isValidUpiId, safePaymentUrl } from "@/lib/pay-link";
 import { VoiceReminderButton } from "@/components/VoiceReminderButton";
 import type { ParsedReminder } from "@/lib/voice-reminder.schemas";
 
+import { Checkbox } from "@/components/ui/checkbox";
+import { useQuery } from "@tanstack/react-query";
+
 import {
   ALERT_PRESETS,
-  CATEGORIES,
+  SELECTABLE_CATEGORIES,
+  normalizeCategory,
   RECURRENCES,
   SPECIAL_DATE_KINDS,
   alertPresetLabel,
@@ -76,7 +80,7 @@ export function ReminderForm({
 
   const [title, setTitle] = useState(existing?.title ?? "");
   const [category, setCategory] = useState<ReminderCategory>(
-    existing?.category ?? "personal_family",
+    normalizeCategory(existing?.category ?? "personal_family"),
   );
   const [description, setDescription] = useState(existing?.description ?? "");
   const [dueDate, setDueDate] = useState(initial?.date ?? new Date().toISOString().slice(0, 10));
@@ -249,7 +253,7 @@ export function ReminderForm({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {CATEGORIES.map((c) => (
+            {SELECTABLE_CATEGORIES.map((c) => (
               <SelectItem key={c.value} value={c.value}>
                 {c.emoji} {categoryLabel(c.value)}
               </SelectItem>

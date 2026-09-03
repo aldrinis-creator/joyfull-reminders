@@ -39,7 +39,7 @@ const common: Namespace = {
 
     // Categories
     "cat.personal_family": "Personal & Family",
-    "cat.finance_tax": "Finance & Tax",
+    "cat.finance_tax": "Bills, Subscriptions & Trials",
     "cat.automotive": "Vehicle (PUC, Insurance)",
     "cat.academic_career": "Academic & Career",
     "cat.subscription": "Subscriptions & Trials",
@@ -49,7 +49,7 @@ const common: Namespace = {
     "cat.appointment": "Appointments",
     "cat.meeting": "Meetings",
     "cat.short.personal_family": "Family",
-    "cat.short.finance_tax": "Finance",
+    "cat.short.finance_tax": "Bills",
     "cat.short.automotive": "Vehicle",
     "cat.short.academic_career": "Exams",
     "cat.short.subscription": "Subs",
@@ -151,7 +151,7 @@ const common: Namespace = {
     "Enter the code we sent you": "हमने जो कोड भेजा है वह डालिए",
 
     "cat.personal_family": "निजी और पारिवारिक",
-    "cat.finance_tax": "वित्त और कर",
+    "cat.finance_tax": "बिल, सब्सक्रिप्शन और ट्रायल",
     "cat.automotive": "वाहन (PUC, बीमा)",
     "cat.academic_career": "शिक्षा और करियर",
     "cat.subscription": "सब्सक्रिप्शन और ट्रायल",
@@ -161,7 +161,7 @@ const common: Namespace = {
     "cat.appointment": "अपॉइंटमेंट",
     "cat.meeting": "मीटिंग",
     "cat.short.personal_family": "परिवार",
-    "cat.short.finance_tax": "वित्त",
+    "cat.short.finance_tax": "बिल",
     "cat.short.automotive": "वाहन",
     "cat.short.academic_career": "परीक्षा",
     "cat.short.subscription": "सब्सक्रिप्शन",
