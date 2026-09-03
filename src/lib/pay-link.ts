@@ -44,7 +44,7 @@ function upiQuery(shortcut: PaymentShortcut): string | null {
   const params = new URLSearchParams({ pa });
   const pn = shortcut.upi_payee_name?.trim() || shortcut.title?.trim();
   if (pn) params.set("pn", pn);
-  const amount = shortcut.payment_amount;
+  const amount = amountIsVariable(shortcut) ? null : shortcut.payment_amount;
   if (amount !== null && amount !== undefined && Number(amount) > 0) {
     params.set("am", Number(amount).toFixed(2));
   }
