@@ -59,6 +59,7 @@ export const CATEGORIES: {
     short: "Subs",
     colorVar: "var(--cat-subscription)",
     emoji: "📺",
+    hidden: true,
   },
   { value: "health", label: "Health", short: "Health", colorVar: "var(--cat-health)", emoji: "🩺" },
   {
