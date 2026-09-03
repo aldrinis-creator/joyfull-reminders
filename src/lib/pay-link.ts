@@ -10,7 +10,15 @@ import type { Reminder } from "@/lib/ereminder";
 export type PaymentShortcut = Pick<
   Reminder,
   "payment_url" | "upi_id" | "upi_payee_name" | "payment_amount"
-> & { title?: string | null };
+> & { title?: string | null; recurrence?: Reminder["recurrence"] | null };
+
+/**
+ * Recurring bills (monthly electricity, yearly insurance) change every cycle,
+ * so we never carry a saved amount into the payment app for them.
+ */
+export function amountIsVariable(shortcut: PaymentShortcut): boolean {
+  return Boolean(shortcut.recurrence) && shortcut.recurrence !== "once";
+}
 
 /** Only http(s) links are ever opened. */
 export function safePaymentUrl(raw: string | null | undefined): string | null {
