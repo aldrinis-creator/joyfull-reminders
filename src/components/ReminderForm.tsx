@@ -581,7 +581,7 @@ function Field({
   children,
 }: {
   label: string;
-  htmlFor: string;
+  htmlFor?: string;
   hint?: string;
   children: React.ReactNode;
 }) {

@@ -14,6 +14,8 @@ const reminders: Namespace = {
     hintBirthYear: "Optional — we'll show the age on their birthday.",
     fieldFor: "Who is this for?",
     justMe: "Just me",
+    hintFor: "Tick everyone this reminder is about.",
+    selectedCount: "{count} selected",
     fieldNotes: "Notes",
     hintNotes: "Anything extra you want to remember.",
 
@@ -100,6 +102,8 @@ const reminders: Namespace = {
     hintBirthYear: "वैकल्पिक — जन्मदिन पर हम उम्र दिखाएँगे।",
     fieldFor: "यह किसके लिए है?",
     justMe: "सिर्फ़ मेरे लिए",
+    hintFor: "यह रिमाइंडर जिन-जिन के लिए है, उन सबको चुनिए।",
+    selectedCount: "{count} चुने गए",
     fieldNotes: "टिप्पणी",
     hintNotes: "और जो कुछ याद रखना चाहें।",
 
