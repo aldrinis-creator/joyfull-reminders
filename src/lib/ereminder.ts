@@ -22,6 +22,8 @@ export const CATEGORIES: {
   short: string;
   colorVar: string;
   emoji: string;
+  /** Retired category kept only so older rows still render. */
+  hidden?: boolean;
 }[] = [
   {
     value: "personal_family",
