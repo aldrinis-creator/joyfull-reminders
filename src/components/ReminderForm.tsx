@@ -457,19 +457,25 @@ export function ReminderForm({
                 className="h-13 text-base"
               />
             </Field>
-            <Field
-              label={t("reminders.fieldAmount")}
-              htmlFor="payAmount"
-              hint={t("reminders.hintAmount")}
-            >
-              <Input
-                id="payAmount"
-                inputMode="decimal"
-                value={payAmount}
-                onChange={(e) => setPayAmount(e.target.value.replace(/[^\d.]/g, ""))}
-                className="h-13 text-base"
-              />
-            </Field>
+            {recurrence === "once" ? (
+              <Field
+                label={t("reminders.fieldAmount")}
+                htmlFor="payAmount"
+                hint={t("reminders.hintAmount")}
+              >
+                <Input
+                  id="payAmount"
+                  inputMode="decimal"
+                  value={payAmount}
+                  onChange={(e) => setPayAmount(e.target.value.replace(/[^\d.]/g, ""))}
+                  className="h-13 text-base"
+                />
+              </Field>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                {t("reminders.amountVariesNote")}
+              </p>
+            )}
           </div>
         </details>
       ) : null}
