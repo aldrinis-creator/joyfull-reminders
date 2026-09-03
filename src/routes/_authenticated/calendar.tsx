@@ -8,7 +8,7 @@ import { useReminders } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import { activeLocale } from "@/lib/i18n";
 import {
-  CATEGORIES,
+  SELECTABLE_CATEGORIES,
   categoryMeta,
   categoryShortLabel,
   nextOccurrence,
@@ -81,7 +81,7 @@ function CalendarPage() {
         <Chip active={category === "all"} onClick={() => setCategory("all")}>
           {t("reminders.filterAll")}
         </Chip>
-        {CATEGORIES.map((c) => (
+        {SELECTABLE_CATEGORIES.map((c) => (
           <Chip key={c.value} active={category === c.value} onClick={() => setCategory(c.value)}>
             {c.emoji} {categoryShortLabel(c.value)}
           </Chip>

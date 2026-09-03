@@ -22,9 +22,13 @@ import { isValidUpiId, safePaymentUrl } from "@/lib/pay-link";
 import { VoiceReminderButton } from "@/components/VoiceReminderButton";
 import type { ParsedReminder } from "@/lib/voice-reminder.schemas";
 
+import { Checkbox } from "@/components/ui/checkbox";
+import { useQuery } from "@tanstack/react-query";
+
 import {
   ALERT_PRESETS,
-  CATEGORIES,
+  SELECTABLE_CATEGORIES,
+  normalizeCategory,
   RECURRENCES,
   SPECIAL_DATE_KINDS,
   alertPresetLabel,
@@ -76,7 +80,7 @@ export function ReminderForm({
 
   const [title, setTitle] = useState(existing?.title ?? "");
   const [category, setCategory] = useState<ReminderCategory>(
-    existing?.category ?? "personal_family",
+    normalizeCategory(existing?.category ?? "personal_family"),
   );
   const [description, setDescription] = useState(existing?.description ?? "");
   const [dueDate, setDueDate] = useState(initial?.date ?? new Date().toISOString().slice(0, 10));
@@ -86,7 +90,10 @@ export function ReminderForm({
     existing?.recurrence_interval_days ? String(existing.recurrence_interval_days) : "30",
   );
   const [birthYear, setBirthYear] = useState(existing?.birth_year ? String(existing.birth_year) : "");
-  const [memberId, setMemberId] = useState<string>(existing?.family_member_id ?? "none");
+  const [memberIds, setMemberIds] = useState<string[]>(
+    existing?.family_member_id ? [existing.family_member_id] : [],
+  );
+  const [recipientsLoaded, setRecipientsLoaded] = useState(!existing);
   const [highPriority, setHighPriority] = useState((existing?.priority ?? "high") === "high");
   const [alerts, setAlerts] = useState<number[]>(existingAlerts ?? [1440, 0]);
   const [paymentUrl, setPaymentUrl] = useState(existing?.payment_url ?? "");
@@ -105,6 +112,28 @@ export function ReminderForm({
   const [saving, setSaving] = useState(false);
 
   const fields = categoryFields(category);
+
+  // Everyone this reminder is already linked to (edit mode).
+  const { data: savedRecipients } = useQuery({
+    queryKey: ["reminder_recipients", existing?.id],
+    enabled: Boolean(existing?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reminder_recipients")
+        .select("family_member_id")
+        .eq("reminder_id", existing!.id);
+      if (error) throw error;
+      return (data ?? []).map((r) => r.family_member_id);
+    },
+  });
+
+  if (savedRecipients && !recipientsLoaded) {
+    setRecipientsLoaded(true);
+    if (savedRecipients.length) setMemberIds(savedRecipients);
+  }
+
+  const toggleMember = (id: string) =>
+    setMemberIds((prev) => (prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]));
 
   const toggleAlert = (minutes: number) =>
     setAlerts((prev) =>
@@ -171,7 +200,7 @@ export function ReminderForm({
           recurrence_interval_days:
             recurrence === "custom" ? Math.max(1, Number(intervalDays) || 30) : null,
           birth_year: fields.occasion && occasionKind === "birthday" && birthYear ? Number(birthYear) : null,
-          family_member_id: fields.familyMember && memberId !== "none" ? memberId : null,
+          family_member_id: fields.familyMember && memberIds[0] ? memberIds[0] : null,
           occasion_kind: fields.occasion ? occasionKind : null,
           location: fields.location ? location.trim() || null : null,
           participants: fields.participants ? participants.trim() || null : null,
@@ -224,8 +253,21 @@ export function ReminderForm({
           );
         }
 
+        // Replace the linked people with the current selection.
+        await supabase.from("reminder_recipients").delete().eq("reminder_id", reminderId);
+        if (fields.familyMember && memberIds.length) {
+          await supabase.from("reminder_recipients").insert(
+            memberIds.map((id) => ({
+              user_id: userId,
+              reminder_id: reminderId,
+              family_member_id: id,
+            })),
+          );
+        }
+
         setSaving(false);
         void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+        void queryClient.invalidateQueries({ queryKey: ["reminder_recipients", reminderId] });
         void queryClient.invalidateQueries({ queryKey: ["reminder", reminderId] });
         toast.success(existing ? t("reminders.updated") : t("reminders.saved"));
         navigate({ to: "/home" });
@@ -249,7 +291,7 @@ export function ReminderForm({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {CATEGORIES.map((c) => (
+            {SELECTABLE_CATEGORIES.map((c) => (
               <SelectItem key={c.value} value={c.value}>
                 {c.emoji} {categoryLabel(c.value)}
               </SelectItem>
@@ -397,20 +439,26 @@ export function ReminderForm({
       ) : null}
 
       {fields.familyMember && members && members.length > 0 ? (
-        <Field label={t("reminders.fieldFor")} htmlFor="member">
-          <Select value={memberId} onValueChange={setMemberId}>
-            <SelectTrigger id="member" className="h-13 text-base">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">{t("reminders.justMe")}</SelectItem>
-              {members.map((m) => (
-                <SelectItem key={m.id} value={m.id}>
+        <Field label={t("reminders.fieldFor")} hint={t("reminders.hintFor")}>
+          <div className="space-y-1 rounded-xl border border-border p-2">
+            {members.map((m) => (
+              <label
+                key={m.id}
+                className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 text-base hover:bg-muted"
+              >
+                <Checkbox
+                  checked={memberIds.includes(m.id)}
+                  onCheckedChange={() => toggleMember(m.id)}
+                />
+                <span>
                   {m.full_name} · {m.relationship}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                </span>
+              </label>
+            ))}
+            <p className="px-2 pb-1 pt-1 text-sm text-muted-foreground">
+              {memberIds.length === 0 ? t("reminders.justMe") : t("reminders.selectedCount", { count: memberIds.length })}
+            </p>
+          </div>
         </Field>
       ) : null}
 
@@ -533,7 +581,7 @@ function Field({
   children,
 }: {
   label: string;
-  htmlFor: string;
+  htmlFor?: string;
   hint?: string;
   children: React.ReactNode;
 }) {

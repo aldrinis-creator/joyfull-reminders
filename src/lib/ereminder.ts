@@ -22,6 +22,8 @@ export const CATEGORIES: {
   short: string;
   colorVar: string;
   emoji: string;
+  /** Retired category kept only so older rows still render. */
+  hidden?: boolean;
 }[] = [
   {
     value: "personal_family",
@@ -32,8 +34,8 @@ export const CATEGORIES: {
   },
   {
     value: "finance_tax",
-    label: "Finance & Tax",
-    short: "Finance",
+    label: "Bills, Subscriptions & Trials",
+    short: "Bills",
     colorVar: "var(--cat-finance-tax)",
     emoji: "₹",
   },
@@ -57,6 +59,7 @@ export const CATEGORIES: {
     short: "Subs",
     colorVar: "var(--cat-subscription)",
     emoji: "📺",
+    hidden: true,
   },
   { value: "health", label: "Health", short: "Health", colorVar: "var(--cat-health)", emoji: "🩺" },
   {
@@ -85,6 +88,14 @@ export const CATEGORIES: {
 
 export function categoryMeta(value: ReminderCategory) {
   return CATEGORIES.find((c) => c.value === value) ?? CATEGORIES.find((c) => c.value === "custom")!;
+}
+
+/** Categories a user can actually pick (retired ones stay out of the pickers). */
+export const SELECTABLE_CATEGORIES = CATEGORIES.filter((c) => !c.hidden);
+
+/** Subscriptions now live inside "Bills, Subscriptions & Trials". */
+export function normalizeCategory(value: ReminderCategory): ReminderCategory {
+  return value === "subscription" ? "finance_tax" : value;
 }
 
 /**
