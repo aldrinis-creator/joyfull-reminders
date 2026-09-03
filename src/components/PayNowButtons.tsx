@@ -83,6 +83,15 @@ export function PayNowButtons({
           <Copy className="size-4" aria-hidden /> {t("home.copyUpi")}
         </Button>
       ) : null}
+      {amountIsVariable(shortcut) ? (
+        <p
+          className={`basis-full text-xs ${
+            tone === "onDark" ? "text-indigo-foreground/80" : "text-muted-foreground"
+          }`}
+        >
+          {t("home.amountVaries")}
+        </p>
+      ) : null}
     </>
   );
 }
