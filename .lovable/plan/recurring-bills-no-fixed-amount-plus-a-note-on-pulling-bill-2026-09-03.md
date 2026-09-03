@@ -19,7 +19,8 @@ In India the only sanctioned way to fetch a live bill from a consumer number is 
 - Coverage is good for electricity, gas, water, broadband, DTH, and postpaid mobile — but each biller must be picked from the BBPS biller list, not free text.
 - Once live, the flow is: user picks biller + enters consumer number once, the app fetches due amount and due date on each cycle, and the reminder auto-updates itself — which is genuinely better than a typed amount.
 
-Recommendation: ship item 1 now (correct behaviour with zero cost), and treat BBPS as a separate, later piece of work once you decide on an aggregator. If you already have a Razorpay or Cashfree account, tell me which one and I can plan the bill-fetch integration against it: store biller ID + consumer number on the reminder, fetch the bill a few days before the due date via a server function on the existing cron, and show the real amount and due date on the card.
+Recommendation: ship item 1 now (correct behaviour with zero cost), and treat BBPS as a separate, later piece of work once you decide on an aggregator. If you already have a Razorpay or Cashfree account, tell me which one and I can plan the bill-fetch integration against it: store biller ID + consumer number on the reminder, fetch the bill a few days before the due date via a server function on the existing cron, and show the real amount and due date on the card.  
+We have RazorPay as our payment provider.
 
 ## Technical notes
 
