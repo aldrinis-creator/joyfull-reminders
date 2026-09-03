@@ -2,7 +2,13 @@ import { Copy, IndianRupee } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/hooks/useLanguage";
-import { buildGpayLink, buildUpiLink, paymentTarget, type PaymentShortcut } from "@/lib/pay-link";
+import {
+  amountIsVariable,
+  buildGpayLink,
+  buildUpiLink,
+  paymentTarget,
+  type PaymentShortcut,
+} from "@/lib/pay-link";
 
 /**
  * "Pay now" hand-off. Opens the biller's page or a Google Pay / UPI deep link —
@@ -76,6 +82,15 @@ export function PayNowButtons({
         >
           <Copy className="size-4" aria-hidden /> {t("home.copyUpi")}
         </Button>
+      ) : null}
+      {amountIsVariable(shortcut) ? (
+        <p
+          className={`basis-full text-xs ${
+            tone === "onDark" ? "text-indigo-foreground/80" : "text-muted-foreground"
+          }`}
+        >
+          {t("home.amountVaries")}
+        </p>
       ) : null}
     </>
   );

@@ -181,7 +181,11 @@ export function ReminderForm({
           payment_url: fields.payment ? normalizedUrl : null,
           upi_id: fields.payment ? trimmedUpi || null : null,
           upi_payee_name: fields.payment ? upiPayee.trim() || null : null,
-          payment_amount: fields.payment && payAmount.trim() ? Number(payAmount) || null : null,
+          // Recurring bills change every cycle, so no amount is ever stored for them.
+          payment_amount:
+            fields.payment && recurrence === "once" && payAmount.trim()
+              ? Number(payAmount) || null
+              : null,
         };
 
 
@@ -457,19 +461,25 @@ export function ReminderForm({
                 className="h-13 text-base"
               />
             </Field>
-            <Field
-              label={t("reminders.fieldAmount")}
-              htmlFor="payAmount"
-              hint={t("reminders.hintAmount")}
-            >
-              <Input
-                id="payAmount"
-                inputMode="decimal"
-                value={payAmount}
-                onChange={(e) => setPayAmount(e.target.value.replace(/[^\d.]/g, ""))}
-                className="h-13 text-base"
-              />
-            </Field>
+            {recurrence === "once" ? (
+              <Field
+                label={t("reminders.fieldAmount")}
+                htmlFor="payAmount"
+                hint={t("reminders.hintAmount")}
+              >
+                <Input
+                  id="payAmount"
+                  inputMode="decimal"
+                  value={payAmount}
+                  onChange={(e) => setPayAmount(e.target.value.replace(/[^\d.]/g, ""))}
+                  className="h-13 text-base"
+                />
+              </Field>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                {t("reminders.amountVariesNote")}
+              </p>
+            )}
           </div>
         </details>
       ) : null}
