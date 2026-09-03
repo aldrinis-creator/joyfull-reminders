@@ -43,6 +43,8 @@ const reminders: Namespace = {
     hintPayee: "Optional — shown in your UPI app.",
     fieldAmount: "Amount in ₹",
     hintAmount: "Optional — pre-fills the amount in your UPI app.",
+    amountVariesNote:
+      "This reminder repeats, so we don't save an amount — bills change each cycle. Enter the current amount in your payment app.",
     errPaymentUrl: "That payment link doesn't look right",
     errUpiId: "That UPI ID doesn't look right (example: name@bank)",
     alertMe: "Alert me",
@@ -126,6 +128,8 @@ const reminders: Namespace = {
     hintPayee: "वैकल्पिक — आपके UPI ऐप में दिखेगा।",
     fieldAmount: "राशि ₹ में",
     hintAmount: "वैकल्पिक — UPI ऐप में राशि पहले से भर जाएगी।",
+    amountVariesNote:
+      "यह रिमाइंडर दोहराता है, इसलिए राशि सहेजी नहीं जाती — हर बार बिल अलग होता है। भुगतान ऐप में मौजूदा राशि भरें।",
     errPaymentUrl: "यह भुगतान लिंक सही नहीं लग रहा",
     errUpiId: "यह UPI आईडी सही नहीं लग रही (उदाहरण: name@bank)",
     alertMe: "मुझे सूचित करें",
