@@ -2,7 +2,13 @@ import { Copy, IndianRupee } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/hooks/useLanguage";
-import { buildGpayLink, buildUpiLink, paymentTarget, type PaymentShortcut } from "@/lib/pay-link";
+import {
+  amountIsVariable,
+  buildGpayLink,
+  buildUpiLink,
+  paymentTarget,
+  type PaymentShortcut,
+} from "@/lib/pay-link";
 
 /**
  * "Pay now" hand-off. Opens the biller's page or a Google Pay / UPI deep link —
