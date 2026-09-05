@@ -122,7 +122,7 @@ export function GreetingComposer({
     return when.toISOString();
   }
 
-  async function handleSubmit(overrideChannel?: GreetingChannel) {
+  async function handleSubmit(overrideChannel?: GreetingChannel, force = false) {
     const useChannel = overrideChannel ?? channel;
     const useScheduling = scheduling && useChannel !== "share";
     if (scheduling && useChannel === "share") {
