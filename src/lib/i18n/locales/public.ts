@@ -53,6 +53,8 @@ const publicNs: Namespace = {
     aGreeting: "A greeting",
     forName: "for {name}",
     defaultWish: "Wishing you a wonderful day.",
+    voiceNote: "🎙️ A voice message for you",
+    voiceNoteFallback: "Your browser cannot play this recording.",
     sentWith: "Sent with e-Reminder",
 
     thankYou: "Thank you!",
@@ -120,6 +122,8 @@ const publicNs: Namespace = {
     aGreeting: "एक शुभकामना",
     forName: "{name} के लिए",
     defaultWish: "आपका दिन शानदार हो।",
+    voiceNote: "🎙️ आपके लिए एक आवाज़ संदेश",
+    voiceNoteFallback: "आपका ब्राउज़र यह रिकॉर्डिंग नहीं चला सकता।",
     sentWith: "ई-रिमाइंडर से भेजा गया",
 
     thankYou: "धन्यवाद!",

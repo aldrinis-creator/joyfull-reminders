@@ -2,13 +2,85 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   cancelScheduledGreetingSchema,
+  publicGreetingSchema,
   sendGreetingSchema,
   updateScheduledGreetingSchema,
+  uploadVoiceNoteSchema,
 } from "@/lib/greetings.schemas";
 
 export type SendGreetingResult =
   | { ok: true; greetingId: string; channel: string; scheduled?: boolean }
   | { ok: false; reason: "not_configured" | "no_recipient" | "already_sent" | "failed"; detail: string };
+
+/**
+ * Stores a recorded voice note in the private bucket under the signed-in
+ * user's own folder and hands the path back to the composer.
+ */
+export const uploadGreetingVoiceNote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => uploadVoiceNoteSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const ext = data.mimeType.includes("mp4")
+      ? "m4a"
+      : data.mimeType.includes("ogg")
+        ? "ogg"
+        : data.mimeType.includes("mpeg")
+          ? "mp3"
+          : "webm";
+    const bytes = Uint8Array.from(atob(data.audioBase64), (c) => c.charCodeAt(0));
+    const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+    const { VOICE_BUCKET } = await import("@/lib/greetings.voice.server");
+    const { error } = await supabase.storage.from(VOICE_BUCKET).upload(path, bytes, {
+      contentType: data.mimeType,
+      upsert: false,
+    });
+    if (error) {
+      return { ok: false as const, detail: "Could not save the recording." };
+    }
+    return { ok: true as const, path, seconds: data.seconds };
+  });
+
+export type PublicGreeting = {
+  occasion: string;
+  message: string;
+  cardStyle: string;
+  recipientName: string | null;
+  voiceUrl: string | null;
+  voiceSeconds: number | null;
+};
+
+/**
+ * Public (recipient-facing) read of a single greeting card. Returns only the
+ * fields printed on the card plus a freshly signed audio URL — never the
+ * sender's identity or contact details.
+ */
+export const getPublicGreeting = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => publicGreetingSchema.parse(input))
+  .handler(async ({ data }): Promise<PublicGreeting | null> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("greetings")
+      .select("occasion, message, card_style, voice_note_path, voice_note_seconds, family_members(full_name)")
+      .eq("id", data.greetingId)
+      .maybeSingle();
+    if (!row) return null;
+
+    let voiceUrl: string | null = null;
+    if (row.voice_note_path) {
+      const { createVoiceSignedUrl } = await import("@/lib/greetings.voice.server");
+      voiceUrl = await createVoiceSignedUrl(row.voice_note_path);
+    }
+
+    return {
+      occasion: row.occasion,
+      message: row.message,
+      cardStyle: row.card_style,
+      recipientName: row.family_members?.full_name ?? null,
+      voiceUrl,
+      voiceSeconds: row.voice_note_seconds ?? null,
+    };
+  });
 
 /**
  * Sends a greeting on behalf of the signed-in user, or queues it when
@@ -73,7 +145,12 @@ export const sendGreeting = createServerFn({ method: "POST" })
       };
     }
 
+    // The card link lives inside the delivered message, so the row id has to
+    // exist before we call the provider.
+    const greetingId = crypto.randomUUID();
+
     const insertRow = {
+      id: greetingId,
       user_id: userId,
       family_member_id: data.familyMemberId,
       reminder_id: data.reminderId ?? null,
@@ -83,6 +160,8 @@ export const sendGreeting = createServerFn({ method: "POST" })
       card_style: data.cardStyle,
       message: data.message,
       recipient,
+      voice_note_path: data.voiceNotePath ?? null,
+      voice_note_seconds: data.voiceNotePath ? (data.voiceNoteSeconds ?? null) : null,
     };
 
     // Queue for later — the cron dispatcher delivers it.
@@ -118,6 +197,7 @@ export const sendGreeting = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
 
+    const { greetingPageUrl, createVoiceSignedUrl } = await import("@/lib/greetings.voice.server");
     const { deliverGreeting } = await import("@/lib/greetings.deliver.server");
     const result = await deliverGreeting({
       channel: data.channel,
@@ -128,6 +208,9 @@ export const sendGreeting = createServerFn({ method: "POST" })
       message: data.message,
       cardStyle: data.cardStyle,
       idempotencyKey: `greeting-${data.familyMemberId}-${data.occasionKey}-${data.channel}`,
+      greetingUrl: greetingPageUrl(greetingId),
+      hasVoiceNote: Boolean(data.voiceNotePath),
+      voiceUrl: data.voiceNotePath ? await createVoiceSignedUrl(data.voiceNotePath) : null,
     });
 
     if (!result.ok) {

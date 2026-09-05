@@ -134,6 +134,8 @@ export type Database = {
           status: Database["public"]["Enums"]["greeting_status"]
           updated_at: string
           user_id: string
+          voice_note_path: string | null
+          voice_note_seconds: number | null
         }
         Insert: {
           card_style?: string
@@ -153,6 +155,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["greeting_status"]
           updated_at?: string
           user_id: string
+          voice_note_path?: string | null
+          voice_note_seconds?: number | null
         }
         Update: {
           card_style?: string
@@ -172,6 +176,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["greeting_status"]
           updated_at?: string
           user_id?: string
+          voice_note_path?: string | null
+          voice_note_seconds?: number | null
         }
         Relationships: [
           {

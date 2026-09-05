@@ -22,8 +22,9 @@ export async function dispatchDueGreetings(admin: Admin) {
   const { data: rows, error } = await admin
     .from("greetings")
     .select(
-      "id, user_id, family_member_id, occasion, occasion_key, channel, card_style, message, recipient, scheduled_for, family_members(full_name, email, whatsapp_phone, greetings_enabled)",
+      "id, user_id, family_member_id, occasion, occasion_key, channel, card_style, message, recipient, scheduled_for, voice_note_path, family_members(full_name, email, whatsapp_phone, greetings_enabled)",
     )
+
     .eq("status", "scheduled")
     .lte("scheduled_for", nowIso)
     .limit(BATCH_LIMIT);
@@ -98,6 +99,7 @@ export async function dispatchDueGreetings(admin: Admin) {
     }
 
     try {
+      const { greetingPageUrl, createVoiceSignedUrl } = await import("@/lib/greetings.voice.server");
       const result = await deliverGreeting({
         channel,
         recipient,
@@ -107,7 +109,11 @@ export async function dispatchDueGreetings(admin: Admin) {
         message: row.message,
         cardStyle: row.card_style,
         idempotencyKey: `greeting-${row.id}`,
+        greetingUrl: greetingPageUrl(row.id),
+        hasVoiceNote: Boolean(row.voice_note_path),
+        voiceUrl: row.voice_note_path ? await createVoiceSignedUrl(row.voice_note_path) : null,
       });
+
 
       if (result.ok) {
         await admin

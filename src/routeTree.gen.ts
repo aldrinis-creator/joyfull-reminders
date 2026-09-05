@@ -12,11 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as GreetingRouteImport } from './routes/greeting'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedVendorRouteImport } from './routes/_authenticated/vendor'
+import { Route as GreetingIdRouteImport } from './routes/greeting.$id'
 import { Route as PincodeMemberIdRouteImport } from './routes/pincode.$memberId'
 import { Route as AuthenticatedFamilyIndexRouteImport } from './routes/_authenticated/family.index'
 import { Route as AuthenticatedFamilyMemberIdRouteImport } from './routes/_authenticated/family.$memberId'
@@ -47,11 +47,6 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GreetingRoute = GreetingRouteImport.update({
-  id: '/greeting',
-  path: '/greeting',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -71,6 +66,11 @@ const AuthenticatedVendorRoute = AuthenticatedVendorRouteImport.update({
   id: '/vendor',
   path: '/vendor',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const GreetingIdRoute = GreetingIdRouteImport.update({
+  id: '/greeting/$id',
+  path: '/greeting/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PincodeMemberIdRoute = PincodeMemberIdRouteImport.update({
   id: '/pincode/$memberId',
@@ -162,11 +162,11 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/greeting': typeof GreetingRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/vendor': typeof AuthenticatedVendorRoute
+  '/greeting/$id': typeof GreetingIdRoute
   '/pincode/$memberId': typeof PincodeMemberIdRoute
   '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
@@ -186,11 +186,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/greeting': typeof GreetingRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/vendor': typeof AuthenticatedVendorRoute
+  '/greeting/$id': typeof GreetingIdRoute
   '/pincode/$memberId': typeof PincodeMemberIdRoute
   '/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
@@ -212,11 +212,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/greeting': typeof GreetingRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/vendor': typeof AuthenticatedVendorRoute
+  '/greeting/$id': typeof GreetingIdRoute
   '/pincode/$memberId': typeof PincodeMemberIdRoute
   '/_authenticated/family/$memberId': typeof AuthenticatedFamilyMemberIdRoute
   '/_authenticated/market/$vendorId': typeof AuthenticatedMarketVendorIdRoute
@@ -238,11 +238,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/greeting'
     | '/calendar'
     | '/home'
     | '/profile'
     | '/vendor'
+    | '/greeting/$id'
     | '/pincode/$memberId'
     | '/family/$memberId'
     | '/market/$vendorId'
@@ -262,11 +262,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/greeting'
     | '/calendar'
     | '/home'
     | '/profile'
     | '/vendor'
+    | '/greeting/$id'
     | '/pincode/$memberId'
     | '/family/$memberId'
     | '/market/$vendorId'
@@ -287,11 +287,11 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/greeting'
     | '/_authenticated/calendar'
     | '/_authenticated/home'
     | '/_authenticated/profile'
     | '/_authenticated/vendor'
+    | '/greeting/$id'
     | '/pincode/$memberId'
     | '/_authenticated/family/$memberId'
     | '/_authenticated/market/$vendorId'
@@ -313,7 +313,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  GreetingRoute: typeof GreetingRoute
+  GreetingIdRoute: typeof GreetingIdRoute
   PincodeMemberIdRoute: typeof PincodeMemberIdRoute
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiPublicCronDispatchRemindersRoute: typeof ApiPublicCronDispatchRemindersRoute
@@ -347,13 +347,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/greeting': {
-      id: '/greeting'
-      path: '/greeting'
-      fullPath: '/greeting'
-      preLoaderRoute: typeof GreetingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/calendar': {
       id: '/_authenticated/calendar'
       path: '/calendar'
@@ -381,6 +374,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/vendor'
       preLoaderRoute: typeof AuthenticatedVendorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/greeting/$id': {
+      id: '/greeting/$id'
+      path: '/greeting/$id'
+      fullPath: '/greeting/$id'
+      preLoaderRoute: typeof GreetingIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/pincode/$memberId': {
       id: '/pincode/$memberId'
@@ -526,7 +526,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  GreetingRoute: GreetingRoute,
+  GreetingIdRoute: GreetingIdRoute,
   PincodeMemberIdRoute: PincodeMemberIdRoute,
   ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
   ApiPublicCronDispatchRemindersRoute: ApiPublicCronDispatchRemindersRoute,

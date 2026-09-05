@@ -12,7 +12,13 @@ export type DeliverGreetingInput = {
   cardStyle: string;
   /** Stable key so retries of the same logical greeting don't double-send email. */
   idempotencyKey: string;
+  /** Recipient-facing card page (also where a voice note can be played). */
+  greetingUrl?: string | null | undefined;
+  hasVoiceNote?: boolean | undefined;
+  /** Short-lived signed audio URL — embedded inline in email only. */
+  voiceUrl?: string | null | undefined;
 };
+
 
 export type DeliverGreetingResult =
   | { ok: true; providerMessageId: string | null }
@@ -32,6 +38,9 @@ async function deliverEmail(input: DeliverGreetingInput): Promise<DeliverGreetin
         occasion: input.occasion,
         message: input.message,
         cardStyle: input.cardStyle,
+        greetingUrl: input.greetingUrl ?? undefined,
+        voiceUrl: input.hasVoiceNote ? (input.voiceUrl ?? undefined) : undefined,
+
       },
       idempotencyKey: input.idempotencyKey,
     });
@@ -49,7 +58,22 @@ async function deliverEmail(input: DeliverGreetingInput): Promise<DeliverGreetin
   }
 }
 
+/**
+ * WhatsApp templates carry plain text only, so a voice note travels as a line
+ * of text plus the card link — no media attachment, no template change.
+ */
+function whatsappBody(input: DeliverGreetingInput): string {
+  const base = input.message.replace(/\s+/g, " ").slice(0, 700);
+  if (!input.hasVoiceNote || !input.greetingUrl) return base;
+  const from = input.senderName?.trim();
+  const line = from
+    ? `Hear a voice message from ${from}: ${input.greetingUrl}`
+    : `Hear a voice message: ${input.greetingUrl}`;
+  return `${base} — ${line}`.slice(0, 900);
+}
+
 async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGreetingResult> {
+
   const authKey = process.env["MSG91_AUTH_KEY"];
   const integratedNumber = process.env["MSG91_WHATSAPP_NUMBER"];
   const templateName = process.env["MSG91_WA_GREETING_TEMPLATE"] ?? "ereminder_greeting";
@@ -80,8 +104,9 @@ async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGree
               body_1: { type: "text", value: input.recipientName },
               body_2: {
                 type: "text",
-                value: input.message.replace(/\s+/g, " ").slice(0, 900),
+                value: whatsappBody(input),
               },
+
             },
           },
         ],
