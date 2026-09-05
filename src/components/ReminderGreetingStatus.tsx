@@ -105,13 +105,28 @@ export function ReminderGreetingStatus({
       ) : null}
 
       {!scheduled && sent ? (
-        <p className="text-muted-foreground mt-3 flex items-center gap-2 text-sm font-semibold">
-          <CheckCircle2 className="size-4" aria-hidden />
-          {t("family.greetingSent", {
-            when: formatDateTime(new Date(sent.sent_at ?? Date.now())),
-          })}
-        </p>
+        <div className="mt-3 space-y-1">
+          <p className="text-muted-foreground flex items-center gap-2 text-sm font-semibold">
+            <CheckCircle2 className="size-4" aria-hidden />
+            {t("family.greetingSent", {
+              when: formatDateTime(new Date(sent.sent_at ?? Date.now())),
+            })}
+          </p>
+          {sent.provider_status === "delivered" || sent.provider_status === "read" ? (
+            <p className="text-muted-foreground text-xs font-semibold">
+              {t("family.deliveryDelivered")}
+            </p>
+          ) : null}
+          {sent.provider_status === "failed" || sent.provider_status === "rejected" ? (
+            <p className="text-destructive text-xs font-semibold">
+              {t("family.deliveryFailed", {
+                reason: (sent.provider_error ?? "").slice(0, 120) || "—",
+              })}
+            </p>
+          ) : null}
+        </div>
       ) : null}
+
 
       {editing ? (
         <GreetingComposer
