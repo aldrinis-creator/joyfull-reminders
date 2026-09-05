@@ -163,6 +163,7 @@ export function GreetingComposer({
           scheduledFor: iso,
           voiceNotePath: voiceNote?.path ?? null,
           voiceNoteSeconds: voiceNote?.seconds ?? null,
+          force,
         },
       });
       if (result.ok) {
@@ -178,6 +179,15 @@ export function GreetingComposer({
           await shareCard(cardUrl(result.greetingId));
         }
         onOpenChange(false);
+      } else if (result.reason === "already_sent" && !force) {
+        toast.error(result.detail, {
+          action: {
+            label: t("family.greetSendAgain"),
+            onClick: () => {
+              void handleSubmit(useChannel, true);
+            },
+          },
+        });
       } else {
         toast.error(result.detail);
       }
