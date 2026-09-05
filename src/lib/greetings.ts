@@ -60,21 +60,11 @@ export function defaultMessage(params: {
   return `${translate(`family.msg.${key}`, { name: first, age })}${from}`;
 }
 
-export function greetingShareUrl(params: {
-  origin: string;
-  name: string;
-  message: string;
-  style: string;
-  occasion: string;
-}): string {
-  const q = new URLSearchParams({
-    to: params.name,
-    m: params.message,
-    s: params.style,
-    o: params.occasion,
-  });
-  return `${params.origin}/greeting?${q.toString()}`;
+/** Recipient-facing card link — keyed by the saved greeting's row id. */
+export function greetingShareUrl(params: { origin: string; greetingId: string }): string {
+  return `${params.origin}/greeting/${params.greetingId}`;
 }
+
 
 export function whatsappDeepLink(phone: string | null | undefined, text: string): string {
   const digits = (phone ?? "").replace(/\D/g, "");

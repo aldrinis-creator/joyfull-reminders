@@ -30,11 +30,11 @@ import {
   defaultMessage,
   greetingShareUrl,
   occasionKey,
-  whatsappDeepLink,
   type GreetingChannel,
 } from "@/lib/greetings";
 import type { FamilyMember } from "@/lib/ereminder";
 import { cn } from "@/lib/utils";
+import { VoiceNoteRecorder } from "@/components/VoiceNoteRecorder";
 import { useT } from "@/hooks/useLanguage";
 
 /** Local (not UTC) date/time parts for the date + time inputs. */
@@ -101,20 +101,15 @@ export function GreetingComposer({
   const [sendDate, setSendDate] = useState(initialWhen.date);
   const [sendTime, setSendTime] = useState(initialWhen.time);
   const [busy, setBusy] = useState(false);
+  const [voiceNote, setVoiceNote] = useState<{ path: string; seconds: number } | null>(null);
 
   const styleMeta = CARD_STYLES.find((s) => s.value === style) ?? CARD_STYLES[0]!;
   const scheduling = mode === "schedule";
 
-  const shareUrl = useMemo(() => {
+  function cardUrl(greetingId: string): string {
     if (typeof window === "undefined") return "";
-    return greetingShareUrl({
-      origin: window.location.origin,
-      name: member.full_name,
-      message,
-      style,
-      occasion,
-    });
-  }, [member.full_name, message, style, occasion]);
+    return greetingShareUrl({ origin: window.location.origin, greetingId });
+  }
 
   function regenerate(nextOccasion: string) {
     setOccasion(nextOccasion);
@@ -127,13 +122,15 @@ export function GreetingComposer({
     return when.toISOString();
   }
 
-  async function handleSubmit() {
-    if (scheduling && channel === "share") {
+  async function handleSubmit(overrideChannel?: GreetingChannel) {
+    const useChannel = overrideChannel ?? channel;
+    const useScheduling = scheduling && useChannel !== "share";
+    if (scheduling && useChannel === "share") {
       toast.error(t("family.scheduleShareHint"));
       return;
     }
-    const iso = scheduling ? scheduledIso() : null;
-    if (scheduling && !iso) {
+    const iso = useScheduling ? scheduledIso() : null;
+    if (useScheduling && !iso) {
       toast.error(t("family.schedulePast"));
       return;
     }
@@ -160,40 +157,39 @@ export function GreetingComposer({
           reminderId,
           occasion,
           occasionKey: occasionKey(occasion, iso ? new Date(iso) : new Date()),
-          channel,
+          channel: useChannel,
           cardStyle: style,
           message,
           scheduledFor: iso,
+          voiceNotePath: voiceNote?.path ?? null,
+          voiceNoteSeconds: voiceNote?.seconds ?? null,
         },
       });
       if (result.ok) {
         toast.success(
           result.scheduled
             ? t("family.scheduleSaved")
-            : channel === "share"
+            : useChannel === "share"
               ? t("family.greetSavedShare")
               : t("family.greetSent"),
         );
         queryClient.invalidateQueries({ queryKey: ["greetings"] });
-        if (!result.scheduled && channel === "share") {
-          await shareCard();
+        if (!result.scheduled && useChannel === "share") {
+          await shareCard(cardUrl(result.greetingId));
         }
         onOpenChange(false);
       } else {
         toast.error(result.detail);
-        if (result.reason === "not_configured" && channel === "whatsapp") {
-          window.open(whatsappDeepLink(member.whatsapp_phone, `${message}\n\n${shareUrl}`), "_blank");
-        }
       }
     } catch {
-      toast.error(scheduling ? t("family.scheduleFailed") : t("family.greetFailed"));
+      toast.error(useScheduling ? t("family.scheduleFailed") : t("family.greetFailed"));
     } finally {
       setBusy(false);
     }
   }
 
-  async function shareCard() {
-    const text = `${message}\n\n${shareUrl}`;
+  async function shareCard(url: string) {
+    const text = `${message}\n\n${url}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: t("family.greetShareTitle", { name: member.full_name }), text });
@@ -205,6 +201,7 @@ export function GreetingComposer({
     await navigator.clipboard.writeText(text);
     toast.success(t("family.greetCopied"));
   }
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -335,6 +332,8 @@ export function GreetingComposer({
             </Button>
           </div>
 
+          {editing ? null : <VoiceNoteRecorder value={voiceNote} onChange={setVoiceNote} />}
+
           <div className="space-y-2">
             <Label>{t("family.sendBy")}</Label>
             <div className="flex flex-wrap gap-2">
@@ -372,7 +371,7 @@ export function GreetingComposer({
         </DialogBody>
         <DialogFooter className="gap-2">
           {editing ? null : (
-            <Button type="button" variant="outline" className="h-13" onClick={shareCard}>
+            <Button type="button" variant="outline" className="h-13" onClick={() => handleSubmit("share")}>
               {typeof navigator !== "undefined" && "share" in navigator ? (
                 <Share2 className="size-5" aria-hidden />
               ) : (
@@ -381,7 +380,7 @@ export function GreetingComposer({
               {t("family.channel.share")}
             </Button>
           )}
-          <Button className="h-13 flex-1 text-base" disabled={busy} onClick={handleSubmit}>
+          <Button className="h-13 flex-1 text-base" disabled={busy} onClick={() => handleSubmit()}>
             {scheduling ? (
               <CalendarClock className="size-5" aria-hidden />
             ) : (

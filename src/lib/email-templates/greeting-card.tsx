@@ -18,7 +18,10 @@ interface Props {
   occasion?: string
   message?: string
   cardStyle?: string
+  greetingUrl?: string
+  voiceUrl?: string
 }
+
 
 const CARD_ACCENTS: Record<string, { bg: string; border: string }> = {
   sunrise: { bg: '#FFF7ED', border: '#F59E0B' },
@@ -27,7 +30,7 @@ const CARD_ACCENTS: Record<string, { bg: string; border: string }> = {
   classic: { bg: '#F0FDFA', border: '#14B8A6' },
 }
 
-const GreetingCard = ({ senderName, recipientName, occasion, message, cardStyle }: Props) => {
+const GreetingCard = ({ senderName, recipientName, occasion, message, cardStyle, greetingUrl, voiceUrl }: Props) => {
   const accent = CARD_ACCENTS[cardStyle ?? 'classic'] ?? CARD_ACCENTS['classic']!
   const greetingTo = recipientName?.trim() || 'you'
   const greetingFrom = senderName?.trim() || 'Someone who cares'
@@ -46,6 +49,22 @@ const GreetingCard = ({ senderName, recipientName, occasion, message, cardStyle 
             <Text style={messageText}>
               {message?.trim() || 'Thinking of you today and wishing you the very best.'}
             </Text>
+            {voiceUrl ? (
+              <Section>
+                <Text style={messageText}>
+                  🎙️ {greetingFrom} recorded a voice message for you.
+                </Text>
+                {/* Some clients play this inline; the rest fall back to the link. */}
+                <audio controls src={voiceUrl} style={{ width: '100%' }} />
+                {greetingUrl ? (
+                  <Text style={messageText}>
+                    <a href={greetingUrl} style={{ color: accent.border }}>
+                      Open your card to listen
+                    </a>
+                  </Text>
+                ) : null}
+              </Section>
+            ) : null}
             <Text style={signature}>— {greetingFrom}</Text>
           </Section>
           <Text style={footer}>
@@ -56,6 +75,7 @@ const GreetingCard = ({ senderName, recipientName, occasion, message, cardStyle 
     </Html>
   )
 }
+
 
 export const template = {
   component: GreetingCard,

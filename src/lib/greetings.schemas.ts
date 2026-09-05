@@ -10,6 +10,9 @@ export const sendGreetingSchema = z.object({
   message: z.string().trim().min(1).max(1200),
   /** ISO timestamp; when present the greeting is queued instead of sent now. */
   scheduledFor: z.string().datetime().nullable().optional(),
+  /** Storage path of an already-uploaded voice recording. */
+  voiceNotePath: z.string().trim().min(1).max(300).nullable().optional(),
+  voiceNoteSeconds: z.number().int().min(1).max(100).nullable().optional(),
 });
 
 export const updateScheduledGreetingSchema = z.object({
@@ -23,6 +26,16 @@ export const cancelScheduledGreetingSchema = z.object({
   greetingId: z.string().uuid(),
 });
 
+export const uploadVoiceNoteSchema = z.object({
+  /** Base64 (no data: prefix) audio payload — roughly 100 seconds max. */
+  audioBase64: z.string().min(16).max(8_000_000),
+  mimeType: z.string().trim().min(3).max(80),
+  seconds: z.number().int().min(1).max(100),
+});
+
+export const publicGreetingSchema = z.object({
+  greetingId: z.string().uuid(),
+});
 
 export const recipientPincodeSchema = z.object({
   memberId: z.string().uuid(),
