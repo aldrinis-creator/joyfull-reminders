@@ -9,7 +9,7 @@ type Search = {
   o?: string | undefined;
 };
 
-export const Route = createFileRoute("/greeting")({
+export const Route = createFileRoute("/greeting/$id")({
   validateSearch: (search: Record<string, unknown>): Search => ({
     to: typeof search["to"] === "string" ? search["to"] : undefined,
     m: typeof search["m"] === "string" ? search["m"] : undefined,
