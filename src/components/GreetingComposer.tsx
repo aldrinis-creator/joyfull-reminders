@@ -30,11 +30,11 @@ import {
   defaultMessage,
   greetingShareUrl,
   occasionKey,
-  whatsappDeepLink,
   type GreetingChannel,
 } from "@/lib/greetings";
 import type { FamilyMember } from "@/lib/ereminder";
 import { cn } from "@/lib/utils";
+import { VoiceNoteRecorder } from "@/components/VoiceNoteRecorder";
 import { useT } from "@/hooks/useLanguage";
 
 /** Local (not UTC) date/time parts for the date + time inputs. */
@@ -332,6 +332,8 @@ export function GreetingComposer({
             </Button>
           </div>
 
+          {editing ? null : <VoiceNoteRecorder value={voiceNote} onChange={setVoiceNote} />}
+
           <div className="space-y-2">
             <Label>{t("family.sendBy")}</Label>
             <div className="flex flex-wrap gap-2">
@@ -369,7 +371,7 @@ export function GreetingComposer({
         </DialogBody>
         <DialogFooter className="gap-2">
           {editing ? null : (
-            <Button type="button" variant="outline" className="h-13" onClick={shareCard}>
+            <Button type="button" variant="outline" className="h-13" onClick={() => handleSubmit("share")}>
               {typeof navigator !== "undefined" && "share" in navigator ? (
                 <Share2 className="size-5" aria-hidden />
               ) : (
@@ -378,7 +380,7 @@ export function GreetingComposer({
               {t("family.channel.share")}
             </Button>
           )}
-          <Button className="h-13 flex-1 text-base" disabled={busy} onClick={handleSubmit}>
+          <Button className="h-13 flex-1 text-base" disabled={busy} onClick={() => handleSubmit()}>
             {scheduling ? (
               <CalendarClock className="size-5" aria-hidden />
             ) : (
