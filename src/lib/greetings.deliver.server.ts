@@ -165,5 +165,22 @@ async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGree
 export async function deliverGreeting(
   input: DeliverGreetingInput,
 ): Promise<DeliverGreetingResult> {
-  return input.channel === "email" ? deliverEmail(input) : deliverWhatsapp(input);
+  if (input.channel === "email") return deliverEmail(input);
+
+  const whatsapp = await deliverWhatsapp(input);
+  if (whatsapp.ok) return whatsapp;
+
+  // WhatsApp refused (template/eligibility/provider). If we know an email
+  // address for this contact, send the emailed card — it already embeds the
+  // player — instead of failing silently.
+  const fallback = input.fallbackEmail?.trim();
+  if (!fallback) return whatsapp;
+  const emailed = await deliverEmail({
+    ...input,
+    channel: "email",
+    recipient: fallback,
+    idempotencyKey: `${input.idempotencyKey}-email-fallback`,
+  });
+  return emailed.ok ? { ...emailed, viaFallbackEmail: true } : whatsapp;
 }
+
