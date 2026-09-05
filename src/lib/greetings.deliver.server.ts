@@ -166,7 +166,7 @@ async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGree
     } catch {
       providerMessageId = null;
     }
-    return { ok: true, providerMessageId };
+    return { ok: true, providerMessageId, providerResponse: bodyText.slice(0, 400) };
   } catch {
     return { ok: false, reason: "failed", detail: "Could not reach the WhatsApp provider." };
   }
