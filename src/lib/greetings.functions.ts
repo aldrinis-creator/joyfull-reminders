@@ -59,11 +59,12 @@ export const getPublicGreeting = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => publicGreetingSchema.parse(input))
   .handler(async ({ data }): Promise<PublicGreeting | null> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
+    const { data: row, error: rowError } = await supabaseAdmin
       .from("greetings")
       .select("occasion, message, card_style, voice_note_path, voice_note_seconds, family_members(full_name)")
       .eq("id", data.greetingId)
       .maybeSingle();
+    console.log("[greetdbg]", JSON.stringify({ rowError, row }));
     if (!row) return null;
 
     let voiceUrl: string | null = null;
