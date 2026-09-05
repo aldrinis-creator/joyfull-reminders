@@ -13,6 +13,8 @@ export const sendGreetingSchema = z.object({
   /** Storage path of an already-uploaded voice recording. */
   voiceNotePath: z.string().trim().min(1).max(300).nullable().optional(),
   voiceNoteSeconds: z.number().int().min(1).max(100).nullable().optional(),
+  /** Bypass the "already sent for this occasion" guard (explicit re-send). */
+  force: z.boolean().optional(),
 });
 
 export const updateScheduledGreetingSchema = z.object({

@@ -19,7 +19,9 @@ Everything above is confirmed from the database and the code; nothing about hand
 
 ## What I need from you
 
-- A **webhook/callback secret**: create one strong random value, paste it into the provider's WhatsApp webhook settings together with the callback URL I give you, and save the same value in the app's secure secrets form.
+- A **webhook/callback secret**: create one strong random value, paste it into the provider's WhatsApp webhook settings together with the callback URL I give you, and save the same value in the app's secure secrets form.  
+How do we do this?
+  &nbsp;
 - Confirmation of which number the app sends **from** (the business/integrated number), so we can rule the self-send problem in or out.
 
 ## Technical notes

@@ -107,14 +107,17 @@ export const sendGreeting = createServerFn({ method: "POST" })
       return { ok: false, reason: "failed", detail: "Greetings are switched off for this contact." };
     }
 
-    const { data: existing } = await supabase
-      .from("greetings")
-      .select("id, status")
-      .eq("family_member_id", data.familyMemberId)
-      .eq("occasion_key", data.occasionKey)
-      .eq("channel", data.channel)
-      .in("status", ["sent", "scheduled"])
-      .maybeSingle();
+    // An explicit re-send ("Send again anyway") skips the duplicate guard.
+    const { data: existing } = data.force
+      ? { data: null as { id: string; status: string } | null }
+      : await supabase
+          .from("greetings")
+          .select("id, status")
+          .eq("family_member_id", data.familyMemberId)
+          .eq("occasion_key", data.occasionKey)
+          .eq("channel", data.channel)
+          .in("status", ["sent", "scheduled"])
+          .maybeSingle();
 
     if (existing) {
       return {
@@ -207,7 +210,9 @@ export const sendGreeting = createServerFn({ method: "POST" })
       occasion: data.occasion,
       message: data.message,
       cardStyle: data.cardStyle,
-      idempotencyKey: `greeting-${data.familyMemberId}-${data.occasionKey}-${data.channel}`,
+      idempotencyKey: `greeting-${data.familyMemberId}-${data.occasionKey}-${data.channel}${
+        data.force ? `-${greetingId}` : ""
+      }`,
       greetingId,
       greetingUrl: greetingPageUrl(greetingId),
       hasVoiceNote: Boolean(data.voiceNotePath),
@@ -240,6 +245,11 @@ export const sendGreeting = createServerFn({ method: "POST" })
         status: "sent" as const,
         sent_at: new Date().toISOString(),
         provider_message_id: result.providerMessageId,
+        // No message reference back from the provider means we cannot ever
+        // match a delivery report — keep the raw acknowledgement to diagnose.
+        provider_error: result.providerMessageId
+          ? null
+          : (result.providerResponse ?? null),
       })
       .select("id")
       .single();

@@ -25,7 +25,13 @@ export type DeliverGreetingInput = {
 
 
 export type DeliverGreetingResult =
-  | { ok: true; providerMessageId: string | null; viaFallbackEmail?: boolean }
+  | {
+      ok: true;
+      providerMessageId: string | null;
+      viaFallbackEmail?: boolean;
+      /** Raw provider acknowledgement, kept for diagnosis. */
+      providerResponse?: string;
+    }
   | {
       ok: false;
       reason: "not_configured" | "suppressed" | "failed";
@@ -137,6 +143,10 @@ async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGree
       },
     );
     const bodyText = await res.text();
+    // Diagnosis breadcrumb: which template went out, and what the provider said.
+    console.log(
+      `[greeting-whatsapp] template=${templateName} status=${res.status} body=${bodyText.slice(0, 300)}`,
+    );
     if (!res.ok) {
       return { ok: false, reason: "failed", detail: bodyText.slice(0, 400) };
     }
@@ -156,7 +166,7 @@ async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGree
     } catch {
       providerMessageId = null;
     }
-    return { ok: true, providerMessageId };
+    return { ok: true, providerMessageId, providerResponse: bodyText.slice(0, 400) };
   } catch {
     return { ok: false, reason: "failed", detail: "Could not reach the WhatsApp provider." };
   }
