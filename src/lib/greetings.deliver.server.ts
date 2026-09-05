@@ -63,26 +63,24 @@ async function deliverEmail(input: DeliverGreetingInput): Promise<DeliverGreetin
   }
 }
 
-/**
- * WhatsApp templates carry plain text only, so a voice note travels as a line
- * of text plus the card link — no media attachment, no template change.
- */
+/** Plain message text for the classic two-variable greeting template. */
 function whatsappBody(input: DeliverGreetingInput): string {
-  const base = input.message.replace(/\s+/g, " ").slice(0, 700);
-  if (!input.hasVoiceNote || !input.greetingUrl) return base;
-  const from = input.senderName?.trim();
-  const line = from
-    ? `Hear a voice message from ${from}: ${input.greetingUrl}`
-    : `Hear a voice message: ${input.greetingUrl}`;
-  return `${base} — ${line}`.slice(0, 900);
+  return input.message.replace(/\s+/g, " ").slice(0, 700);
 }
 
 async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGreetingResult> {
 
   const authKey = process.env["MSG91_AUTH_KEY"];
   const integratedNumber = process.env["MSG91_WHATSAPP_NUMBER"];
-  const templateName = process.env["MSG91_WA_GREETING_TEMPLATE"] ?? "ereminder_greeting";
   const namespace = process.env["MSG91_WA_NAMESPACE"];
+
+  // A greeting that carries a recording needs the card link. WhatsApp drops
+  // links stuffed into a body variable, so those go out on a template that
+  // has an approved URL button instead.
+  const useVoiceTemplate = Boolean(input.hasVoiceNote && input.greetingId);
+  const templateName = useVoiceTemplate
+    ? (process.env["MSG91_WA_VOICE_GREETING_TEMPLATE"] ?? "ereminder_voice_greeting")
+    : (process.env["MSG91_WA_GREETING_TEMPLATE"] ?? "ereminder_greeting");
 
   if (!authKey || !integratedNumber) {
     return {
@@ -91,6 +89,22 @@ async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGree
       detail: "Add your MSG91 credentials to send WhatsApp greetings.",
     };
   }
+
+  const components = useVoiceTemplate
+    ? {
+        body_1: { type: "text", value: input.recipientName },
+        body_2: { type: "text", value: input.occasion.replace(/\s+/g, " ").slice(0, 60) },
+        body_3: {
+          type: "text",
+          value: (input.senderName?.trim() || "a loved one").slice(0, 60),
+        },
+        body_4: { type: "text", value: whatsappBody(input) },
+        button_1: { subtype: "url", type: "text", value: input.greetingId },
+      }
+    : {
+        body_1: { type: "text", value: input.recipientName },
+        body_2: { type: "text", value: whatsappBody(input) },
+      };
 
   const payload = {
     integrated_number: integratedNumber,
@@ -105,19 +119,13 @@ async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGree
         to_and_components: [
           {
             to: [input.recipient.replace(/\D/g, "")],
-            components: {
-              body_1: { type: "text", value: input.recipientName },
-              body_2: {
-                type: "text",
-                value: whatsappBody(input),
-              },
-
-            },
+            components,
           },
         ],
       },
     },
   };
+
 
   try {
     const res = await fetch(
