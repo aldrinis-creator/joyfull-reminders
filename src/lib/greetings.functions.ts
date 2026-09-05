@@ -107,14 +107,17 @@ export const sendGreeting = createServerFn({ method: "POST" })
       return { ok: false, reason: "failed", detail: "Greetings are switched off for this contact." };
     }
 
-    const { data: existing } = await supabase
-      .from("greetings")
-      .select("id, status")
-      .eq("family_member_id", data.familyMemberId)
-      .eq("occasion_key", data.occasionKey)
-      .eq("channel", data.channel)
-      .in("status", ["sent", "scheduled"])
-      .maybeSingle();
+    // An explicit re-send ("Send again anyway") skips the duplicate guard.
+    const { data: existing } = data.force
+      ? { data: null as { id: string; status: string } | null }
+      : await supabase
+          .from("greetings")
+          .select("id, status")
+          .eq("family_member_id", data.familyMemberId)
+          .eq("occasion_key", data.occasionKey)
+          .eq("channel", data.channel)
+          .in("status", ["sent", "scheduled"])
+          .maybeSingle();
 
     if (existing) {
       return {
