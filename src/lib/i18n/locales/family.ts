@@ -122,6 +122,9 @@ const family: Namespace = {
     scheduleCta: "Schedule greeting",
     scheduledFor: "Greeting scheduled for {when}",
     greetingSent: "Greeting sent {when}",
+    deliveryDelivered: "Delivered to their phone",
+    deliveryFailed: "Not delivered — {reason}",
+
     editSchedule: "Edit",
     cancelSchedule: "Cancel",
     scheduleCancelled: "Scheduled greeting cancelled.",
