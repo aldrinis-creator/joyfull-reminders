@@ -1,21 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { CARD_STYLES, OCCASIONS } from "@/lib/greetings";
+import { getPublicGreeting } from "@/lib/greetings.functions";
 import { useT } from "@/hooks/useLanguage";
 
-type Search = {
-  to?: string | undefined;
-  m?: string | undefined;
-  s?: string | undefined;
-  o?: string | undefined;
-};
-
 export const Route = createFileRoute("/greeting/$id")({
-  validateSearch: (search: Record<string, unknown>): Search => ({
-    to: typeof search["to"] === "string" ? search["to"] : undefined,
-    m: typeof search["m"] === "string" ? search["m"] : undefined,
-    s: typeof search["s"] === "string" ? search["s"] : undefined,
-    o: typeof search["o"] === "string" ? search["o"] : undefined,
-  }),
   head: () => ({
     meta: [
       { title: "A greeting just for you — e-Reminder" },
@@ -29,14 +18,24 @@ export const Route = createFileRoute("/greeting/$id")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  loader: ({ params }) => getPublicGreeting({ data: { greetingId: params.id } }),
   component: GreetingCardPage,
 });
 
 function GreetingCardPage() {
   const t = useT();
-  const { to, m, s, o } = Route.useSearch();
-  const style = CARD_STYLES.find((c) => c.value === s) ?? CARD_STYLES[0]!;
-  const occasion = OCCASIONS.find((x) => x.value === o);
+  const { id } = Route.useParams();
+  const initial = Route.useLoaderData();
+  const { data } = useQuery({
+    queryKey: ["public-greeting", id],
+    queryFn: () => getPublicGreeting({ data: { greetingId: id } }),
+    initialData: initial,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const style =
+    CARD_STYLES.find((c) => c.value === data?.cardStyle) ?? CARD_STYLES[0]!;
+  const occasion = OCCASIONS.find((x) => x.value === data?.occasion);
 
   return (
     <main className="bg-background flex min-h-dvh items-center justify-center p-4">
@@ -49,11 +48,21 @@ function GreetingCardPage() {
         </p>
         <h1 className="mt-4 text-3xl">
           {occasion ? t(`family.occ.${occasion.value}`) : t("public.aGreeting")}{" "}
-          {to ? t("public.forName", { name: to }) : ""}
+          {data?.recipientName ? t("public.forName", { name: data.recipientName }) : ""}
         </h1>
         <p className="mt-4 text-lg whitespace-pre-line">
-          {m ?? t("public.defaultWish")}
+          {data?.message ?? t("public.defaultWish")}
         </p>
+
+        {data?.voiceUrl ? (
+          <section className="mt-6 rounded-2xl bg-black/15 p-4">
+            <p className="text-sm font-bold">{t("public.voiceNote")}</p>
+            <audio className="mt-3 w-full" controls preload="none" src={data.voiceUrl}>
+              {t("public.voiceNoteFallback")}
+            </audio>
+          </section>
+        ) : null}
+
         <p className="mt-8 text-sm font-bold opacity-90">{t("public.sentWith")}</p>
       </article>
     </main>
