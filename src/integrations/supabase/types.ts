@@ -126,7 +126,9 @@ export type Database = {
           message: string
           occasion: string
           occasion_key: string
+          provider_error: string | null
           provider_message_id: string | null
+          provider_status: string | null
           recipient: string | null
           reminder_id: string | null
           scheduled_for: string | null
@@ -147,7 +149,9 @@ export type Database = {
           message: string
           occasion?: string
           occasion_key: string
+          provider_error?: string | null
           provider_message_id?: string | null
+          provider_status?: string | null
           recipient?: string | null
           reminder_id?: string | null
           scheduled_for?: string | null
@@ -168,7 +172,9 @@ export type Database = {
           message?: string
           occasion?: string
           occasion_key?: string
+          provider_error?: string | null
           provider_message_id?: string | null
+          provider_status?: string | null
           recipient?: string | null
           reminder_id?: string | null
           scheduled_for?: string | null
