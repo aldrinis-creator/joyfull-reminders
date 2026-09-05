@@ -208,10 +208,13 @@ export const sendGreeting = createServerFn({ method: "POST" })
       message: data.message,
       cardStyle: data.cardStyle,
       idempotencyKey: `greeting-${data.familyMemberId}-${data.occasionKey}-${data.channel}`,
+      greetingId,
       greetingUrl: greetingPageUrl(greetingId),
       hasVoiceNote: Boolean(data.voiceNotePath),
       voiceUrl: data.voiceNotePath ? await createVoiceSignedUrl(data.voiceNotePath) : null,
+      fallbackEmail: data.channel === "whatsapp" ? member.email : null,
     });
+
 
     if (!result.ok) {
       const status =

@@ -109,10 +109,13 @@ export async function dispatchDueGreetings(admin: Admin) {
         message: row.message,
         cardStyle: row.card_style,
         idempotencyKey: `greeting-${row.id}`,
+        greetingId: row.id,
         greetingUrl: greetingPageUrl(row.id),
         hasVoiceNote: Boolean(row.voice_note_path),
         voiceUrl: row.voice_note_path ? await createVoiceSignedUrl(row.voice_note_path) : null,
+        fallbackEmail: channel === "whatsapp" ? member.email : null,
       });
+
 
 
       if (result.ok) {
