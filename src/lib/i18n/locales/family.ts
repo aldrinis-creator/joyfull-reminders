@@ -282,6 +282,9 @@ const family: Namespace = {
     scheduleCta: "शुभकामना शेड्यूल करें",
     scheduledFor: "शुभकामना {when} को भेजी जाएगी",
     greetingSent: "शुभकामना {when} को भेजी गई",
+    deliveryDelivered: "उनके फ़ोन पर पहुँच गई",
+    deliveryFailed: "नहीं पहुँची — {reason}",
+
     editSchedule: "बदलें",
     cancelSchedule: "रद्द करें",
     scheduleCancelled: "तय की गई शुभकामना रद्द कर दी गई।",
