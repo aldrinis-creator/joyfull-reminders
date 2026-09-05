@@ -143,6 +143,10 @@ async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGree
       },
     );
     const bodyText = await res.text();
+    // Diagnosis breadcrumb: which template went out, and what the provider said.
+    console.log(
+      `[greeting-whatsapp] template=${templateName} status=${res.status} body=${bodyText.slice(0, 300)}`,
+    );
     if (!res.ok) {
       return { ok: false, reason: "failed", detail: bodyText.slice(0, 400) };
     }
