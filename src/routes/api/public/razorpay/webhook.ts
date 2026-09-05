@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/public/razorpay/webhook")({
         }
 
         const event = payload.event ?? "";
-        if (event !== "order.paid" && event !== "payment.captured") {
+        if (event !== "order.paid" && event !== "payment.captured" && event !== "payment.failed") {
           return new Response("ignored");
         }
 
@@ -56,6 +56,22 @@ export const Route = createFileRoute("/api/public/razorpay/webhook")({
 
         if (!payment) return new Response("Unknown order", { status: 404 });
         if (payment.status === "captured") return new Response("ok");
+
+        // Failed attempt: record it and log an order event so the order page
+        // shows the failure instead of hanging on "awaiting payment". The
+        // order itself stays pending_payment — the customer can retry.
+        if (event === "payment.failed") {
+          await supabaseAdmin
+            .from("payments")
+            .update({ status: "failed", provider_payment_id: providerPaymentId })
+            .eq("id", payment.id);
+          await supabaseAdmin.from("order_events").insert({
+            order_id: payment.order_id,
+            status: "pending_payment",
+            note: "Payment failed — please try again",
+          });
+          return new Response("ok");
+        }
 
         await supabaseAdmin
           .from("payments")
