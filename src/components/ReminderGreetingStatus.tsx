@@ -39,7 +39,9 @@ export function ReminderGreetingStatus({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("greetings")
-        .select("id, status, scheduled_for, sent_at, message, card_style, channel, occasion")
+        .select(
+          "id, status, scheduled_for, sent_at, message, card_style, channel, occasion, provider_status, provider_error",
+        )
         .eq("reminder_id", reminderId)
         .in("status", ["scheduled", "sent"])
         .order("created_at", { ascending: false });
@@ -47,6 +49,7 @@ export function ReminderGreetingStatus({
       return data ?? [];
     },
   });
+
 
   const scheduled = (data ?? []).find((g) => g.status === "scheduled" && g.scheduled_for);
   const sent = (data ?? []).find((g) => g.status === "sent");
