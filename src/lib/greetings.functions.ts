@@ -245,6 +245,11 @@ export const sendGreeting = createServerFn({ method: "POST" })
         status: "sent" as const,
         sent_at: new Date().toISOString(),
         provider_message_id: result.providerMessageId,
+        // No message reference back from the provider means we cannot ever
+        // match a delivery report — keep the raw acknowledgement to diagnose.
+        provider_error: result.providerMessageId
+          ? null
+          : (result.providerResponse ?? null),
       })
       .select("id")
       .single();
