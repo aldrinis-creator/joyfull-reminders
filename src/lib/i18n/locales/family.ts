@@ -92,6 +92,7 @@ const family: Namespace = {
     greetSavedShare: "Greeting saved — share it now.",
     greetSent: "Greeting sent. Lovely.",
     greetFailed: "Could not send that greeting.",
+    greetSendAgain: "Send again anyway",
     greetShareTitle: "A greeting for {name}",
     greetCopied: "Greeting copied — paste it anywhere.",
     // Voice note
@@ -254,6 +255,7 @@ const family: Namespace = {
     greetSavedShare: "शुभकामना सहेज ली — अब साझा कीजिए।",
     greetSent: "शुभकामना भेज दी गई। बहुत बढ़िया।",
     greetFailed: "यह शुभकामना भेजी नहीं जा सकी।",
+    greetSendAgain: "फिर भी दोबारा भेजें",
     greetShareTitle: "{name} के लिए एक शुभकामना",
     greetCopied: "शुभकामना कॉपी हो गई — कहीं भी चिपकाइए।",
     voiceTitle: "आवाज़ संदेश (वैकल्पिक)",
