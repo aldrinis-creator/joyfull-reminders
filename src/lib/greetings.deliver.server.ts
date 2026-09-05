@@ -12,21 +12,26 @@ export type DeliverGreetingInput = {
   cardStyle: string;
   /** Stable key so retries of the same logical greeting don't double-send email. */
   idempotencyKey: string;
+  /** Greeting row id — used as the dynamic suffix of the card button URL. */
+  greetingId?: string | null | undefined;
   /** Recipient-facing card page (also where a voice note can be played). */
   greetingUrl?: string | null | undefined;
   hasVoiceNote?: boolean | undefined;
   /** Short-lived signed audio URL — embedded inline in email only. */
   voiceUrl?: string | null | undefined;
+  /** If WhatsApp is rejected and we know an email address, mail the card instead. */
+  fallbackEmail?: string | null | undefined;
 };
 
 
 export type DeliverGreetingResult =
-  | { ok: true; providerMessageId: string | null }
+  | { ok: true; providerMessageId: string | null; viaFallbackEmail?: boolean }
   | {
       ok: false;
       reason: "not_configured" | "suppressed" | "failed";
       detail: string;
     };
+
 
 async function deliverEmail(input: DeliverGreetingInput): Promise<DeliverGreetingResult> {
   try {
