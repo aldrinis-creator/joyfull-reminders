@@ -210,7 +210,9 @@ export const sendGreeting = createServerFn({ method: "POST" })
       occasion: data.occasion,
       message: data.message,
       cardStyle: data.cardStyle,
-      idempotencyKey: `greeting-${data.familyMemberId}-${data.occasionKey}-${data.channel}`,
+      idempotencyKey: `greeting-${data.familyMemberId}-${data.occasionKey}-${data.channel}${
+        data.force ? `-${greetingId}` : ""
+      }`,
       greetingId,
       greetingUrl: greetingPageUrl(greetingId),
       hasVoiceNote: Boolean(data.voiceNotePath),
