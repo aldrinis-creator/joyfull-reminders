@@ -29,9 +29,19 @@ export const Route = createFileRoute("/api/public/msg91/whatsapp-status")({
         if (!secret) return new Response("Not configured", { status: 503 });
 
         const body = await request.text();
-        const supplied = request.headers.get("x-msg91-signature") ?? "";
+
+        // Two accepted proofs, because the provider console can only add a
+        // static header or URL token — HMAC is used when it is available.
+        const signature = (request.headers.get("x-msg91-signature") ?? "").replace(/^sha256=/, "");
         const expected = createHmac("sha256", secret).update(body).digest("hex");
-        if (!secureEqual(supplied.replace(/^sha256=/, ""), expected)) {
+        const token =
+          request.headers.get("x-msg91-secret") ??
+          new URL(request.url).searchParams.get("token") ??
+          "";
+        const authorised =
+          (signature.length > 0 && secureEqual(signature, expected)) ||
+          (token.length > 0 && secureEqual(token, secret));
+        if (!authorised) {
           return new Response("Invalid signature", { status: 401 });
         }
 
