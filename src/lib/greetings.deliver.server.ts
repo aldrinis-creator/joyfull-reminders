@@ -25,7 +25,13 @@ export type DeliverGreetingInput = {
 
 
 export type DeliverGreetingResult =
-  | { ok: true; providerMessageId: string | null; viaFallbackEmail?: boolean }
+  | {
+      ok: true;
+      providerMessageId: string | null;
+      viaFallbackEmail?: boolean;
+      /** Raw provider acknowledgement, kept for diagnosis. */
+      providerResponse?: string;
+    }
   | {
       ok: false;
       reason: "not_configured" | "suppressed" | "failed";
