@@ -62,10 +62,20 @@ export const Route = createFileRoute("/api/public/msg91/whatsapp-status")({
           ? (typeof detail === "string" ? detail : JSON.stringify(detail)).slice(0, 500)
           : null;
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        await supabaseAdmin
-          .from("phone_otp_challenges")
-          .update({ provider_status: providerStatus, provider_error: providerError })
-          .eq("provider_message_id", providerMessageId);
+        const patch = { provider_status: providerStatus, provider_error: providerError };
+        // The same report shape covers sign-in codes and greetings; only one
+        // of these tables will hold a row for this provider message id.
+        await Promise.all([
+          supabaseAdmin
+            .from("phone_otp_challenges")
+            .update(patch)
+            .eq("provider_message_id", providerMessageId),
+          supabaseAdmin
+            .from("greetings")
+            .update(patch)
+            .eq("provider_message_id", providerMessageId),
+        ]);
+
 
         return new Response("ok");
       },

@@ -39,7 +39,9 @@ export function ReminderGreetingStatus({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("greetings")
-        .select("id, status, scheduled_for, sent_at, message, card_style, channel, occasion")
+        .select(
+          "id, status, scheduled_for, sent_at, message, card_style, channel, occasion, provider_status, provider_error",
+        )
         .eq("reminder_id", reminderId)
         .in("status", ["scheduled", "sent"])
         .order("created_at", { ascending: false });
@@ -47,6 +49,7 @@ export function ReminderGreetingStatus({
       return data ?? [];
     },
   });
+
 
   const scheduled = (data ?? []).find((g) => g.status === "scheduled" && g.scheduled_for);
   const sent = (data ?? []).find((g) => g.status === "sent");
@@ -102,13 +105,28 @@ export function ReminderGreetingStatus({
       ) : null}
 
       {!scheduled && sent ? (
-        <p className="text-muted-foreground mt-3 flex items-center gap-2 text-sm font-semibold">
-          <CheckCircle2 className="size-4" aria-hidden />
-          {t("family.greetingSent", {
-            when: formatDateTime(new Date(sent.sent_at ?? Date.now())),
-          })}
-        </p>
+        <div className="mt-3 space-y-1">
+          <p className="text-muted-foreground flex items-center gap-2 text-sm font-semibold">
+            <CheckCircle2 className="size-4" aria-hidden />
+            {t("family.greetingSent", {
+              when: formatDateTime(new Date(sent.sent_at ?? Date.now())),
+            })}
+          </p>
+          {sent.provider_status === "delivered" || sent.provider_status === "read" ? (
+            <p className="text-muted-foreground text-xs font-semibold">
+              {t("family.deliveryDelivered")}
+            </p>
+          ) : null}
+          {sent.provider_status === "failed" || sent.provider_status === "rejected" ? (
+            <p className="text-destructive text-xs font-semibold">
+              {t("family.deliveryFailed", {
+                reason: (sent.provider_error ?? "").slice(0, 120) || "—",
+              })}
+            </p>
+          ) : null}
+        </div>
       ) : null}
+
 
       {editing ? (
         <GreetingComposer
