@@ -63,18 +63,9 @@ async function deliverEmail(input: DeliverGreetingInput): Promise<DeliverGreetin
   }
 }
 
-/** Plain message text for the approved two-variable greeting template. */
+/** Plain message text for the classic two-variable greeting template. */
 function whatsappBody(input: DeliverGreetingInput): string {
-  const message = input.message.replace(/\s+/g, " ").trim();
-  // Voice-note greetings carry the card link as plain text inside the same
-  // approved template — no separate template approval needed. The link is
-  // never truncated: the message is trimmed first to make room.
-  if (input.hasVoiceNote && input.greetingUrl) {
-    const suffix = `\n\nHear my voice message: ${input.greetingUrl}`;
-    const budget = Math.max(0, 750 - suffix.length);
-    return `${message.slice(0, budget)}${suffix}`;
-  }
-  return message.slice(0, 700);
+  return input.message.replace(/\s+/g, " ").slice(0, 700);
 }
 
 async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGreetingResult> {
@@ -83,9 +74,13 @@ async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGree
   const integratedNumber = process.env["MSG91_WHATSAPP_NUMBER"];
   const namespace = process.env["MSG91_WA_NAMESPACE"];
 
-  // Always the already-approved greeting template, with or without a voice
-  // note — a second template would need separate WhatsApp approval.
-  const templateName = process.env["MSG91_WA_GREETING_TEMPLATE"] ?? "ereminder_greeting";
+  // A greeting that carries a recording goes out on the approved
+  // ereminder_voice_greeting template, whose "Open card" URL button carries
+  // the card link — links stuffed into a body variable get dropped.
+  const useVoiceTemplate = Boolean(input.hasVoiceNote && input.greetingId);
+  const templateName = useVoiceTemplate
+    ? (process.env["MSG91_WA_VOICE_GREETING_TEMPLATE"] ?? "ereminder_voice_greeting")
+    : (process.env["MSG91_WA_GREETING_TEMPLATE"] ?? "ereminder_greeting");
 
   if (!authKey || !integratedNumber) {
     return {
@@ -95,10 +90,21 @@ async function deliverWhatsapp(input: DeliverGreetingInput): Promise<DeliverGree
     };
   }
 
-  const components = {
-    body_1: { type: "text", value: input.recipientName },
-    body_2: { type: "text", value: whatsappBody(input) },
-  };
+  const components = useVoiceTemplate
+    ? {
+        body_1: { type: "text", value: input.recipientName },
+        body_2: { type: "text", value: input.occasion.replace(/\s+/g, " ").slice(0, 60) },
+        body_3: {
+          type: "text",
+          value: (input.senderName?.trim() || "a loved one").slice(0, 60),
+        },
+        body_4: { type: "text", value: whatsappBody(input) },
+        button_1: { subtype: "url", type: "text", value: input.greetingId },
+      }
+    : {
+        body_1: { type: "text", value: input.recipientName },
+        body_2: { type: "text", value: whatsappBody(input) },
+      };
 
   const payload = {
     integrated_number: integratedNumber,
