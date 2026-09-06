@@ -77,8 +77,11 @@ const memberSchema = z.object({
   gift_hints: z.string().trim().max(500).optional(),
 });
 
+type FamilyMember = NonNullable<ReturnType<typeof useFamilyMembers>["data"]>[number];
+
 function FamilyPage() {
   const t = useT();
+  const queryClient = useQueryClient();
   const { data: members, isLoading } = useFamilyMembers();
   const { data: dates } = useSpecialDates();
 
@@ -183,7 +186,7 @@ function FamilyPage() {
                           e.preventDefault();
                           if (!confirm(t("family.confirmDelete") || "Delete this member?")) return;
                           await supabase.from("family_members").delete().eq("id", m.id);
-                          queryClient.invalidateQueries({ queryKey: ["family_members"] });
+                          void queryClient.invalidateQueries({ queryKey: ["family_members"] });
                           toast.success(t("family.deletedToast") || "Deleted successfully");
                         }}
                         className="text-muted-foreground hover:text-destructive bg-muted rounded-full p-2 transition-colors"
@@ -470,14 +473,14 @@ function AddMemberDialog() {
   );
 }
 
-function EditMemberDialog({ member }: { member: any }) {
+function EditMemberDialog({ member }: { member: FamilyMember }) {
   const t = useT();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [fullName, setFullName] = useState(member.full_name);
   const [relationship, setRelationship] = useState(member.relationship);
-  const [likes, setLikes] = useState(member.likes?.join(", ") ?? "");
-  const [music, setMusic] = useState(member.music_genres?.join(", ") ?? "");
+  const [likes, setLikes] = useState<string>(member.likes?.join(", ") ?? "");
+  const [music, setMusic] = useState<string>(member.music_genres?.join(", ") ?? "");
   const [giftHints, setGiftHints] = useState(member.gift_hints ?? "");
   const [email, setEmail] = useState(member.email ?? "");
   const [whatsapp, setWhatsapp] = useState(member.whatsapp_phone ?? "");
