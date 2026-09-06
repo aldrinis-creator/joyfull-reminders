@@ -152,12 +152,12 @@ function FamilyPage() {
                     <h2 className="text-xl">{m.full_name}</h2>
                     <p className="text-muted-foreground text-sm font-semibold">
                       {t(`family.rel.${m.relationship}`)}
-                      {m.whatsapp_phone ? ` Â· ${m.whatsapp_phone}` : ""}
+                      {m.whatsapp_phone ? ` · ${m.whatsapp_phone}` : ""}
                     </p>
                     {next ? (
                       <p className="mt-2 text-base">
-                        {kindMeta?.emoji} {next.title} Â· {formatDate(next.when)}
-                        {next.age ? ` Â· ${t("family.turning", { age: next.age })}` : ""}
+                        {kindMeta?.emoji} {next.title} · {formatDate(next.when)}
+                        {next.age ? ` · ${t("family.turning", { age: next.age })}` : ""}
                       </p>
                     ) : (
                       <p className="text-muted-foreground mt-2 text-sm">{t("family.noDates")}</p>
@@ -500,9 +500,9 @@ function EditMemberDialog({ member }: { member: any }) {
         <DialogBody className="space-y-4">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor={m-name-+member.id}>{t("family.fullName")}</Label>
+            <Label htmlFor={`m-name-${member.id}`}>{t("family.fullName")}</Label>
             <Input
-              id={m-name-+member.id}
+              id={`m-name-${member.id}`}
               value={fullName}
               maxLength={100}
               onChange={(e) => setFullName(e.target.value)}
@@ -510,24 +510,24 @@ function EditMemberDialog({ member }: { member: any }) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor={m-rel-+member.id}>{t("family.relationship")}</Label>
+            <Label htmlFor={`m-rel-${member.id}`}>{t("family.relationship")}</Label>
             <Select value={relationship} onValueChange={setRelationship}>
-              <SelectTrigger id={m-rel-+member.id} className="h-12">
+              <SelectTrigger id={`m-rel-${member.id}`} className="h-12">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {RELATIONSHIPS.map((r) => (
                   <SelectItem key={r} value={r}>
-                    {t(amily.rel. + r)}
+                    {t(`family.rel.${r}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor={m-likes-+member.id}>{t("family.likes")}</Label>
+            <Label htmlFor={`m-likes-${member.id}`}>{t("family.likes")}</Label>
             <Input
-              id={m-likes-+member.id}
+              id={`m-likes-${member.id}`}
               value={likes}
               maxLength={300}
               onChange={(e) => setLikes(e.target.value)}
@@ -535,9 +535,9 @@ function EditMemberDialog({ member }: { member: any }) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor={m-music-+member.id}>{t("family.music")}</Label>
+            <Label htmlFor={`m-music-${member.id}`}>{t("family.music")}</Label>
             <Input
-              id={m-music-+member.id}
+              id={`m-music-${member.id}`}
               value={music}
               maxLength={200}
               onChange={(e) => setMusic(e.target.value)}
@@ -545,9 +545,9 @@ function EditMemberDialog({ member }: { member: any }) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor={m-gift-+member.id}>{t("family.giftHints")}</Label>
+            <Label htmlFor={`m-gift-${member.id}`}>{t("family.giftHints")}</Label>
             <Textarea
-              id={m-gift-+member.id}
+              id={`m-gift-${member.id}`}
               value={giftHints}
               maxLength={500}
               onChange={(e) => setGiftHints(e.target.value)}
@@ -560,9 +560,9 @@ function EditMemberDialog({ member }: { member: any }) {
               <h3 className="text-lg">{t("family.greetingsSection")}</h3>
             </div>
             <div className="space-y-2">
-              <Label htmlFor={m-email-+member.id}>{t("family.email")}</Label>
+              <Label htmlFor={`m-email-${member.id}`}>{t("family.email")}</Label>
               <Input
-                id={m-email-+member.id}
+                id={`m-email-${member.id}`}
                 type="email"
                 inputMode="email"
                 value={email}
@@ -572,9 +572,9 @@ function EditMemberDialog({ member }: { member: any }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={m-wa-+member.id}>{t("family.whatsapp")}</Label>
+              <Label htmlFor={`m-wa-${member.id}`}>{t("family.whatsapp")}</Label>
               <Input
-                id={m-wa-+member.id}
+                id={`m-wa-${member.id}`}
                 inputMode="tel"
                 value={whatsapp}
                 maxLength={20}
@@ -584,9 +584,9 @@ function EditMemberDialog({ member }: { member: any }) {
             </div>
             <div className="flex gap-3">
               <div className="flex-1 space-y-2">
-                <Label htmlFor={m-pin-+member.id}>{t("family.theirPincode")}</Label>
+                <Label htmlFor={`m-pin-${member.id}`}>{t("family.theirPincode")}</Label>
                 <Input
-                  id={m-pin-+member.id}
+                  id={`m-pin-${member.id}`}
                   inputMode="numeric"
                   maxLength={6}
                   value={pincode}
@@ -595,9 +595,9 @@ function EditMemberDialog({ member }: { member: any }) {
                 />
               </div>
               <div className="flex-1 space-y-2">
-                <Label htmlFor={m-city-+member.id}>{t("family.theirCity")}</Label>
+                <Label htmlFor={`m-city-${member.id}`}>{t("family.theirCity")}</Label>
                 <Input
-                  id={m-city-+member.id}
+                  id={`m-city-${member.id}`}
                   value={city}
                   maxLength={80}
                   onChange={(e) => setCity(e.target.value)}
