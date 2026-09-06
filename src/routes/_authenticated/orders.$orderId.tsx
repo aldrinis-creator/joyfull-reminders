@@ -82,6 +82,18 @@ function OrderPage() {
     document.body.appendChild(script);
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("payment_id")) {
+      toast.success(t("market.paySubmitted"));
+      void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+      // Remove payment_id from URL without full reload
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("payment_id");
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, [orderId, queryClient, t]);
+
   const pay = async () => {
     setPaying(true);
     try {
@@ -90,28 +102,17 @@ function OrderPage() {
         toast.error(t("market.errPaymentsOff"));
         return;
       }
-      if (!window.Razorpay) {
-        toast.error(t("market.errCheckoutLoading"));
-        return;
-      }
-      const checkout = new window.Razorpay({
-        key: session.keyId,
-        order_id: session.providerOrderId,
-        amount: session.amountPaise,
-        currency: session.currency,
-        name: "e-Reminder",
-        description: session.description,
-        prefill: {
-          name: session.customerName ?? undefined,
-          email: session.customerEmail ?? undefined,
-        },
-        theme: { color: "#ff6b57" },
-        handler: () => {
-          toast.success(t("market.paySubmitted"));
-          void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
-        },
-      });
-      checkout.open();
+      const payUrl = new URL("https://futurewave.in/pay-joyfull/");
+      payUrl.searchParams.set("key", session.keyId);
+      payUrl.searchParams.set("order_id", session.providerOrderId);
+      payUrl.searchParams.set("amount", session.amountPaise.toString());
+      payUrl.searchParams.set("currency", session.currency);
+      payUrl.searchParams.set("description", session.description);
+      if (session.customerName) payUrl.searchParams.set("name", session.customerName);
+      if (session.customerEmail) payUrl.searchParams.set("email", session.customerEmail);
+      payUrl.searchParams.set("app_callback", window.location.href);
+
+      window.location.href = payUrl.toString();
     } catch (err) {
       console.error(err);
       toast.error(t("market.errPayStart"));
