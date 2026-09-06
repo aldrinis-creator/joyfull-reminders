@@ -152,12 +152,12 @@ function FamilyPage() {
                     <h2 className="text-xl">{m.full_name}</h2>
                     <p className="text-muted-foreground text-sm font-semibold">
                       {t(`family.rel.${m.relationship}`)}
-                      {m.whatsapp_phone ? ` Â· ${m.whatsapp_phone}` : ""}
+                      {m.whatsapp_phone ? ` · ${m.whatsapp_phone}` : ""}
                     </p>
                     {next ? (
                       <p className="mt-2 text-base">
-                        {kindMeta?.emoji} {next.title} Â· {formatDate(next.when)}
-                        {next.age ? ` Â· ${t("family.turning", { age: next.age })}` : ""}
+                        {kindMeta?.emoji} {next.title} · {formatDate(next.when)}
+                        {next.age ? ` · ${t("family.turning", { age: next.age })}` : ""}
                       </p>
                     ) : (
                       <p className="text-muted-foreground mt-2 text-sm">{t("family.noDates")}</p>
@@ -518,7 +518,7 @@ function EditMemberDialog({ member }: { member: any }) {
               <SelectContent>
                 {RELATIONSHIPS.map((r) => (
                   <SelectItem key={r} value={r}>
-                    {t(amily.rel. + r)}
+                    {t(`family.rel.${r}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
