@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Heart } from "lucide-react";
+import { Plus, Heart, Edit2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/AppShell";
@@ -42,13 +42,13 @@ import {
 export const Route = createFileRoute("/_authenticated/family/")({
   head: () => ({
     meta: [
-      { title: "Family milestones — e-Reminder" },
+      { title: "Family milestones â€” e-Reminder" },
       {
         name: "description",
         content:
           "Everyone in your family circle with their upcoming birthdays, anniversaries, exams and the age they're turning.",
       },
-      { property: "og:title", content: "Family milestones — e-Reminder" },
+      { property: "og:title", content: "Family milestones â€” e-Reminder" },
       {
         property: "og:description",
         content: "Birthdays, anniversaries and milestones for the people you love.",
@@ -150,11 +150,14 @@ function FamilyPage() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <h2 className="text-xl">{m.full_name}</h2>
-                    <p className="text-muted-foreground text-sm font-semibold">{t(`family.rel.${m.relationship}`)}</p>
+                    <p className="text-muted-foreground text-sm font-semibold">
+                      {t(`family.rel.${m.relationship}`)}
+                      {m.whatsapp_phone ? ` Â· ${m.whatsapp_phone}` : ""}
+                    </p>
                     {next ? (
                       <p className="mt-2 text-base">
-                        {kindMeta?.emoji} {next.title} · {formatDate(next.when)}
-                        {next.age ? ` · ${t("family.turning", { age: next.age })}` : ""}
+                        {kindMeta?.emoji} {next.title} Â· {formatDate(next.when)}
+                        {next.age ? ` Â· ${t("family.turning", { age: next.age })}` : ""}
                       </p>
                     ) : (
                       <p className="text-muted-foreground mt-2 text-sm">{t("family.noDates")}</p>
@@ -172,11 +175,28 @@ function FamilyPage() {
                       </div>
                     ) : null}
                   </div>
-                  {next ? (
-                    <span className="bg-accent text-accent-foreground shrink-0 rounded-2xl px-3 py-2 text-xs font-bold">
-                      {relativeDay(next.when)}
-                    </span>
-                  ) : null}
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex gap-1" onClick={(e) => e.preventDefault()}>
+                      <EditMemberDialog member={m} />
+                      <button
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          if (!confirm(t("family.confirmDelete") || "Delete this member?")) return;
+                          await supabase.from("family_members").delete().eq("id", m.id);
+                          queryClient.invalidateQueries({ queryKey: ["family_members"] });
+                          toast.success(t("family.deletedToast") || "Deleted successfully");
+                        }}
+                        className="text-muted-foreground hover:text-destructive bg-muted rounded-full p-2 transition-colors"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                    {next ? (
+                      <span className="bg-accent text-accent-foreground shrink-0 rounded-2xl px-3 py-2 text-xs font-bold">
+                        {relativeDay(next.when)}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               </Link>
             );
@@ -440,6 +460,195 @@ function AddMemberDialog() {
               void queryClient.invalidateQueries({ queryKey: ["special_dates"] });
               void queryClient.invalidateQueries({ queryKey: ["reminders"] });
               toast.success(t("family.addedToast"));
+            }}
+          >
+            {saving ? t("saving") : t("save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditMemberDialog({ member }: { member: any }) {
+  const t = useT();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [fullName, setFullName] = useState(member.full_name);
+  const [relationship, setRelationship] = useState(member.relationship);
+  const [likes, setLikes] = useState(member.likes?.join(", ") ?? "");
+  const [music, setMusic] = useState(member.music_genres?.join(", ") ?? "");
+  const [giftHints, setGiftHints] = useState(member.gift_hints ?? "");
+  const [email, setEmail] = useState(member.email ?? "");
+  const [whatsapp, setWhatsapp] = useState(member.whatsapp_phone ?? "");
+  const [pincode, setPincode] = useState(member.pincode ?? "");
+  const [city, setCity] = useState(member.city ?? "");
+  const [greetingsEnabled, setGreetingsEnabled] = useState(member.greetings_enabled ?? true);
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button className="text-muted-foreground hover:text-primary bg-muted rounded-full p-2 transition-colors">
+          <Edit2 className="size-4" aria-hidden />
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-2xl">{t("family.editTitle") || "Edit Member"}</DialogTitle>
+        </DialogHeader>
+        <DialogBody className="space-y-4">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor={m-name-+member.id}>{t("family.fullName")}</Label>
+            <Input
+              id={m-name-+member.id}
+              value={fullName}
+              maxLength={100}
+              onChange={(e) => setFullName(e.target.value)}
+              className="h-12"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={m-rel-+member.id}>{t("family.relationship")}</Label>
+            <Select value={relationship} onValueChange={setRelationship}>
+              <SelectTrigger id={m-rel-+member.id} className="h-12">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RELATIONSHIPS.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {t(amily.rel. + r)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={m-likes-+member.id}>{t("family.likes")}</Label>
+            <Input
+              id={m-likes-+member.id}
+              value={likes}
+              maxLength={300}
+              onChange={(e) => setLikes(e.target.value)}
+              className="h-12"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={m-music-+member.id}>{t("family.music")}</Label>
+            <Input
+              id={m-music-+member.id}
+              value={music}
+              maxLength={200}
+              onChange={(e) => setMusic(e.target.value)}
+              className="h-12"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={m-gift-+member.id}>{t("family.giftHints")}</Label>
+            <Textarea
+              id={m-gift-+member.id}
+              value={giftHints}
+              maxLength={500}
+              onChange={(e) => setGiftHints(e.target.value)}
+              rows={2}
+            />
+          </div>
+
+          <div className="bg-muted/60 space-y-4 rounded-2xl p-4">
+            <div>
+              <h3 className="text-lg">{t("family.greetingsSection")}</h3>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={m-email-+member.id}>{t("family.email")}</Label>
+              <Input
+                id={m-email-+member.id}
+                type="email"
+                inputMode="email"
+                value={email}
+                maxLength={200}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-12"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={m-wa-+member.id}>{t("family.whatsapp")}</Label>
+              <Input
+                id={m-wa-+member.id}
+                inputMode="tel"
+                value={whatsapp}
+                maxLength={20}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                className="h-12"
+              />
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-1 space-y-2">
+                <Label htmlFor={m-pin-+member.id}>{t("family.theirPincode")}</Label>
+                <Input
+                  id={m-pin-+member.id}
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                  className="h-12"
+                />
+              </div>
+              <div className="flex-1 space-y-2">
+                <Label htmlFor={m-city-+member.id}>{t("family.theirCity")}</Label>
+                <Input
+                  id={m-city-+member.id}
+                  value={city}
+                  maxLength={80}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="h-12"
+                />
+              </div>
+            </div>
+            <label className="flex min-h-11 items-center justify-between gap-3 text-base font-semibold">
+              {t("family.allowGreetings")}
+              <Switch checked={greetingsEnabled} onCheckedChange={setGreetingsEnabled} />
+            </label>
+          </div>
+        </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button
+            size="lg"
+            className="h-13 w-full text-base"
+            disabled={saving}
+            onClick={async () => {
+              const parsed = memberSchema.safeParse({ full_name: fullName, relationship, gift_hints: giftHints });
+              if (!parsed.success) {
+                toast.error(t(parsed.error.issues[0]?.message ?? "family.errDetails"));
+                return;
+              }
+              setSaving(true);
+              const { error } = await supabase
+                .from("family_members")
+                .update({
+                  full_name: parsed.data.full_name,
+                  relationship: parsed.data.relationship,
+                  likes: likes.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 12),
+                  music_genres: music.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 12),
+                  gift_hints: parsed.data.gift_hints || null,
+                  email: email.trim() || null,
+                  whatsapp_phone: whatsapp.trim() || null,
+                  pincode: pincode.trim() || null,
+                  city: city.trim() || null,
+                  greetings_enabled: greetingsEnabled,
+                })
+                .eq("id", member.id);
+
+              setSaving(false);
+              if (error) {
+                toast.error(t("family.errSavePerson"));
+                return;
+              }
+              
+              setOpen(false);
+              void queryClient.invalidateQueries({ queryKey: ["family_members"] });
+              toast.success(t("saved") || "Saved");
             }}
           >
             {saving ? t("saving") : t("save")}
