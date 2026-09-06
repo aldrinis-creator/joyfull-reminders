@@ -498,7 +498,7 @@ function EditMemberDialog({ member }: { member: FamilyMember }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-2xl">{t("family.editTitle") || "Edit Member"}</DialogTitle>
+          <DialogTitle className="text-2xl">{t("family.editTitle")}</DialogTitle>
         </DialogHeader>
         <DialogBody className="space-y-4">
         <div className="space-y-4">
