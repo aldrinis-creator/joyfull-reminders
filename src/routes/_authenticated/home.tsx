@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useFamilyMembers, useProfile, useReminders, useStreak } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
+import { useAlarmSettings } from "@/hooks/useAlarmSettings";
 import { fetchActiveSnoozes, readSnoozes, recordSnooze, snoozeLocally } from "@/lib/snooze";
 import {
   bucketLabel,
