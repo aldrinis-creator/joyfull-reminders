@@ -9,6 +9,7 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { CalendarSyncCard } from "@/components/CalendarSyncCard";
 
 import { PhoneVerifyDialog } from "@/components/PhoneVerifyDialog";
+import { PushDeviceCard } from "@/components/PushDeviceCard";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -276,6 +277,7 @@ function ProfilePage() {
             </div>
             <Switch checked={push} onCheckedChange={setPush} />
           </div>
+          <PushDeviceCard />
           <Button
             size="lg"
             className="h-13 w-full text-base"

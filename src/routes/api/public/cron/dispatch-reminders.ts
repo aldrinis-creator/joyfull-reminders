@@ -221,6 +221,20 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
               if (wa.ok) delivered = true;
             }
 
+            if (owner.pushEnabled) {
+              try {
+                const { sendPushToUser } = await import("@/lib/push.server");
+                const push = await sendPushToUser(supabaseAdmin, row.user_id, {
+                  title: reminder.title,
+                  body: `${label} · ${when}`,
+                  path: "/home",
+                });
+                if (push.sent > 0) delivered = true;
+              } catch {
+                /* one channel failing must not sink the batch */
+              }
+            }
+
             if (owner.emailEnabled && owner.email) {
               try {
                 const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
