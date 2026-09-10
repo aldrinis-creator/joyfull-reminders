@@ -64,10 +64,11 @@ export function AlarmOverlay({
 }) {
   const t = useT();
   const [ringing, setRinging] = useState(true);
-  useChime(ringing);
+  const { blocked, retry } = useChime(ringing);
 
   useEffect(() => {
     const t = setTimeout(() => setRinging(false), RING_MS);
+    vibrateAlarm();
     return () => clearTimeout(t);
   }, []);
 
