@@ -10,6 +10,7 @@ import { CalendarSyncCard } from "@/components/CalendarSyncCard";
 
 import { PhoneVerifyDialog } from "@/components/PhoneVerifyDialog";
 import { PushDeviceCard } from "@/components/PushDeviceCard";
+import { AlarmSoundCard } from "@/components/AlarmSoundCard";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
