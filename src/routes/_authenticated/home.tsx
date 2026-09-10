@@ -47,6 +47,7 @@ function HomePage() {
   const { data: profile } = useProfile();
   const { data: streak } = useStreak();
   const t = useT();
+  useAlarmSettings();
   const queryClient = useQueryClient();
   const [snoozedIds, setSnoozedIds] = useState<Record<string, number>>({});
   const [showLater, setShowLater] = useState(false);
