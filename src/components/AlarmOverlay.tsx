@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { BellRing, Clock, Check, Gift } from "lucide-react";
+import { BellRing, Clock, Check, Gift, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PayNowButtons } from "@/components/PayNowButtons";
 import { categoryMeta, categoryShortLabel, formatDateTime, type Reminder } from "@/lib/ereminder";
@@ -107,6 +107,17 @@ export function AlarmOverlay({
       ) : null}
 
       <div className="mt-10 w-full max-w-sm space-y-3">
+        {ringing && blocked ? (
+          <Button
+            size="lg"
+            variant="secondary"
+            className="h-14 w-full text-base"
+            onClick={() => void retry()}
+          >
+            <Volume2 className="size-5" aria-hidden /> {t("home.enableAlarmSound")}
+          </Button>
+        ) : null}
+
         <Button
           size="lg"
           className="h-16 w-full text-lg"
