@@ -1,55 +1,56 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { BellRing, Clock, Check, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PayNowButtons } from "@/components/PayNowButtons";
 import { categoryMeta, categoryShortLabel, formatDateTime, type Reminder } from "@/lib/ereminder";
 import { useT } from "@/hooks/useLanguage";
+import { isAudioUnlocked, playChime, unlockAudio, vibrateAlarm } from "@/lib/alarm-sound";
 
 
 const RING_MS = 60_000;
 
-/** Simple looping chime built with the Web Audio API — no asset download needed. */
+/**
+ * Looping chime on the shared, pre-unlocked audio context. Reports `blocked`
+ * when the browser is still refusing sound, so the overlay can offer a tap.
+ */
 function useChime(active: boolean) {
-  const ctxRef = useRef<AudioContext | null>(null);
+  const [blocked, setBlocked] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
     let stopped = false;
-    const AudioCtor =
-      window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtor) return;
-    const ctx = new AudioCtor();
-    ctxRef.current = ctx;
 
     const ping = () => {
       if (stopped) return;
-      [880, 1174.7].forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        const t = ctx.currentTime + i * 0.28;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.25, t + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(t);
-        osc.stop(t + 1);
-      });
+      const played = playChime();
+      setBlocked(!played);
     };
 
-    void ctx.resume().then(ping);
+    void unlockAudio().then((ok) => {
+      if (stopped) return;
+      setBlocked(!ok);
+      if (ok) ping();
+    });
     timerRef.current = setInterval(ping, 2200);
 
     return () => {
       stopped = true;
       if (timerRef.current) clearInterval(timerRef.current);
-      void ctx.close();
-      ctxRef.current = null;
     };
   }, [active]);
+
+  const retry = useCallback(async () => {
+    const ok = await unlockAudio();
+    setBlocked(!ok);
+    if (ok) playChime();
+  }, []);
+
+  return { blocked: blocked && !isAudioUnlocked(), retry };
 }
 
 export function AlarmOverlay({
