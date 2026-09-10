@@ -38,7 +38,11 @@ export function AlarmSoundCard() {
     setCustomPath(profile.alarm_sound_path ?? null);
   }, [profile]);
 
-  const persist = async (patch: Record<string, unknown>) => {
+  const persist = async (patch: {
+    alarm_sound?: string;
+    alarm_volume?: number;
+    alarm_sound_path?: string | null;
+  }) => {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
