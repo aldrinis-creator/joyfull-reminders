@@ -458,6 +458,8 @@ export type Database = {
         Row: {
           address: string | null
           alarm_sound: string
+          alarm_sound_path: string | null
+          alarm_volume: number
           avatar_url: string | null
           calendar_token: string | null
           city: string | null
@@ -477,6 +479,8 @@ export type Database = {
         Insert: {
           address?: string | null
           alarm_sound?: string
+          alarm_sound_path?: string | null
+          alarm_volume?: number
           avatar_url?: string | null
           calendar_token?: string | null
           city?: string | null
@@ -496,6 +500,8 @@ export type Database = {
         Update: {
           address?: string | null
           alarm_sound?: string
+          alarm_sound_path?: string | null
+          alarm_volume?: number
           avatar_url?: string | null
           calendar_token?: string | null
           city?: string | null

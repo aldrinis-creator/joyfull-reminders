@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { PayNowButtons } from "@/components/PayNowButtons";
 import { categoryMeta, categoryShortLabel, formatDateTime, type Reminder } from "@/lib/ereminder";
 import { useT } from "@/hooks/useLanguage";
-import { isAudioUnlocked, playChime, unlockAudio, vibrateAlarm } from "@/lib/alarm-sound";
+import { alarmIntervalMs, isAudioUnlocked, playAlarm, unlockAudio, vibrateAlarm } from "@/lib/alarm-sound";
 
 
 const RING_MS = 60_000;
 
 /**
- * Looping chime on the shared, pre-unlocked audio context. Reports `blocked`
+ * Looping alarm on the shared, pre-unlocked audio context. Reports `blocked`
  * when the browser is still refusing sound, so the overlay can offer a tap.
  */
 function useChime(active: boolean) {
@@ -27,7 +27,7 @@ function useChime(active: boolean) {
 
     const ping = () => {
       if (stopped) return;
-      const played = playChime();
+      const played = playAlarm();
       setBlocked(!played);
     };
 
@@ -36,7 +36,7 @@ function useChime(active: boolean) {
       setBlocked(!ok);
       if (ok) ping();
     });
-    timerRef.current = setInterval(ping, 2200);
+    timerRef.current = setInterval(ping, alarmIntervalMs());
 
     return () => {
       stopped = true;
@@ -47,7 +47,7 @@ function useChime(active: boolean) {
   const retry = useCallback(async () => {
     const ok = await unlockAudio();
     setBlocked(!ok);
-    if (ok) playChime();
+    if (ok) playAlarm();
   }, []);
 
   return { blocked: blocked && !isAudioUnlocked(), retry };
