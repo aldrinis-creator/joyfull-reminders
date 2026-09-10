@@ -40,7 +40,7 @@ export async function unlockAudio(): Promise<boolean> {
   } catch {
     return false;
   }
-  return context.state === "running";
+  return isAudioUnlocked();
 }
 
 /** Register a one-time unlock on the first interaction. Returns a cleanup fn. */
