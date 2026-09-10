@@ -88,7 +88,13 @@ export async function enablePush(): Promise<PushResult> {
   );
 
   const { initializeApp, getApps, getApp } = await import("firebase/app");
-  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const options = {
+    apiKey: firebaseConfig.apiKey,
+    projectId: firebaseConfig.projectId,
+    appId,
+    messagingSenderId: firebaseConfig.messagingSenderId,
+  };
+  const app = getApps().length ? getApp() : initializeApp(options);
   const messaging = getMessaging(app);
   const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration });
   return token ? { status: "registered", token } : { status: "denied" };
