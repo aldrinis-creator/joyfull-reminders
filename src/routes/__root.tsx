@@ -17,6 +17,7 @@ import { LANGUAGE_STORAGE_KEY, languageInitScript, readStoredLanguage } from "..
 import { detectLanguage } from "../lib/i18n/detect";
 import { LanguageProvider, useT } from "@/hooks/useLanguage";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { installAudioUnlock } from "../lib/alarm-sound";
 
 function NotFoundComponent() {
   const t = useT();
@@ -132,6 +133,10 @@ function RootComponent() {
     const stored = readStoredLanguage();
     document.cookie = `${LANGUAGE_STORAGE_KEY}=${stored}; path=/; max-age=31536000; samesite=lax`;
   }, []);
+
+  // Prepare the alarm sound on the first interaction so a due reminder can ring
+  // by itself later (browsers block audio that starts without a gesture).
+  useEffect(() => installAudioUnlock(), []);
 
 
   useEffect(() => {
