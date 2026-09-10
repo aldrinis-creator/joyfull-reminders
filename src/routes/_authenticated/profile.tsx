@@ -278,6 +278,7 @@ function ProfilePage() {
             <Switch checked={push} onCheckedChange={setPush} />
           </div>
           <PushDeviceCard />
+          <AlarmSoundCard />
           <Button
             size="lg"
             className="h-13 w-full text-base"
