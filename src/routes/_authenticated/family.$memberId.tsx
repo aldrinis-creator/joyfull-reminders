@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { GreetingComposer } from "@/components/GreetingComposer";
 import { supabase } from "@/integrations/supabase/client";
 import { isValidPincode } from "@/lib/greetings";
+import { useMemberAnyGreetingState } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import {
   SPECIAL_DATE_KINDS,
