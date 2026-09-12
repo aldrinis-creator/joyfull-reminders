@@ -49,6 +49,23 @@ const home: Namespace = {
     shareTextWithNotes: "Reminder: {title}\nWhen: {when}\n{notes}",
     shareFailed: "Could not open the share sheet.",
 
+    // Ask e-Reminder assistant
+    askButton: "Ask",
+    askTitle: "Ask e-Reminder",
+    askSubtitle: "Ask about your reminders and family dates. Answers use only your own saved data.",
+    askPlaceholder: "Type your question",
+    askMic: "Speak your question",
+    askStopMic: "Stop listening",
+    askSend: "Send",
+    askThinking: "Looking at your reminders…",
+    askExamplesLabel: "Try asking:",
+    askExample1: "What's due this week?",
+    askExample2: "Whose birthday is coming up?",
+    askExample3: "How much do I owe this month?",
+    askFailed: "Sorry, that didn't work. Please try again in a moment.",
+    askNotConfigured: "The assistant is not set up yet.",
+
+
     // Alarm overlay
     alarmAria: "Reminder due: {title}",
     alarmKicker: "{category} reminder",
@@ -106,6 +123,22 @@ const home: Namespace = {
     shareText: "रिमाइंडर: {title}\nकब: {when}",
     shareTextWithNotes: "रिमाइंडर: {title}\nकब: {when}\n{notes}",
     shareFailed: "साझा करने की विंडो नहीं खुल सकी।",
+
+    askButton: "पूछें",
+    askTitle: "e-Reminder से पूछें",
+    askSubtitle: "अपने रिमाइंडर और परिवार की तारीखों के बारे में पूछें। उत्तर केवल आपके सहेजे डेटा से आते हैं।",
+    askPlaceholder: "अपना सवाल लिखें",
+    askMic: "बोलकर पूछें",
+    askStopMic: "सुनना बंद करें",
+    askSend: "भेजें",
+    askThinking: "आपके रिमाइंडर देखे जा रहे हैं…",
+    askExamplesLabel: "ऐसे पूछकर देखें:",
+    askExample1: "इस हफ़्ते क्या देय है?",
+    askExample2: "किसका जन्मदिन आने वाला है?",
+    askExample3: "इस महीने मुझे कितना भुगतान करना है?",
+    askFailed: "क्षमा करें, यह काम नहीं कर सका। कृपया थोड़ी देर बाद फिर कोशिश करें।",
+    askNotConfigured: "सहायक अभी सेट नहीं किया गया है।",
+
 
     alarmAria: "रिमाइंडर का समय: {title}",
     alarmKicker: "{category} रिमाइंडर",

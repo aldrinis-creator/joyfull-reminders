@@ -5,6 +5,7 @@ import { Plus, Flame, PartyPopper, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { AlarmOverlay } from "@/components/AlarmOverlay";
+import { AskAssistant } from "@/components/AskAssistant";
 import { ReminderCard } from "@/components/ReminderCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -312,6 +313,8 @@ function HomePage() {
           </div>
         )}
       </AppShell>
+
+      <AskAssistant />
 
       {dueAlarm ? (
         <AlarmOverlay
