@@ -2,6 +2,7 @@ import common from "./locales/common";
 import home from "./locales/home";
 import reminders from "./locales/reminders";
 import family from "./locales/family";
+import documents from "./locales/documents";
 import market from "./locales/market";
 import profile from "./locales/profile";
 import publicNs from "./locales/public";
@@ -14,6 +15,7 @@ const NAMESPACES: Record<string, Namespace> = {
   home,
   reminders,
   family,
+  documents,
   market,
   profile,
   public: publicNs,
