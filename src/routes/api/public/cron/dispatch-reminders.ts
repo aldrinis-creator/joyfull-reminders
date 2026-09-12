@@ -229,9 +229,14 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
                   body: `${label} · ${when}`,
                   path: "/home",
                 });
+                // Delivery visibility: without this, a silent zero-token or
+                // gateway failure is indistinguishable from a successful send.
+                console.log(
+                  `[cron] push reminder=${row.reminder_id} sent=${push.sent} failed=${push.failed}`,
+                );
                 if (push.sent > 0) delivered = true;
-              } catch {
-                /* one channel failing must not sink the batch */
+              } catch (err) {
+                console.error(`[cron] push threw for reminder=${row.reminder_id}: ${String(err)}`);
               }
             }
 
