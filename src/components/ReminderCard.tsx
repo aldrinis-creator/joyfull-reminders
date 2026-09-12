@@ -12,8 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { GreetingComposer } from "@/components/GreetingComposer";
-import { ReminderGreetingStatus } from "@/components/ReminderGreetingStatus";
+import { RecipientList } from "@/components/RecipientActions";
 import { PayNowButtons } from "@/components/PayNowButtons";
 import { ShareReminderButtons } from "@/components/ShareReminderButtons";
 import { cn } from "@/lib/utils";
