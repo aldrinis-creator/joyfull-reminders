@@ -142,6 +142,18 @@ export function AlarmOverlay({
           <PayNowButtons shortcut={{ ...reminder, title: reminder.title }} tone="onDark" size="lg" />
         </div>
 
+        {isWishingReminder(reminder)
+          ? recipients.map((m) => (
+              <div key={m.id} className="space-y-1">
+                {recipients.length > 1 ? (
+                  <p className="text-indigo-foreground/85 text-sm font-bold">{m.full_name}</p>
+                ) : null}
+                <div className="flex flex-wrap gap-2 [&>*]:flex-1">
+                  <CallButtons member={m} tone="onDark" />
+                </div>
+              </div>
+            ))
+          : null}
 
         <Button
           asChild
