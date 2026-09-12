@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { GreetingComposer } from "@/components/GreetingComposer";
 import { supabase } from "@/integrations/supabase/client";
 import { isValidPincode } from "@/lib/greetings";
+import { useMemberAnyGreetingState } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import {
   SPECIAL_DATE_KINDS,
@@ -77,6 +78,7 @@ function MemberPage() {
   });
 
   const member = data?.member;
+  const greetingState = useMemberAnyGreetingState(memberId).data ?? null;
   const [composerOpen, setComposerOpen] = useState(false);
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["family_member", memberId] });
 
@@ -177,8 +179,14 @@ function MemberPage() {
               </Button>
               <Button
                 size="lg"
-                variant="secondary"
-                className="h-13 w-full text-base"
+                variant={greetingState ? "default" : "secondary"}
+                className={
+                  greetingState === "scheduled"
+                    ? "h-13 w-full text-base bg-accent text-accent-foreground hover:bg-accent/90"
+                    : greetingState === "sent"
+                      ? "h-13 w-full text-base bg-success text-success-foreground hover:bg-success/90"
+                      : "h-13 w-full text-base"
+                }
                 onClick={() => setComposerOpen(true)}
               >
                 <MessageCircleHeart className="size-5" aria-hidden /> {t("family.sendGreeting")}

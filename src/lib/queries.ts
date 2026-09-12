@@ -74,6 +74,59 @@ export function useReminderRecipients() {
   });
 }
 
+/**
+ * Greeting state for one person on one reminder.
+ * Shares the `["greetings", reminderId]` cache with ReminderGreetingStatus, so
+ * adding the colour hint does not add another network request.
+ * Returns "scheduled", "sent" or null.
+ */
+export function useMemberGreetingState(reminderId: string, memberId: string) {
+  return useQuery({
+    queryKey: ["greetings", reminderId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("greetings")
+        .select("id, status, scheduled_for, sent_at, family_member_id")
+        .eq("reminder_id", reminderId)
+        .in("status", ["scheduled", "sent"])
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    select: (rows) => {
+      const mine = rows.filter(
+        (g) => g.family_member_id === memberId || g.family_member_id === null,
+      );
+      if (mine.some((g) => g.status === "scheduled" && g.scheduled_for)) return "scheduled" as const;
+      if (mine.some((g) => g.status === "sent")) return "sent" as const;
+      return null;
+    },
+  });
+}
+
+/**
+ * Whether a member has ANY scheduled or sent greeting (most recent wins).
+ * Used on the Family member detail page where the button is not tied to one reminder.
+ */
+export function useMemberAnyGreetingState(memberId: string) {
+  return useQuery({
+    queryKey: ["greetings_member", memberId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("greetings")
+        .select("id, status, scheduled_for, sent_at")
+        .eq("family_member_id", memberId)
+        .in("status", ["scheduled", "sent"])
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+    select: (row) =>
+      !row ? null : row.status === "scheduled" ? ("scheduled" as const) : ("sent" as const),
+  });
+}
+
 export function useSpecialDates() {
   return useQuery({
     queryKey: ["special_dates"],
