@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Flame, Languages, LogOut, MapPin, Monitor, Moon, Store, Sun } from "lucide-react";
+import { Flame, FolderLock, Languages, LogOut, MapPin, Monitor, Moon, Store, Sun } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/AppShell";
