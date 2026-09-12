@@ -81,6 +81,18 @@ const reminders: Namespace = {
     voiceError: "Voice input didn't work. Please type it instead.",
     voiceRetry: "Try again",
 
+    // Document scan
+    scanTitle: "Scan a bill or document",
+    scanHint: "Take a photo of a bill, policy or form and we'll fill in what we can read.",
+    scanStart: "Scan a document",
+    scanProcessing: "Reading the document…",
+    scanRetry: "Try another photo",
+    scanPreviewAlt: "Photo you scanned",
+    scanFilled: "Filled in — please check it before saving.",
+    scanUnclear: "We couldn't read a bill or document in that photo. Try a clearer picture.",
+    scanNotImage: "Please choose a photo.",
+    scanError: "Scanning didn't work. Please type it instead.",
+
     // Calendar page
     filterAll: "All",
     prevMonth: "Previous month",
