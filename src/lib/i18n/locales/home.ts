@@ -124,6 +124,22 @@ const home: Namespace = {
     shareTextWithNotes: "रिमाइंडर: {title}\nकब: {when}\n{notes}",
     shareFailed: "साझा करने की विंडो नहीं खुल सकी।",
 
+    askButton: "पूछें",
+    askTitle: "e-Reminder से पूछें",
+    askSubtitle: "अपने रिमाइंडर और परिवार की तारीखों के बारे में पूछें। उत्तर केवल आपके सहेजे डेटा से आते हैं।",
+    askPlaceholder: "अपना सवाल लिखें",
+    askMic: "बोलकर पूछें",
+    askStopMic: "सुनना बंद करें",
+    askSend: "भेजें",
+    askThinking: "आपके रिमाइंडर देखे जा रहे हैं…",
+    askExamplesLabel: "ऐसे पूछकर देखें:",
+    askExample1: "इस हफ़्ते क्या देय है?",
+    askExample2: "किसका जन्मदिन आने वाला है?",
+    askExample3: "इस महीने मुझे कितना भुगतान करना है?",
+    askFailed: "क्षमा करें, यह काम नहीं कर सका। कृपया थोड़ी देर बाद फिर कोशिश करें।",
+    askNotConfigured: "सहायक अभी सेट नहीं किया गया है।",
+
+
     alarmAria: "रिमाइंडर का समय: {title}",
     alarmKicker: "{category} रिमाइंडर",
     dismissDone: "बंद करें और पूरा करें",
