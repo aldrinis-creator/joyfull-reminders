@@ -50,6 +50,7 @@ const ORDER: UrgencyBucket[] = ["overdue", "today", "week", "later"];
 function HomePage() {
   const { data: reminders, isLoading } = useReminders();
   const { data: members } = useFamilyMembers();
+  const { data: recipientsByReminder } = useReminderRecipients();
   const { data: profile } = useProfile();
   const { data: streak } = useStreak();
   const t = useT();

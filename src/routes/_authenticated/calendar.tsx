@@ -170,7 +170,12 @@ function CalendarPage() {
             : t("reminders.upcoming")}
         </h2>
         {(selectedDay ? selectedEvents : events.slice(0, 20)).map(({ reminder, occurrence }) => (
-          <ReminderCard key={reminder.id} reminder={reminder} occurrence={occurrence} />
+          <ReminderCard
+            key={reminder.id}
+            reminder={reminder}
+            occurrence={occurrence}
+            recipients={recipientsByReminder?.get(reminder.id)}
+          />
         ))}
         {(selectedDay ? selectedEvents : events).length === 0 ? (
           <p className="text-muted-foreground bg-card shadow-card rounded-3xl px-6 py-10 text-center">
