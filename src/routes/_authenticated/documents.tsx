@@ -343,7 +343,7 @@ function AddDocumentDialog({
               <option value="">{t("documents.memberNone")}</option>
               {(members ?? []).map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.name}
+                  {m.full_name}
                 </option>
               ))}
             </select>
