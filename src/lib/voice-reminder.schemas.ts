@@ -48,6 +48,19 @@ export const parsedReminderSchema = z.object({
   participants: z.string().trim().max(200).nullish(),
   vehicleNumber: z.string().trim().max(40).nullish(),
   institution: z.string().trim().max(120).nullish(),
+  /** Only when clearly printed on a scanned document. */
+  paymentAmount: z.coerce.number().positive().max(10_000_000).nullish(),
+  upiPayeeName: z.string().trim().max(120).nullish(),
 });
+
+export const parseDocumentScanInput = z.object({
+  /** Raw base64 (no data: prefix). */
+  imageBase64: z.string().min(100),
+  mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+  localNow: z.string().trim().min(10).max(40),
+  language: z.enum(["en", "hi"]).default("en"),
+});
+
+export type ParseDocumentScanInput = z.infer<typeof parseDocumentScanInput>;
 
 export type ParsedReminder = z.infer<typeof parsedReminderSchema>;

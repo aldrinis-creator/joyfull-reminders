@@ -20,6 +20,7 @@ import { useFamilyMembers } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import { isValidUpiId, safePaymentUrl } from "@/lib/pay-link";
 import { VoiceReminderButton } from "@/components/VoiceReminderButton";
+import { DocumentScanButton } from "@/components/DocumentScanButton";
 import type { ParsedReminder } from "@/lib/voice-reminder.schemas";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -152,6 +153,8 @@ export function ReminderForm({
     if (parsed.participants) setParticipants(parsed.participants);
     if (parsed.vehicleNumber) setVehicleNumber(parsed.vehicleNumber);
     if (parsed.institution) setInstitution(parsed.institution);
+    if (parsed.paymentAmount && !payAmount.trim()) setPayAmount(String(parsed.paymentAmount));
+    if (parsed.upiPayeeName && !upiPayee.trim()) setUpiPayee(parsed.upiPayeeName);
   }
 
 
@@ -273,7 +276,12 @@ export function ReminderForm({
         navigate({ to: "/home" });
       }}
     >
-      {existing ? null : <VoiceReminderButton onParsed={applyParsed} />}
+      {existing ? null : (
+        <>
+          <VoiceReminderButton onParsed={applyParsed} />
+          <DocumentScanButton onParsed={applyParsed} />
+        </>
+      )}
 
       <Field label={t("reminders.fieldTitle")} htmlFor="title">
         <Input

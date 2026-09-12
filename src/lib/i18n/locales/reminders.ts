@@ -81,6 +81,18 @@ const reminders: Namespace = {
     voiceError: "Voice input didn't work. Please type it instead.",
     voiceRetry: "Try again",
 
+    // Document scan
+    scanTitle: "Scan a bill or document",
+    scanHint: "Take a photo of a bill, policy or form and we'll fill in what we can read.",
+    scanStart: "Scan a document",
+    scanProcessing: "Reading the document…",
+    scanRetry: "Try another photo",
+    scanPreviewAlt: "Photo you scanned",
+    scanFilled: "Filled in — please check it before saving.",
+    scanUnclear: "We couldn't read a bill or document in that photo. Try a clearer picture.",
+    scanNotImage: "Please choose a photo.",
+    scanError: "Scanning didn't work. Please type it instead.",
+
     // Calendar page
     filterAll: "All",
     prevMonth: "Previous month",
@@ -166,6 +178,17 @@ const reminders: Namespace = {
     voiceDenied: "माइक्रोफ़ोन की अनुमति नहीं मिली। ब्राउज़र सेटिंग में इसे चालू कीजिए।",
     voiceError: "वॉइस इनपुट काम नहीं किया। कृपया टाइप कर लीजिए।",
     voiceRetry: "फिर कोशिश करें",
+
+    scanTitle: "बिल या दस्तावेज़ स्कैन कीजिए",
+    scanHint: "बिल, पॉलिसी या फ़ॉर्म की फ़ोटो लीजिए — जो पढ़ पाएँगे, भर देंगे।",
+    scanStart: "दस्तावेज़ स्कैन करें",
+    scanProcessing: "दस्तावेज़ पढ़ा जा रहा है…",
+    scanRetry: "दूसरी फ़ोटो लीजिए",
+    scanPreviewAlt: "आपने जो फ़ोटो स्कैन की",
+    scanFilled: "भर दिया गया — सहेजने से पहले जाँच लीजिए।",
+    scanUnclear: "इस फ़ोटो में बिल या दस्तावेज़ नहीं पढ़ पाए। साफ़ फ़ोटो लीजिए।",
+    scanNotImage: "कृपया एक फ़ोटो चुनिए।",
+    scanError: "स्कैन काम नहीं किया। कृपया टाइप कर लीजिए।",
 
     filterAll: "सभी",
     prevMonth: "पिछला महीना",
