@@ -170,16 +170,6 @@ export function ReminderCard({
         </AlertDialogContent>
       </AlertDialog>
 
-      {member ? (
-        <GreetingComposer
-          member={member}
-          open={composerOpen}
-          onOpenChange={setComposerOpen}
-          occasion={occasion}
-          reminderId={reminder.id}
-          scheduleDefault={occurrence}
-        />
-      ) : null}
     </article>
   );
 }
