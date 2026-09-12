@@ -152,6 +152,8 @@ export function ReminderForm({
     if (parsed.participants) setParticipants(parsed.participants);
     if (parsed.vehicleNumber) setVehicleNumber(parsed.vehicleNumber);
     if (parsed.institution) setInstitution(parsed.institution);
+    if (parsed.paymentAmount && !payAmount.trim()) setPayAmount(String(parsed.paymentAmount));
+    if (parsed.upiPayeeName && !upiPayee.trim()) setUpiPayee(parsed.upiPayeeName);
   }
 
 
