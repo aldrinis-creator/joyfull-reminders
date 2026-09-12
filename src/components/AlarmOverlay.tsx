@@ -57,10 +57,12 @@ export function AlarmOverlay({
   reminder,
   onDismiss,
   onSnooze,
+  recipients = [],
 }: {
   reminder: Reminder;
   onDismiss: () => void;
   onSnooze: (minutes: number) => void;
+  recipients?: FamilyMember[];
 }) {
   const t = useT();
   const [ringing, setRinging] = useState(true);
