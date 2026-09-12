@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { ReminderCard } from "@/components/ReminderCard";
-import { useReminders } from "@/lib/queries";
+import { useReminderRecipients, useReminders } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import { activeLocale } from "@/lib/i18n";
 import {
@@ -35,6 +35,7 @@ export const Route = createFileRoute("/_authenticated/calendar")({
 function CalendarPage() {
   const t = useT();
   const { data: reminders } = useReminders();
+  const { data: recipientsByReminder } = useReminderRecipients();
   const [monthOffset, setMonthOffset] = useState(0);
   const [category, setCategory] = useState<ReminderCategory | "all">("all");
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -170,7 +171,12 @@ function CalendarPage() {
             : t("reminders.upcoming")}
         </h2>
         {(selectedDay ? selectedEvents : events.slice(0, 20)).map(({ reminder, occurrence }) => (
-          <ReminderCard key={reminder.id} reminder={reminder} occurrence={occurrence} />
+          <ReminderCard
+            key={reminder.id}
+            reminder={reminder}
+            occurrence={occurrence}
+            recipients={recipientsByReminder?.get(reminder.id)}
+          />
         ))}
         {(selectedDay ? selectedEvents : events).length === 0 ? (
           <p className="text-muted-foreground bg-card shadow-card rounded-3xl px-6 py-10 text-center">

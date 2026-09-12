@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { CalendarPlus, Check, Gift, MessageCircleHeart, Pencil, Trash2 } from "lucide-react";
+import { CalendarPlus, Check, Gift, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -12,8 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { GreetingComposer } from "@/components/GreetingComposer";
-import { ReminderGreetingStatus } from "@/components/ReminderGreetingStatus";
+import { RecipientList } from "@/components/RecipientActions";
 import { PayNowButtons } from "@/components/PayNowButtons";
 import { ShareReminderButtons } from "@/components/ShareReminderButtons";
 import { cn } from "@/lib/utils";
@@ -37,6 +36,7 @@ export function ReminderCard({
   onDelete,
   memberName,
   member,
+  recipients,
 }: {
   reminder: Reminder;
   occurrence: Date;
@@ -44,17 +44,15 @@ export function ReminderCard({
   onDelete?: ((r: Reminder) => void) | undefined;
   memberName?: string | undefined;
   member?: FamilyMember | undefined;
+  /** Everyone linked through reminder_recipients — source of truth when present. */
+  recipients?: FamilyMember[] | undefined;
 }) {
   const t = useT();
   const meta = categoryMeta(reminder.category);
   const isGiftable = reminder.category === "personal_family";
-  const [composerOpen, setComposerOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const occasion = /anniversar/i.test(reminder.title)
-    ? "anniversary"
-    : /exam/i.test(reminder.title)
-      ? "exam"
-      : "birthday";
+  const people = recipients && recipients.length ? recipients : member ? [member] : [];
+  const giftMember = people[0] ?? member;
 
   function downloadIcs() {
     const ics = buildIcs({
@@ -117,16 +115,6 @@ export function ReminderCard({
             <Check className="size-4" aria-hidden /> {t("home.markDone")}
           </Button>
         ) : null}
-        {member && member.greetings_enabled ? (
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-11"
-            onClick={() => setComposerOpen(true)}
-          >
-            <MessageCircleHeart className="size-4" aria-hidden /> {t("home.sendGreeting")}
-          </Button>
-        ) : null}
         <PayNowButtons shortcut={{ ...reminder, title: reminder.title }} />
         <Button size="sm" variant="outline" className="h-11" onClick={downloadIcs}>
           <CalendarPlus className="size-4" aria-hidden /> {t("home.addToCalendar")}
@@ -154,7 +142,7 @@ export function ReminderCard({
           <Button asChild size="sm" variant="outline" className="h-11">
             <Link
               to="/market"
-              search={{ pin: member?.pincode ?? undefined, for: member?.id }}
+              search={{ pin: giftMember?.pincode ?? undefined, for: giftMember?.id }}
             >
               <Gift className="size-4" aria-hidden /> {t("home.sendGift")}
             </Link>
@@ -162,9 +150,7 @@ export function ReminderCard({
         ) : null}
       </div>
 
-      {member && member.greetings_enabled ? (
-        <ReminderGreetingStatus reminderId={reminder.id} member={member} />
-      ) : null}
+      <RecipientList reminder={reminder} occurrence={occurrence} recipients={people} />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
@@ -183,16 +169,6 @@ export function ReminderCard({
         </AlertDialogContent>
       </AlertDialog>
 
-      {member ? (
-        <GreetingComposer
-          member={member}
-          open={composerOpen}
-          onOpenChange={setComposerOpen}
-          occasion={occasion}
-          reminderId={reminder.id}
-          scheduleDefault={occurrence}
-        />
-      ) : null}
     </article>
   );
 }

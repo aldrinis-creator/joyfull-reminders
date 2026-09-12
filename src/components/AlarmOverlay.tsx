@@ -3,7 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { BellRing, Clock, Check, Gift, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PayNowButtons } from "@/components/PayNowButtons";
-import { categoryMeta, categoryShortLabel, formatDateTime, type Reminder } from "@/lib/ereminder";
+import { CallButtons, isWishingReminder } from "@/components/RecipientActions";
+import {
+  categoryMeta,
+  categoryShortLabel,
+  formatDateTime,
+  type FamilyMember,
+  type Reminder,
+} from "@/lib/ereminder";
 import { useT } from "@/hooks/useLanguage";
 import { alarmIntervalMs, isAudioUnlocked, playAlarm, unlockAudio, vibrateAlarm } from "@/lib/alarm-sound";
 
@@ -57,10 +64,12 @@ export function AlarmOverlay({
   reminder,
   onDismiss,
   onSnooze,
+  recipients = [],
 }: {
   reminder: Reminder;
   onDismiss: () => void;
   onSnooze: (minutes: number) => void;
+  recipients?: FamilyMember[];
 }) {
   const t = useT();
   const [ringing, setRinging] = useState(true);
@@ -133,6 +142,18 @@ export function AlarmOverlay({
           <PayNowButtons shortcut={{ ...reminder, title: reminder.title }} tone="onDark" size="lg" />
         </div>
 
+        {isWishingReminder(reminder)
+          ? recipients.map((m) => (
+              <div key={m.id} className="space-y-1">
+                {recipients.length > 1 ? (
+                  <p className="text-indigo-foreground/85 text-sm font-bold">{m.full_name}</p>
+                ) : null}
+                <div className="flex flex-wrap gap-2 [&>*]:flex-1">
+                  <CallButtons member={m} tone="onDark" />
+                </div>
+              </div>
+            ))
+          : null}
 
         <Button
           asChild
