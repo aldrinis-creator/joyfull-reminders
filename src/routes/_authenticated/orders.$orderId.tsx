@@ -100,23 +100,41 @@ function OrderPage() {
       const session = await startCheckout({ data: { orderId } });
       if (!session.configured) {
         toast.error(t("market.errPaymentsOff"));
+        setPaying(false);
         return;
       }
-      const payUrl = new URL("https://futurewave.in/pay-joyfull/");
-      payUrl.searchParams.set("key", session.keyId);
-      payUrl.searchParams.set("order_id", session.providerOrderId);
-      payUrl.searchParams.set("amount", session.amountPaise.toString());
-      payUrl.searchParams.set("currency", session.currency);
-      payUrl.searchParams.set("description", session.description);
-      if (session.customerName) payUrl.searchParams.set("name", session.customerName);
-      if (session.customerEmail) payUrl.searchParams.set("email", session.customerEmail);
-      payUrl.searchParams.set("app_callback", window.location.href);
-
-      window.location.href = payUrl.toString();
+      if (typeof window.Razorpay !== "function") {
+        // checkout.js hasn't finished loading yet
+        toast.error(t("market.errCheckoutLoading"));
+        setPaying(false);
+        return;
+      }
+      const rzp = new window.Razorpay({
+        key: session.keyId,
+        order_id: session.providerOrderId,
+        amount: session.amountPaise,
+        currency: session.currency,
+        name: "e-Reminder",
+        description: session.description,
+        prefill: {
+          name: session.customerName ?? undefined,
+          email: session.customerEmail ?? undefined,
+        },
+        handler: () => {
+          // Immediate UI feedback only — the order flips to "paid" solely via
+          // the signature-verified Razorpay webhook.
+          toast.success(t("market.paySubmitted"));
+          void queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+          setPaying(false);
+        },
+        modal: {
+          ondismiss: () => setPaying(false),
+        },
+      });
+      rzp.open();
     } catch (err) {
       console.error(err);
       toast.error(t("market.errPayStart"));
-    } finally {
       setPaying(false);
     }
   };
