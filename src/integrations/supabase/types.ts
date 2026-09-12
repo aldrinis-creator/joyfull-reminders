@@ -49,6 +49,63 @@ export type Database = {
           },
         ]
       }
+      documents: {
+        Row: {
+          created_at: string
+          doc_type: Database["public"]["Enums"]["document_type"]
+          expiry_date: string | null
+          family_member_id: string | null
+          file_path: string
+          id: string
+          notes: string | null
+          reminder_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_type?: Database["public"]["Enums"]["document_type"]
+          expiry_date?: string | null
+          family_member_id?: string | null
+          file_path: string
+          id?: string
+          notes?: string | null
+          reminder_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_type?: Database["public"]["Enums"]["document_type"]
+          expiry_date?: string | null
+          family_member_id?: string | null
+          file_path?: string
+          id?: string
+          notes?: string | null
+          reminder_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_reminder_id_fkey"
+            columns: ["reminder_id"]
+            isOneToOne: false
+            referencedRelation: "reminders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       family_members: {
         Row: {
           birth_date: string | null
@@ -1037,6 +1094,14 @@ export type Database = {
     }
     Enums: {
       app_role: "user" | "vendor" | "admin"
+      document_type:
+        | "insurance"
+        | "puc"
+        | "id_proof"
+        | "vehicle"
+        | "warranty"
+        | "subscription"
+        | "other"
       greeting_channel: "email" | "whatsapp" | "share"
       greeting_status:
         | "draft"
@@ -1215,6 +1280,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["user", "vendor", "admin"],
+      document_type: [
+        "insurance",
+        "puc",
+        "id_proof",
+        "vehicle",
+        "warranty",
+        "subscription",
+        "other",
+      ],
       greeting_channel: ["email", "whatsapp", "share"],
       greeting_status: [
         "draft",
