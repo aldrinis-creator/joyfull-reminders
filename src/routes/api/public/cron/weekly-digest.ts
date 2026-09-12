@@ -24,7 +24,11 @@ export const Route = createFileRoute("/api/public/cron/weekly-digest")({
         const userId = url.searchParams.get("userId") ?? undefined;
 
         try {
-          const result = await dispatchWeeklyDigests(supabaseAdmin, { dryRun, force, userId });
+          const result = await dispatchWeeklyDigests(supabaseAdmin, {
+            dryRun,
+            force,
+            ...(userId ? { userId } : {}),
+          });
           return Response.json({ ok: true, ranAt: new Date().toISOString(), ...result });
         } catch (err) {
           return Response.json({ error: "digest_failed", detail: String(err) }, { status: 500 });
