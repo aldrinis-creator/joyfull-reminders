@@ -52,6 +52,28 @@ export function useFamilyMembers() {
   });
 }
 
+/** Everyone each reminder is addressed to, keyed by reminder id. */
+export function useReminderRecipients() {
+  return useQuery({
+    queryKey: ["reminder_recipients", "all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reminder_recipients")
+        .select("reminder_id, family_members(*)");
+      if (error) throw error;
+      const map = new Map<string, FamilyMember[]>();
+      for (const row of data ?? []) {
+        const member = row.family_members as FamilyMember | null;
+        if (!member) continue;
+        const list = map.get(row.reminder_id) ?? [];
+        list.push(member);
+        map.set(row.reminder_id, list);
+      }
+      return map;
+    },
+  });
+}
+
 export function useSpecialDates() {
   return useQuery({
     queryKey: ["special_dates"],
