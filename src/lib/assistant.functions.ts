@@ -128,12 +128,23 @@ export const askAssistant = createServerFn({ method: "POST" })
     }
     dateLines.sort((a, b) => a.at.getTime() - b.at.getTime());
 
+    // Full roster (names + next birthday) so questions about any relative can be answered,
+    // even when their date falls outside the upcoming window.
+    const rosterLines = (membersRes.data ?? []).map((m) => {
+      const at = m.birth_date ? nextAnnual(m.birth_date, now) : null;
+      return `- ${m.full_name} (${m.relationship})${at ? ` — next birthday ${fmt(at)}` : " — no birthday on file"}`;
+    });
+
     const summary = [
       `Today (India time): ${fmt(now)}`,
       "",
       `UPCOMING REMINDERS (next ${WINDOW_DAYS} days, not completed):`,
       reminderLines.length ? reminderLines.map((r) => r.line).join("\n") : "- none",
       "",
+      "FAMILY MEMBERS ON FILE:",
+      rosterLines.length ? rosterLines.join("\n") : "- none",
+      "",
+
       `FAMILY SPECIAL DATES (next ${WINDOW_DAYS} days):`,
       dateLines.length ? dateLines.map((d) => d.line).join("\n") : "- none",
     ].join("\n");
