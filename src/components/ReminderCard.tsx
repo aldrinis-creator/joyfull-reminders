@@ -116,16 +116,6 @@ export function ReminderCard({
             <Check className="size-4" aria-hidden /> {t("home.markDone")}
           </Button>
         ) : null}
-        {member && member.greetings_enabled ? (
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-11"
-            onClick={() => setComposerOpen(true)}
-          >
-            <MessageCircleHeart className="size-4" aria-hidden /> {t("home.sendGreeting")}
-          </Button>
-        ) : null}
         <PayNowButtons shortcut={{ ...reminder, title: reminder.title }} />
         <Button size="sm" variant="outline" className="h-11" onClick={downloadIcs}>
           <CalendarPlus className="size-4" aria-hidden /> {t("home.addToCalendar")}
