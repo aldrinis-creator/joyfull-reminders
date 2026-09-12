@@ -37,6 +37,7 @@ export function ReminderCard({
   onDelete,
   memberName,
   member,
+  recipients,
 }: {
   reminder: Reminder;
   occurrence: Date;
@@ -44,17 +45,15 @@ export function ReminderCard({
   onDelete?: ((r: Reminder) => void) | undefined;
   memberName?: string | undefined;
   member?: FamilyMember | undefined;
+  /** Everyone linked through reminder_recipients — source of truth when present. */
+  recipients?: FamilyMember[] | undefined;
 }) {
   const t = useT();
   const meta = categoryMeta(reminder.category);
   const isGiftable = reminder.category === "personal_family";
-  const [composerOpen, setComposerOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const occasion = /anniversar/i.test(reminder.title)
-    ? "anniversary"
-    : /exam/i.test(reminder.title)
-      ? "exam"
-      : "birthday";
+  const people = recipients && recipients.length ? recipients : member ? [member] : [];
+  const giftMember = people[0] ?? member;
 
   function downloadIcs() {
     const ics = buildIcs({
