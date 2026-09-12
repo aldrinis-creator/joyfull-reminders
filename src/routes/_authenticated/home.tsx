@@ -9,7 +9,13 @@ import { ReminderCard } from "@/components/ReminderCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { useFamilyMembers, useProfile, useReminders, useStreak } from "@/lib/queries";
+import {
+  useFamilyMembers,
+  useProfile,
+  useReminderRecipients,
+  useReminders,
+  useStreak,
+} from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import { useAlarmSettings } from "@/hooks/useAlarmSettings";
 import { fetchActiveSnoozes, readSnoozes, recordSnooze, snoozeLocally } from "@/lib/snooze";
@@ -253,6 +259,7 @@ function HomePage() {
                           ? (members ?? []).find((m) => m.id === reminder.family_member_id)
                           : undefined
                       }
+                      recipients={recipientsByReminder?.get(reminder.id)}
                       onComplete={(r) => complete.mutate(r)}
                       onDelete={(r) => remove.mutate(r)}
                     />
@@ -292,7 +299,8 @@ function HomePage() {
                             ? (members ?? []).find((m) => m.id === reminder.family_member_id)
                             : undefined
                         }
-                        onComplete={(r) => complete.mutate(r)}
+                        recipients={recipientsByReminder?.get(reminder.id)}
+                      onComplete={(r) => complete.mutate(r)}
                         onDelete={(r) => remove.mutate(r)}
                       />
                     ))}
@@ -308,6 +316,12 @@ function HomePage() {
         <AlarmOverlay
           reminder={dueAlarm.reminder}
           onDismiss={() => complete.mutate(dueAlarm.reminder)}
+          recipients={
+            recipientsByReminder?.get(dueAlarm.reminder.id) ??
+            (dueAlarm.reminder.family_member_id
+              ? (members ?? []).filter((m) => m.id === dueAlarm.reminder.family_member_id)
+              : [])
+          }
           onSnooze={(minutes) => {
             setSnoozedIds(snoozeLocally(dueAlarm.reminder.id, minutes));
             void recordSnooze(dueAlarm.reminder.id, dueAlarm.occurrence, minutes);
