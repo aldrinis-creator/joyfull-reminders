@@ -143,7 +143,7 @@ export function ReminderCard({
           <Button asChild size="sm" variant="outline" className="h-11">
             <Link
               to="/market"
-              search={{ pin: member?.pincode ?? undefined, for: member?.id }}
+              search={{ pin: giftMember?.pincode ?? undefined, for: giftMember?.id }}
             >
               <Gift className="size-4" aria-hidden /> {t("home.sendGift")}
             </Link>
