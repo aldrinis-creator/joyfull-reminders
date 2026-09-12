@@ -49,6 +49,23 @@ const home: Namespace = {
     shareTextWithNotes: "Reminder: {title}\nWhen: {when}\n{notes}",
     shareFailed: "Could not open the share sheet.",
 
+    // Ask e-Reminder assistant
+    askButton: "Ask",
+    askTitle: "Ask e-Reminder",
+    askSubtitle: "Ask about your reminders and family dates. Answers use only your own saved data.",
+    askPlaceholder: "Type your question",
+    askMic: "Speak your question",
+    askStopMic: "Stop listening",
+    askSend: "Send",
+    askThinking: "Looking at your reminders…",
+    askExamplesLabel: "Try asking:",
+    askExample1: "What's due this week?",
+    askExample2: "Whose birthday is coming up?",
+    askExample3: "How much do I owe this month?",
+    askFailed: "Sorry, that didn't work. Please try again in a moment.",
+    askNotConfigured: "The assistant is not set up yet.",
+
+
     // Alarm overlay
     alarmAria: "Reminder due: {title}",
     alarmKicker: "{category} reminder",
