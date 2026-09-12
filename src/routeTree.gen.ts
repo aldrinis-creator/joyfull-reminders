@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as TmpGreetCheckRouteImport } from './routes/tmp-greet-check'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -45,6 +46,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TmpGreetCheckRoute = TmpGreetCheckRouteImport.update({
+  id: '/tmp-greet-check',
+  path: '/tmp-greet-check',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
@@ -162,6 +168,7 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/tmp-greet-check': typeof TmpGreetCheckRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/tmp-greet-check': typeof TmpGreetCheckRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/tmp-greet-check': typeof TmpGreetCheckRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/tmp-greet-check'
     | '/calendar'
     | '/home'
     | '/profile'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/tmp-greet-check'
     | '/calendar'
     | '/home'
     | '/profile'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/tmp-greet-check'
     | '/_authenticated/calendar'
     | '/_authenticated/home'
     | '/_authenticated/profile'
@@ -313,6 +325,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  TmpGreetCheckRoute: typeof TmpGreetCheckRoute
   GreetingIdRoute: typeof GreetingIdRoute
   PincodeMemberIdRoute: typeof PincodeMemberIdRoute
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
@@ -345,6 +358,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tmp-greet-check': {
+      id: '/tmp-greet-check'
+      path: '/tmp-greet-check'
+      fullPath: '/tmp-greet-check'
+      preLoaderRoute: typeof TmpGreetCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/calendar': {
@@ -526,6 +546,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  TmpGreetCheckRoute: TmpGreetCheckRoute,
   GreetingIdRoute: GreetingIdRoute,
   PincodeMemberIdRoute: PincodeMemberIdRoute,
   ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
