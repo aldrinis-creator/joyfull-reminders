@@ -275,7 +275,12 @@ export function ReminderForm({
         navigate({ to: "/home" });
       }}
     >
-      {existing ? null : <VoiceReminderButton onParsed={applyParsed} />}
+      {existing ? null : (
+        <>
+          <VoiceReminderButton onParsed={applyParsed} />
+          <DocumentScanButton onParsed={applyParsed} />
+        </>
+      )}
 
       <Field label={t("reminders.fieldTitle")} htmlFor="title">
         <Input
