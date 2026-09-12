@@ -3,7 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { BellRing, Clock, Check, Gift, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PayNowButtons } from "@/components/PayNowButtons";
-import { categoryMeta, categoryShortLabel, formatDateTime, type Reminder } from "@/lib/ereminder";
+import { CallButtons, isWishingReminder } from "@/components/RecipientActions";
+import {
+  categoryMeta,
+  categoryShortLabel,
+  formatDateTime,
+  type FamilyMember,
+  type Reminder,
+} from "@/lib/ereminder";
 import { useT } from "@/hooks/useLanguage";
 import { alarmIntervalMs, isAudioUnlocked, playAlarm, unlockAudio, vibrateAlarm } from "@/lib/alarm-sound";
 
