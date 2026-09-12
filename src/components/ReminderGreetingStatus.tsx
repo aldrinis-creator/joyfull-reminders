@@ -40,7 +40,7 @@ export function ReminderGreetingStatus({
       const { data, error } = await supabase
         .from("greetings")
         .select(
-          "id, status, scheduled_for, sent_at, message, card_style, channel, occasion, provider_status, provider_error",
+          "id, status, scheduled_for, sent_at, message, card_style, channel, occasion, provider_status, provider_error, family_member_id",
         )
         .eq("reminder_id", reminderId)
         .in("status", ["scheduled", "sent"])
@@ -50,9 +50,12 @@ export function ReminderGreetingStatus({
     },
   });
 
-
-  const scheduled = (data ?? []).find((g) => g.status === "scheduled" && g.scheduled_for);
-  const sent = (data ?? []).find((g) => g.status === "sent");
+  // Only this person's greetings (older rows may have no member attached).
+  const mine = (data ?? []).filter(
+    (g) => g.family_member_id === member.id || g.family_member_id === null,
+  );
+  const scheduled = mine.find((g) => g.status === "scheduled" && g.scheduled_for);
+  const sent = mine.find((g) => g.status === "sent");
 
   async function handleCancel(id: string) {
     const result = await cancel({ data: { greetingId: id } });
