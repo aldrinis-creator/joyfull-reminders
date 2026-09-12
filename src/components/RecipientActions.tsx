@@ -91,13 +91,19 @@ export function RecipientRow({
   const t = useT();
   const [composerOpen, setComposerOpen] = useState(false);
   const wishing = isWishingReminder(reminder);
+  const greetingState = useMemberGreetingState(reminder.id, member.id).data ?? null;
 
   return (
     <div className="space-y-2">
       {showName ? <p className="text-sm font-bold">{member.full_name}</p> : null}
       <div className="flex flex-wrap gap-2">
         {member.greetings_enabled ? (
-          <Button size="sm" variant="outline" className="h-11" onClick={() => setComposerOpen(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            className={greetingButtonClass(greetingState)}
+            onClick={() => setComposerOpen(true)}
+          >
             <MessageCircleHeart className="size-4" aria-hidden /> {t("home.sendGreeting")}
           </Button>
         ) : null}
