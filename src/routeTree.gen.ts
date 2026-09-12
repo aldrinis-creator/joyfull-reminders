@@ -27,6 +27,7 @@ import { Route as AuthenticatedRemindersNewRouteImport } from './routes/_authent
 import { Route as AuthenticatedRemindersReminderIdEditRouteImport } from './routes/_authenticated/reminders.$reminderId.edit'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
 import { Route as ApiPublicCronDispatchRemindersRouteImport } from './routes/api/public/cron/dispatch-reminders'
+import { Route as ApiPublicCronWeeklyDigestRouteImport } from './routes/api/public/cron/weekly-digest'
 import { Route as ApiPublicMsg91WhatsappStatusRouteImport } from './routes/api/public/msg91/whatsapp-status'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -130,6 +131,12 @@ const ApiPublicCronDispatchRemindersRoute =
     path: '/api/public/cron/dispatch-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronWeeklyDigestRoute =
+  ApiPublicCronWeeklyDigestRouteImport.update({
+    id: '/api/public/cron/weekly-digest',
+    path: '/api/public/cron/weekly-digest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicMsg91WhatsappStatusRoute =
   ApiPublicMsg91WhatsappStatusRouteImport.update({
     id: '/api/public/msg91/whatsapp-status',
@@ -177,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/reminders/$reminderId/edit': typeof AuthenticatedRemindersReminderIdEditRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/dispatch-reminders': typeof ApiPublicCronDispatchRemindersRoute
+  '/api/public/cron/weekly-digest': typeof ApiPublicCronWeeklyDigestRoute
   '/api/public/msg91/whatsapp-status': typeof ApiPublicMsg91WhatsappStatusRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -201,6 +209,7 @@ export interface FileRoutesByTo {
   '/reminders/$reminderId/edit': typeof AuthenticatedRemindersReminderIdEditRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/dispatch-reminders': typeof ApiPublicCronDispatchRemindersRoute
+  '/api/public/cron/weekly-digest': typeof ApiPublicCronWeeklyDigestRoute
   '/api/public/msg91/whatsapp-status': typeof ApiPublicMsg91WhatsappStatusRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -227,6 +236,7 @@ export interface FileRoutesById {
   '/_authenticated/reminders/$reminderId/edit': typeof AuthenticatedRemindersReminderIdEditRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/dispatch-reminders': typeof ApiPublicCronDispatchRemindersRoute
+  '/api/public/cron/weekly-digest': typeof ApiPublicCronWeeklyDigestRoute
   '/api/public/msg91/whatsapp-status': typeof ApiPublicMsg91WhatsappStatusRoute
   '/api/public/razorpay/webhook': typeof ApiPublicRazorpayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/reminders/$reminderId/edit'
     | '/api/public/calendar/$token'
     | '/api/public/cron/dispatch-reminders'
+    | '/api/public/cron/weekly-digest'
     | '/api/public/msg91/whatsapp-status'
     | '/api/public/razorpay/webhook'
     | '/lovable/email/auth/preview'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/reminders/$reminderId/edit'
     | '/api/public/calendar/$token'
     | '/api/public/cron/dispatch-reminders'
+    | '/api/public/cron/weekly-digest'
     | '/api/public/msg91/whatsapp-status'
     | '/api/public/razorpay/webhook'
     | '/lovable/email/auth/preview'
@@ -302,6 +314,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reminders/$reminderId/edit'
     | '/api/public/calendar/$token'
     | '/api/public/cron/dispatch-reminders'
+    | '/api/public/cron/weekly-digest'
     | '/api/public/msg91/whatsapp-status'
     | '/api/public/razorpay/webhook'
     | '/lovable/email/auth/preview'
@@ -317,6 +330,7 @@ export interface RootRouteChildren {
   PincodeMemberIdRoute: typeof PincodeMemberIdRoute
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiPublicCronDispatchRemindersRoute: typeof ApiPublicCronDispatchRemindersRoute
+  ApiPublicCronWeeklyDigestRoute: typeof ApiPublicCronWeeklyDigestRoute
   ApiPublicMsg91WhatsappStatusRoute: typeof ApiPublicMsg91WhatsappStatusRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -452,6 +466,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronDispatchRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/weekly-digest': {
+      id: '/api/public/cron/weekly-digest'
+      path: '/api/public/cron/weekly-digest'
+      fullPath: '/api/public/cron/weekly-digest'
+      preLoaderRoute: typeof ApiPublicCronWeeklyDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/msg91/whatsapp-status': {
       id: '/api/public/msg91/whatsapp-status'
       path: '/api/public/msg91/whatsapp-status'
@@ -530,6 +551,7 @@ const rootRouteChildren: RootRouteChildren = {
   PincodeMemberIdRoute: PincodeMemberIdRoute,
   ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
   ApiPublicCronDispatchRemindersRoute: ApiPublicCronDispatchRemindersRoute,
+  ApiPublicCronWeeklyDigestRoute: ApiPublicCronWeeklyDigestRoute,
   ApiPublicMsg91WhatsappStatusRoute: ApiPublicMsg91WhatsappStatusRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
