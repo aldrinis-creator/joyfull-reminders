@@ -151,9 +151,7 @@ export function ReminderCard({
         ) : null}
       </div>
 
-      {member && member.greetings_enabled ? (
-        <ReminderGreetingStatus reminderId={reminder.id} member={member} />
-      ) : null}
+      <RecipientList reminder={reminder} occurrence={occurrence} recipients={people} />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
