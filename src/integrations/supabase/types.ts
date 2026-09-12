@@ -467,6 +467,7 @@ export type Database = {
           email_enabled: boolean
           full_name: string | null
           id: string
+          last_digest_sent_at: string | null
           latitude: number | null
           longitude: number | null
           onboarded: boolean
@@ -488,6 +489,7 @@ export type Database = {
           email_enabled?: boolean
           full_name?: string | null
           id: string
+          last_digest_sent_at?: string | null
           latitude?: number | null
           longitude?: number | null
           onboarded?: boolean
@@ -509,6 +511,7 @@ export type Database = {
           email_enabled?: boolean
           full_name?: string | null
           id?: string
+          last_digest_sent_at?: string | null
           latitude?: number | null
           longitude?: number | null
           onboarded?: boolean
