@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { CalendarPlus, Check, Gift, MessageCircleHeart, Pencil, Trash2 } from "lucide-react";
+import { CalendarPlus, Check, Gift, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
