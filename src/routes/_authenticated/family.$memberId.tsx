@@ -78,6 +78,7 @@ function MemberPage() {
   });
 
   const member = data?.member;
+  const greetingState = useMemberAnyGreetingState(memberId).data ?? null;
   const [composerOpen, setComposerOpen] = useState(false);
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["family_member", memberId] });
 
