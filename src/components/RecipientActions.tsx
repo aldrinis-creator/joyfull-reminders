@@ -3,8 +3,18 @@ import { MessageCircle, MessageCircleHeart, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GreetingComposer } from "@/components/GreetingComposer";
 import { ReminderGreetingStatus } from "@/components/ReminderGreetingStatus";
+import { useMemberGreetingState } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import type { FamilyMember, Reminder } from "@/lib/ereminder";
+
+/** Fill classes that hint at greeting state — uses semantic accent/success tokens. */
+function greetingButtonClass(state: "scheduled" | "sent" | null | undefined): string {
+  if (state === "scheduled")
+    return "bg-accent text-accent-foreground border-transparent hover:bg-accent/90 h-11";
+  if (state === "sent")
+    return "bg-success text-success-foreground border-transparent hover:bg-success/90 h-11";
+  return "h-11";
+}
 
 /** Digits only, with the Indian country code added when it is missing. */
 export function dialNumber(member: FamilyMember): string | null {
