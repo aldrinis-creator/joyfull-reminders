@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { ReminderCard } from "@/components/ReminderCard";
-import { useReminders } from "@/lib/queries";
+import { useReminderRecipients, useReminders } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import { activeLocale } from "@/lib/i18n";
 import {
@@ -35,6 +35,7 @@ export const Route = createFileRoute("/_authenticated/calendar")({
 function CalendarPage() {
   const t = useT();
   const { data: reminders } = useReminders();
+  const { data: recipientsByReminder } = useReminderRecipients();
   const [monthOffset, setMonthOffset] = useState(0);
   const [category, setCategory] = useState<ReminderCategory | "all">("all");
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
