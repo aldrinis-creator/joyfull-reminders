@@ -1,10 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Flame, PartyPopper, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { AlarmOverlay } from "@/components/AlarmOverlay";
 import { AskAssistant } from "@/components/AskAssistant";
 import { ReminderCard } from "@/components/ReminderCard";
 import { Button } from "@/components/ui/button";
@@ -18,14 +17,11 @@ import {
   useStreak,
 } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
-import { useAlarmSettings } from "@/hooks/useAlarmSettings";
-import { fetchActiveSnoozes, readSnoozes, recordSnooze, snoozeLocally } from "@/lib/snooze";
+import { completeReminder } from "@/lib/complete-reminder";
 import {
   bucketLabel,
-  advanceOccurrence,
   bucketFor,
   formatDate,
-  localDayKey,
   nextOccurrence,
   type Reminder,
   type UrgencyBucket,
@@ -55,24 +51,15 @@ function HomePage() {
   const { data: profile } = useProfile();
   const { data: streak } = useStreak();
   const t = useT();
-  useAlarmSettings();
   const queryClient = useQueryClient();
-  const [snoozedIds, setSnoozedIds] = useState<Record<string, number>>({});
   const [showLater, setShowLater] = useState(false);
 
-  // Snoozes persist across reloads: hydrate from localStorage, then the server.
-  useEffect(() => {
-    setSnoozedIds((prev) => ({ ...readSnoozes(), ...prev }));
-    void fetchActiveSnoozes().then((remote) =>
-      setSnoozedIds((prev) => {
-        const next = { ...prev };
-        for (const [id, until] of Object.entries(remote)) {
-          if (until > (next[id] ?? 0)) next[id] = until;
-        }
-        return next;
-      }),
+  /** Drops a reminder from the cached list straight away, so the card goes instantly. */
+  function removeFromCache(id: string) {
+    queryClient.setQueryData<Reminder[]>(["reminders"], (old) =>
+      (old ?? []).filter((r) => r.id !== id),
     );
-  }, []);
+  }
 
   const remove = useMutation({
     mutationFn: async (reminder: Reminder) => {
@@ -81,68 +68,20 @@ function HomePage() {
       const { error } = await supabase.from("reminders").delete().eq("id", reminder.id);
       if (error) throw error;
     },
+    onMutate: (reminder: Reminder) => removeFromCache(reminder.id),
     onSuccess: () => {
       toast.success(t("home.deleted"));
       void queryClient.invalidateQueries({ queryKey: ["reminders"] });
     },
-    onError: () => toast.error(t("home.deleteFailed")),
+    onError: () => {
+      toast.error(t("home.deleteFailed"));
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
   });
 
   const complete = useMutation({
-    mutationFn: async (reminder: Reminder) => {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-      const completedOccurrence = nextOccurrence(reminder);
-      const upcoming = advanceOccurrence(reminder);
-
-      if (userId) {
-        await supabase.from("reminder_occurrences").insert({
-          user_id: userId,
-          reminder_id: reminder.id,
-          occurrence_at: completedOccurrence.toISOString(),
-          status: "completed",
-          acknowledged_at: new Date().toISOString(),
-        });
-      }
-
-      if (upcoming) {
-        // Recurring: roll forward to the next occurrence, keep it active.
-        const { error } = await supabase
-          .from("reminders")
-          .update({ due_at: upcoming.toISOString(), completed: false, completed_at: null })
-          .eq("id", reminder.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("reminders")
-          .update({ completed: true, completed_at: new Date().toISOString() })
-          .eq("id", reminder.id);
-        if (error) throw error;
-      }
-
-      if (userId) {
-        const today = localDayKey();
-        const { data: current } = await supabase
-          .from("user_streaks")
-          .select("*")
-          .eq("user_id", userId)
-          .maybeSingle();
-        const yesterday = localDayKey(new Date(Date.now() - 86_400_000));
-        const next =
-          current?.last_completed_on === today
-            ? current.current_streak
-            : current?.last_completed_on === yesterday
-              ? current.current_streak + 1
-              : 1;
-        await supabase.from("user_streaks").upsert({
-          user_id: userId,
-          current_streak: next,
-          longest_streak: Math.max(next, current?.longest_streak ?? 0),
-          last_completed_on: today,
-        });
-      }
-      return { recurring: Boolean(upcoming), upcoming };
-    },
+    mutationFn: (reminder: Reminder) => completeReminder(reminder),
+    onMutate: (reminder: Reminder) => removeFromCache(reminder.id),
     onSuccess: (result) => {
       toast.success(
         result.recurring && result.upcoming
@@ -193,14 +132,6 @@ function HomePage() {
     thisMonth.forEach((item) => map[bucketFor(item.occurrence)].push(item));
     return map;
   }, [thisMonth]);
-
-  const now = Date.now();
-  const dueAlarm = active.find(
-    ({ reminder, occurrence }) =>
-      reminder.priority === "high" &&
-      occurrence.getTime() <= now &&
-      (snoozedIds[reminder.id] ?? 0) < now,
-  );
 
   const firstName = (profile?.full_name ?? "").split(" ")[0];
 
@@ -315,23 +246,6 @@ function HomePage() {
       </AppShell>
 
       <AskAssistant />
-
-      {dueAlarm ? (
-        <AlarmOverlay
-          reminder={dueAlarm.reminder}
-          onDismiss={() => complete.mutate(dueAlarm.reminder)}
-          recipients={
-            recipientsByReminder?.get(dueAlarm.reminder.id) ??
-            (dueAlarm.reminder.family_member_id
-              ? (members ?? []).filter((m) => m.id === dueAlarm.reminder.family_member_id)
-              : [])
-          }
-          onSnooze={(minutes) => {
-            setSnoozedIds(snoozeLocally(dueAlarm.reminder.id, minutes));
-            void recordSnooze(dueAlarm.reminder.id, dueAlarm.occurrence, minutes);
-          }}
-        />
-      ) : null}
     </>
   );
 }
