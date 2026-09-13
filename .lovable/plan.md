@@ -1,46 +1,40 @@
-# PIN lock for the Document Shelf
+# Alarms that ring, automatic document reminders, and a snappier app
 
-Protect the Document Shelf behind a 4-6 digit PIN, stored only as a one-way hash on the server.
+Four fixes, in this order.
 
-## What the user sees
+## 1. The alarm doesn't ring when a reminder is due
 
-**First visit to the Document Shelf (no PIN yet)**
-A friendly prompt: "Set a PIN to protect your documents", with the PIN typed twice to confirm. A "Set up later" button skips it — never a hard block — and the prompt reappears on the next visit until a PIN is set.
+Three separate reasons, all fixed together:
 
-**Visits once a PIN exists**
-An "Enter PIN" screen appears before any document is shown. A correct PIN unlocks the shelf for the rest of that browser session; navigating around the app doesn't ask again, but closing and re-opening the app does.
+- The alarm pop-up only exists on the Home screen. If you are on Family, Documents, Profile or anywhere else, nothing happens. The alarm moves into the app frame so it can appear on any screen.
+- Nothing re-checks the clock. The app only notices a reminder is due when the screen happens to redraw. A steady check every 15 seconds is added, plus an immediate check when you come back to the app.
+- Only reminders marked high priority ever rang. Per your answer, every reminder now rings when it falls due.
 
-**Wrong attempts**
-After 5 wrong tries the input is disabled for 30 seconds with a visible countdown.
+The existing sound choice, volume, vibration and the "tap to allow sound" fallback all stay as they are. Snooze and Done keep working the same way.
 
-**In Profile**
-A new "Document Shelf PIN" card with:
-- Change PIN — asks for the current PIN, then the new one twice.
-- Forgot PIN? — sends a one-time code to the verified phone using the existing code flow; only after the code checks out can a brand new PIN be set.
+## 2. The "Schedule it" choice in the greeting box
 
-All text in English and Hindi.
+The choice between sending now and scheduling exists but sits partway down a scrolling box, so it is easy to miss and can be pushed out of view on smaller screens. It moves to the top of the greeting box, right under the occasion, as two clearly labelled buttons that are always visible, with the date and time fields appearing directly beneath when scheduling is picked. Same on Home cards and on a family member's page (both use the same box). Verified with a screenshot of the open box.
 
-## Technical design
+## 3. Automatic expiry reminders for documents
 
-**Database**
-Migration adds `profiles.documents_pin_hash text` (nullable). No policy change needed — profiles are already owner-scoped — but the client never reads this column directly; all access goes through server functions.
+Right now a reminder is only created when you add a document through the form. A scheduled job runs once a day and, for every document that has an expiry date but no reminder yet, creates one for you: a 9am reminder on the expiry day, with alerts 7 days before and on the day, matching exactly what the manual flow creates. It also keeps an existing reminder's date in step if you change the expiry date, and never creates duplicates.
 
-**Hashing**
-PBKDF2-SHA256 (150k iterations) via WebCrypto, which works in the Worker runtime without native deps. Stored as `pbkdf2$<iterations>$<saltB64>$<hashB64>`. Comparison is constant-time on the server.
+## 4. Slower-feeling saves and screen changes
 
-**Server functions** — new `src/lib/documents-pin.functions.ts`, all with `requireSupabaseAuth`, hashing in `src/lib/documents-pin.server.ts`:
-- `hasDocumentsPin()` → `{ hasPin: boolean }`
-- `setDocumentsPin({ pin })` → validates 4-6 digits with Zod, hashes, overwrites the stored hash
-- `verifyDocumentsPin({ pin })` → returns `{ ok: boolean }` only
-- `resetDocumentsPinWithOtp({ phone, code, pin })` → consumes the OTP through the existing `consumeOtp` helper (same path `PhoneVerifyDialog` uses), and only then writes the new hash
+Every screen currently re-fetches all its data from scratch on each visit, so tabs look blank then fill in. Changes:
 
-The hash is never returned to the client. Attempt counting and the 30-second cooldown are client-side UX; server-side OTP rate limits already guard the recovery path.
+- Cached data is shown instantly while fresh data loads quietly in the background.
+- Saving a reminder, document or greeting updates the screen straight away instead of waiting for a full reload of the list.
+- Buttons show a clear busy state so a save never feels like nothing happened.
 
-**UI**
-- `src/components/DocumentsPinGate.tsx` — wraps the shelf content in `/documents`; handles the set-up prompt, enter-PIN screen, attempt counter, countdown, and the `sessionStorage` unlock flag (`ereminder.documentsPinUnlocked`).
-- `src/components/DocumentsPinCard.tsx` — Profile card with Change PIN and Forgot PIN? dialogs, reusing the existing OTP request/verify calls.
-- New `pin` i18n namespace with full English + Hindi strings.
+## Technical notes
 
-## Testing
+- New `useDueAlarm` hook + `<AlarmHost>` rendered in `AppShell` (or `__root`), driven by a 15s interval and a `visibilitychange` listener; Home stops owning `AlarmOverlay`. Due test drops the `priority === "high"` condition, keeps the snooze check.
+- `GreetingComposer`: move the `mode` pill group above the card-style block; no logic change.
+- New authenticated cron route `src/routes/api/public/cron/document-expiry.ts` guarded by `authenticateCronRequest`, scheduled daily via `cron.schedule` (03:00 IST). It reuses the same insert shape as `createExpiryReminder` (server-side, service role, scoped per `user_id`) for `documents` rows where `expiry_date is not null and reminder_id is null`, then writes back `reminder_id`.
+- React Query: add `staleTime: 60_000` and `gcTime` defaults in the QueryClient in `src/router.tsx`; keep list queries mounted via placeholder data; convert list mutations in Home/Documents to optimistic cache updates instead of blanket `invalidateQueries`.
 
-Typecheck and build, plus browser checks of the set-up prompt, the lock screen, wrong-attempt counting and the 30-second countdown, session-unlock persistence across navigation and re-lock after reload. Signed-in checks depend on whether a preview session can be minted; I'll state plainly which parts were exercised live versus read-only, and I will not send a real recovery SMS unless you want me to.
+## Verification
+
+Typecheck and build, then in the preview: set a reminder one minute out, navigate to another screen and confirm the alarm appears and sounds there; open the greeting box and screenshot the Schedule choice; run the new job once and confirm a reminder appears for an existing document with an expiry date.
