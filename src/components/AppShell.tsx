@@ -3,6 +3,7 @@ import { CalendarDays, Home, ShoppingBag, User, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/hooks/useLanguage";
+import { AlarmHost } from "@/components/AlarmHost";
 
 const TABS = [
   { to: "/home", labelKey: "nav.home", icon: Home },
@@ -67,6 +68,8 @@ export function AppShell({
           })}
         </ul>
       </nav>
+
+      <AlarmHost />
     </div>
   );
 }
