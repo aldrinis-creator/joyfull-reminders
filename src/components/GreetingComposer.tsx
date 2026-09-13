@@ -277,6 +277,22 @@ export function GreetingComposer({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="g-occasion">{t("family.occasion")}</Label>
+            <Select value={occasion} onValueChange={regenerate}>
+              <SelectTrigger id="g-occasion" className="h-12">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {OCCASIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.emoji} {t(`family.occ.${o.value}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label>{t("family.cardStyle")}</Label>
             <div className="flex flex-wrap gap-2">
               {CARD_STYLES.map((s) => (
