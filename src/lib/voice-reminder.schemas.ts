@@ -53,10 +53,15 @@ export const parsedReminderSchema = z.object({
   upiPayeeName: z.string().trim().max(120).nullish(),
 });
 
-export const parseDocumentScanInput = z.object({
+export const scanImageSchema = z.object({
   /** Raw base64 (no data: prefix). */
   imageBase64: z.string().min(100),
   mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+});
+
+export const parseDocumentScanInput = z.object({
+  /** One entry per photographed page / side, up to 10. */
+  images: z.array(scanImageSchema).min(1).max(10),
   localNow: z.string().trim().min(10).max(40),
   language: z.enum(["en", "hi"]).default("en"),
 });

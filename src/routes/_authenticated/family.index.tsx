@@ -7,6 +7,7 @@ import { z } from "zod";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneField, isPhoneAcceptable, normalizePhone } from "@/components/PhoneField";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -329,18 +330,12 @@ function AddMemberDialog() {
                 className="h-12"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="m-wa">{t("family.whatsapp")}</Label>
-              <Input
-                id="m-wa"
-                inputMode="tel"
-                value={whatsapp}
-                maxLength={20}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                placeholder="+91 98765 43210"
-                className="h-12"
-              />
-            </div>
+            <PhoneField
+              id="m-wa"
+              label={t("family.whatsapp")}
+              value={whatsapp}
+              onChange={setWhatsapp}
+            />
             <div className="flex gap-3">
               <div className="flex-1 space-y-2">
                 <Label htmlFor="m-pin">{t("family.theirPincode")}</Label>
@@ -384,6 +379,10 @@ function AddMemberDialog() {
                 toast.error(t(parsed.error.issues[0]?.message ?? "family.errDetails"));
                 return;
               }
+              if (!isPhoneAcceptable(whatsapp)) {
+                toast.error(t("phoneCountryError"));
+                return;
+              }
               setSaving(true);
               const { data: userData } = await supabase.auth.getUser();
               const userId = userData.user?.id;
@@ -412,7 +411,7 @@ function AddMemberDialog() {
                     .slice(0, 12),
                   gift_hints: parsed.data.gift_hints || null,
                   email: email.trim() || null,
-                  whatsapp_phone: whatsapp.trim() || null,
+                  whatsapp_phone: normalizePhone(whatsapp),
                   pincode: pincode.trim() || null,
                   city: city.trim() || null,
                   greetings_enabled: greetingsEnabled,
@@ -574,17 +573,12 @@ function EditMemberDialog({ member }: { member: FamilyMember }) {
                 className="h-12"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor={`m-wa-${member.id}`}>{t("family.whatsapp")}</Label>
-              <Input
-                id={`m-wa-${member.id}`}
-                inputMode="tel"
-                value={whatsapp}
-                maxLength={20}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                className="h-12"
-              />
-            </div>
+            <PhoneField
+              id={`m-wa-${member.id}`}
+              label={t("family.whatsapp")}
+              value={whatsapp}
+              onChange={setWhatsapp}
+            />
             <div className="flex gap-3">
               <div className="flex-1 space-y-2">
                 <Label htmlFor={`m-pin-${member.id}`}>{t("family.theirPincode")}</Label>
@@ -626,6 +620,10 @@ function EditMemberDialog({ member }: { member: FamilyMember }) {
                 toast.error(t(parsed.error.issues[0]?.message ?? "family.errDetails"));
                 return;
               }
+              if (!isPhoneAcceptable(whatsapp)) {
+                toast.error(t("phoneCountryError"));
+                return;
+              }
               setSaving(true);
               const { error } = await supabase
                 .from("family_members")
@@ -636,7 +634,7 @@ function EditMemberDialog({ member }: { member: FamilyMember }) {
                   music_genres: music.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 12),
                   gift_hints: parsed.data.gift_hints || null,
                   email: email.trim() || null,
-                  whatsapp_phone: whatsapp.trim() || null,
+                  whatsapp_phone: normalizePhone(whatsapp),
                   pincode: pincode.trim() || null,
                   city: city.trim() || null,
                   greetings_enabled: greetingsEnabled,

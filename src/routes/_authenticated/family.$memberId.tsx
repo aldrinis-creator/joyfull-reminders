@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneField, isPhoneAcceptable, normalizePhone } from "@/components/PhoneField";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -281,12 +282,16 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
             toast.error(t("family.errPincode"));
             return;
           }
+          if (!isPhoneAcceptable(whatsapp)) {
+            toast.error(t("phoneCountryError"));
+            return;
+          }
           setSaving(true);
           const { error } = await supabase
             .from("family_members")
             .update({
               email: email.trim() || null,
-              whatsapp_phone: whatsapp.trim() || null,
+              whatsapp_phone: normalizePhone(whatsapp),
               pincode: pincode.trim() || null,
               city: city.trim() || null,
               greetings_enabled: enabled,
@@ -314,20 +319,12 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
             className="h-12"
           />
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="c-wa" className="text-sm">
-            {t("family.whatsapp")}
-          </Label>
-          <Input
-            id="c-wa"
-            inputMode="tel"
-            value={whatsapp}
-            maxLength={20}
-            onChange={(e) => setWhatsapp(e.target.value)}
-            placeholder="+91 98765 43210"
-            className="h-12"
-          />
-        </div>
+        <PhoneField
+          id="c-wa"
+          label={t("family.whatsapp")}
+          value={whatsapp}
+          onChange={setWhatsapp}
+        />
         <div className="flex gap-2">
           <div className="flex-1 space-y-1">
             <Label htmlFor="c-pin" className="text-sm">

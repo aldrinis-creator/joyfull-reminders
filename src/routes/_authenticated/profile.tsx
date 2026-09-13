@@ -9,6 +9,7 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { CalendarSyncCard } from "@/components/CalendarSyncCard";
 
 import { PhoneVerifyDialog } from "@/components/PhoneVerifyDialog";
+import { PhoneField, isPhoneAcceptable, normalizePhone } from "@/components/PhoneField";
 import { PushDeviceCard } from "@/components/PushDeviceCard";
 import { AlarmSoundCard } from "@/components/AlarmSoundCard";
 
@@ -41,7 +42,11 @@ export const Route = createFileRoute("/_authenticated/profile")({
 
 const profileSchema = z.object({
   full_name: z.string().trim().max(100),
-  phone: z.string().trim().max(20),
+  phone: z
+    .string()
+    .trim()
+    .max(20)
+    .refine((v) => isPhoneAcceptable(v), "phoneCountryError"),
   city: z.string().trim().max(80),
   address: z.string().trim().max(300),
   pincode: z.union([z.literal(""), z.string().regex(/^[1-9]\d{5}$/, "family.errPincode")]),
@@ -97,7 +102,7 @@ function ProfilePage() {
     const { error } = await supabase.from("profiles").upsert({
       id: userId,
       full_name: parsed.data.full_name || null,
-      phone: parsed.data.phone || null,
+      phone: normalizePhone(parsed.data.phone),
       city: parsed.data.city || null,
       address: parsed.data.address || null,
       pincode: parsed.data.pincode || null,
@@ -143,8 +148,7 @@ function ProfilePage() {
             />
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="p-phone">{t("profile.phone")}</Label>
+            <div className="flex items-center justify-end gap-3">
               <PhoneVerifyDialog
                 phone={phone}
                 verified={Boolean(profile?.phone_verified_at) && phone === (profile?.phone ?? "")}
@@ -153,14 +157,7 @@ function ProfilePage() {
                 }}
               />
             </div>
-            <Input
-              id="p-phone"
-              value={phone}
-              maxLength={20}
-              onChange={(e) => setPhone(e.target.value)}
-              className="h-12"
-              placeholder="+919876543210"
-            />
+            <PhoneField id="p-phone" label={t("profile.phone")} value={phone} onChange={setPhone} />
             {profile?.phone_verified_at && phone === (profile.phone ?? "") ? (
               <p className="text-muted-foreground text-xs">{t("profile.verifiedNumber")}</p>
             ) : (
