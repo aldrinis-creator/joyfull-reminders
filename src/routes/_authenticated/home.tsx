@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Flame, PartyPopper, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
@@ -132,14 +132,6 @@ function HomePage() {
     thisMonth.forEach((item) => map[bucketFor(item.occurrence)].push(item));
     return map;
   }, [thisMonth]);
-
-  const now = Date.now();
-  const dueAlarm = active.find(
-    ({ reminder, occurrence }) =>
-      reminder.priority === "high" &&
-      occurrence.getTime() <= now &&
-      (snoozedIds[reminder.id] ?? 0) < now,
-  );
 
   const firstName = (profile?.full_name ?? "").split(" ")[0];
 
