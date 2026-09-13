@@ -60,7 +60,9 @@ export async function syncDocumentExpiryReminders(
         .maybeSingle();
 
       if (existing) {
-        if (!existing.completed && existing.due_at !== dueAt) {
+        const sameMoment =
+          new Date(existing.due_at).getTime() === new Date(dueAt).getTime();
+        if (!existing.completed && !sameMoment) {
           if (!opts.dryRun) {
             await admin.from("reminders").update({ due_at: dueAt }).eq("id", existing.id);
           }
