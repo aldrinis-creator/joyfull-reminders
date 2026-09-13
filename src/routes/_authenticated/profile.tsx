@@ -9,6 +9,7 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { CalendarSyncCard } from "@/components/CalendarSyncCard";
 
 import { PhoneVerifyDialog } from "@/components/PhoneVerifyDialog";
+import { PhoneField, isPhoneAcceptable, normalizePhone } from "@/components/PhoneField";
 import { PushDeviceCard } from "@/components/PushDeviceCard";
 import { AlarmSoundCard } from "@/components/AlarmSoundCard";
 
@@ -101,7 +102,7 @@ function ProfilePage() {
     const { error } = await supabase.from("profiles").upsert({
       id: userId,
       full_name: parsed.data.full_name || null,
-      phone: parsed.data.phone || null,
+      phone: normalizePhone(parsed.data.phone),
       city: parsed.data.city || null,
       address: parsed.data.address || null,
       pincode: parsed.data.pincode || null,
