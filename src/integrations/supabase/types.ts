@@ -56,6 +56,7 @@ export type Database = {
           expiry_date: string | null
           family_member_id: string | null
           file_path: string
+          file_paths: string[]
           id: string
           notes: string | null
           reminder_id: string | null
@@ -69,6 +70,7 @@ export type Database = {
           expiry_date?: string | null
           family_member_id?: string | null
           file_path: string
+          file_paths?: string[]
           id?: string
           notes?: string | null
           reminder_id?: string | null
@@ -82,6 +84,7 @@ export type Database = {
           expiry_date?: string | null
           family_member_id?: string | null
           file_path?: string
+          file_paths?: string[]
           id?: string
           notes?: string | null
           reminder_id?: string | null

@@ -1,0 +1,2 @@
+ALTER TABLE public.documents ADD COLUMN IF NOT EXISTS file_paths text[] NOT NULL DEFAULT '{}';
+UPDATE public.documents SET file_paths = ARRAY[file_path] WHERE cardinality(file_paths) = 0 AND file_path IS NOT NULL;
