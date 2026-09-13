@@ -108,6 +108,7 @@ function DocumentsPage() {
 
       {adding ? <DocumentDialog open={adding} onOpenChange={setAdding} /> : null}
     </AppShell>
+    </DocumentsPinGate>
   );
 }
 
