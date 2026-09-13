@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Flame, PartyPopper, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { AlarmOverlay } from "@/components/AlarmOverlay";
 import { AskAssistant } from "@/components/AskAssistant";
 import { ReminderCard } from "@/components/ReminderCard";
 import { Button } from "@/components/ui/button";
@@ -18,14 +17,11 @@ import {
   useStreak,
 } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
-import { useAlarmSettings } from "@/hooks/useAlarmSettings";
-import { fetchActiveSnoozes, readSnoozes, recordSnooze, snoozeLocally } from "@/lib/snooze";
+import { completeReminder } from "@/lib/complete-reminder";
 import {
   bucketLabel,
-  advanceOccurrence,
   bucketFor,
   formatDate,
-  localDayKey,
   nextOccurrence,
   type Reminder,
   type UrgencyBucket,
