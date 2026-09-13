@@ -3,6 +3,7 @@ import home from "./locales/home";
 import reminders from "./locales/reminders";
 import family from "./locales/family";
 import documents from "./locales/documents";
+import pin from "./locales/pin";
 import photos from "./locales/photos";
 import market from "./locales/market";
 import profile from "./locales/profile";
