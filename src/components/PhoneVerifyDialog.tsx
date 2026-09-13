@@ -14,6 +14,7 @@ import {
 import { confirmNumberVerification, requestNumberVerification } from "@/lib/otp.functions";
 import { phoneSchema } from "@/lib/otp.schemas";
 import { useT } from "@/hooks/useLanguage";
+import { useWebOtp } from "@/hooks/useWebOtp";
 
 /** Lets a signed-in user confirm their own mobile number by SMS or WhatsApp. */
 export function PhoneVerifyDialog({
@@ -35,6 +36,35 @@ export function PhoneVerifyDialog({
   const [busy, setBusy] = useState(false);
 
   const parsed = phoneSchema.safeParse(phone);
+
+  async function confirmCode(rawCode: string) {
+    if (!parsed.success) return;
+    setBusy(true);
+    try {
+      const result = await confirmOtp({
+        data: { phone: parsed.data, code: rawCode.trim() },
+      });
+      if (!result.ok) {
+        toast.error(result.detail);
+        return;
+      }
+      toast.success(t("profile.numberVerified"));
+      setOpen(false);
+      setStep("channel");
+      setCode("");
+      onVerified?.();
+    } catch {
+      toast.error(t("profile.errVerifyCode"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Auto-fill SMS codes via WebOTP where the browser supports it.
+  useWebOtp(open && step === "code" && channel === "sms", (received) => {
+    setCode(received);
+    void confirmCode(received);
+  });
 
   async function send(picked: "sms" | "whatsapp") {
     if (!parsed.success) {
@@ -96,28 +126,9 @@ export function PhoneVerifyDialog({
         ) : (
           <form
             className="space-y-3"
-            onSubmit={async (e) => {
+            onSubmit={(e) => {
               e.preventDefault();
-              if (!parsed.success) return;
-              setBusy(true);
-              try {
-                const result = await confirmOtp({
-                  data: { phone: parsed.data, code: code.trim() },
-                });
-                if (!result.ok) {
-                  toast.error(result.detail);
-                  return;
-                }
-                toast.success(t("profile.numberVerified"));
-                setOpen(false);
-                setStep("channel");
-                setCode("");
-                onVerified?.();
-              } catch {
-                toast.error(t("profile.errVerifyCode"));
-              } finally {
-                setBusy(false);
-              }
+              void confirmCode(code);
             }}
           >
             <div className="space-y-2">
@@ -125,6 +136,7 @@ export function PhoneVerifyDialog({
               <Input
                 id="verify-otp"
                 inputMode="numeric"
+                autoComplete="one-time-code"
                 maxLength={8}
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
