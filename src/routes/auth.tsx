@@ -290,35 +290,45 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
     );
   }
 
+  async function submitCode(rawCode: string) {
+    const parsed = phoneSchema.safeParse(phone);
+    if (!parsed.success) return;
+    setBusy(true);
+    try {
+      const result = await verifyOtp({ data: { phone: parsed.data, code: rawCode.trim() } });
+      if (!result.ok) {
+        toast.error(result.detail);
+        return;
+      }
+      const { error } = await supabase.auth.setSession({
+        access_token: result.accessToken,
+        refresh_token: result.refreshToken,
+      });
+      if (error) {
+        toast.error(t("public.errSession"));
+        return;
+      }
+      navigate({ to: "/home" });
+    } catch {
+      toast.error(t("public.errVerify"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Auto-fill SMS codes via WebOTP where the browser supports it.
+  useWebOtp(step === "code" && channel === "sms", (received) => {
+    setCode(received);
+    void submitCode(received);
+  });
+
   if (step === "code") {
     return (
       <form
         className="mt-5 space-y-4"
-        onSubmit={async (e) => {
+        onSubmit={(e) => {
           e.preventDefault();
-          const parsed = phoneSchema.safeParse(phone);
-          if (!parsed.success) return;
-          setBusy(true);
-          try {
-            const result = await verifyOtp({ data: { phone: parsed.data, code: code.trim() } });
-            if (!result.ok) {
-              toast.error(result.detail);
-              return;
-            }
-            const { error } = await supabase.auth.setSession({
-              access_token: result.accessToken,
-              refresh_token: result.refreshToken,
-            });
-            if (error) {
-              toast.error(t("public.errSession"));
-              return;
-            }
-            navigate({ to: "/home" });
-          } catch {
-            toast.error(t("public.errVerify"));
-          } finally {
-            setBusy(false);
-          }
+          void submitCode(code);
         }}
       >
         <div className="space-y-2">
