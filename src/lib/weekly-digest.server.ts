@@ -135,7 +135,7 @@ async function sendWhatsappDigest(
       type: "template",
       template: {
         name: templateName,
-        language: { code: "en", policy: "deterministic" },
+        language: { code: "en_GB", policy: "deterministic" },
         ...(namespace ? { namespace } : {}),
         to_and_components: [
           {
