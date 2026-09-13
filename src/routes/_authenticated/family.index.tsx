@@ -569,17 +569,12 @@ function EditMemberDialog({ member }: { member: FamilyMember }) {
                 className="h-12"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor={`m-wa-${member.id}`}>{t("family.whatsapp")}</Label>
-              <Input
-                id={`m-wa-${member.id}`}
-                inputMode="tel"
-                value={whatsapp}
-                maxLength={20}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                className="h-12"
-              />
-            </div>
+            <PhoneField
+              id={`m-wa-${member.id}`}
+              label={t("family.whatsapp")}
+              value={whatsapp}
+              onChange={setWhatsapp}
+            />
             <div className="flex gap-3">
               <div className="flex-1 space-y-2">
                 <Label htmlFor={`m-pin-${member.id}`}>{t("family.theirPincode")}</Label>
