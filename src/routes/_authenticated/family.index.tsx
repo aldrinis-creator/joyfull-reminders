@@ -330,18 +330,12 @@ function AddMemberDialog() {
                 className="h-12"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="m-wa">{t("family.whatsapp")}</Label>
-              <Input
-                id="m-wa"
-                inputMode="tel"
-                value={whatsapp}
-                maxLength={20}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                placeholder="+91 98765 43210"
-                className="h-12"
-              />
-            </div>
+            <PhoneField
+              id="m-wa"
+              label={t("family.whatsapp")}
+              value={whatsapp}
+              onChange={setWhatsapp}
+            />
             <div className="flex gap-3">
               <div className="flex-1 space-y-2">
                 <Label htmlFor="m-pin">{t("family.theirPincode")}</Label>
