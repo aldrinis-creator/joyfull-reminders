@@ -337,6 +337,7 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
           <Input
             id="otp"
             inputMode="numeric"
+            autoComplete="one-time-code"
             value={code}
             maxLength={8}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}

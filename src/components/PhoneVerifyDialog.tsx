@@ -126,28 +126,9 @@ export function PhoneVerifyDialog({
         ) : (
           <form
             className="space-y-3"
-            onSubmit={async (e) => {
+            onSubmit={(e) => {
               e.preventDefault();
-              if (!parsed.success) return;
-              setBusy(true);
-              try {
-                const result = await confirmOtp({
-                  data: { phone: parsed.data, code: code.trim() },
-                });
-                if (!result.ok) {
-                  toast.error(result.detail);
-                  return;
-                }
-                toast.success(t("profile.numberVerified"));
-                setOpen(false);
-                setStep("channel");
-                setCode("");
-                onVerified?.();
-              } catch {
-                toast.error(t("profile.errVerifyCode"));
-              } finally {
-                setBusy(false);
-              }
+              void confirmCode(code);
             }}
           >
             <div className="space-y-2">
@@ -155,6 +136,7 @@ export function PhoneVerifyDialog({
               <Input
                 id="verify-otp"
                 inputMode="numeric"
+                autoComplete="one-time-code"
                 maxLength={8}
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
