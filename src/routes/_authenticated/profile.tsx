@@ -147,8 +147,7 @@ function ProfilePage() {
             />
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="p-phone">{t("profile.phone")}</Label>
+            <div className="flex items-center justify-end gap-3">
               <PhoneVerifyDialog
                 phone={phone}
                 verified={Boolean(profile?.phone_verified_at) && phone === (profile?.phone ?? "")}
