@@ -254,23 +254,6 @@ function HomePage() {
       </AppShell>
 
       <AskAssistant />
-
-      {dueAlarm ? (
-        <AlarmOverlay
-          reminder={dueAlarm.reminder}
-          onDismiss={() => complete.mutate(dueAlarm.reminder)}
-          recipients={
-            recipientsByReminder?.get(dueAlarm.reminder.id) ??
-            (dueAlarm.reminder.family_member_id
-              ? (members ?? []).filter((m) => m.id === dueAlarm.reminder.family_member_id)
-              : [])
-          }
-          onSnooze={(minutes) => {
-            setSnoozedIds(snoozeLocally(dueAlarm.reminder.id, minutes));
-            void recordSnooze(dueAlarm.reminder.id, dueAlarm.occurrence, minutes);
-          }}
-        />
-      ) : null}
     </>
   );
 }
