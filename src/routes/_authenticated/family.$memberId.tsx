@@ -314,20 +314,12 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
             className="h-12"
           />
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="c-wa" className="text-sm">
-            {t("family.whatsapp")}
-          </Label>
-          <Input
-            id="c-wa"
-            inputMode="tel"
-            value={whatsapp}
-            maxLength={20}
-            onChange={(e) => setWhatsapp(e.target.value)}
-            placeholder="+91 98765 43210"
-            className="h-12"
-          />
-        </div>
+        <PhoneField
+          id="c-wa"
+          label={t("family.whatsapp")}
+          value={whatsapp}
+          onChange={setWhatsapp}
+        />
         <div className="flex gap-2">
           <div className="flex-1 space-y-1">
             <Label htmlFor="c-pin" className="text-sm">
