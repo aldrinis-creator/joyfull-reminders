@@ -14,6 +14,7 @@ import {
 import { confirmNumberVerification, requestNumberVerification } from "@/lib/otp.functions";
 import { phoneSchema } from "@/lib/otp.schemas";
 import { useT } from "@/hooks/useLanguage";
+import { useWebOtp } from "@/hooks/useWebOtp";
 
 /** Lets a signed-in user confirm their own mobile number by SMS or WhatsApp. */
 export function PhoneVerifyDialog({
