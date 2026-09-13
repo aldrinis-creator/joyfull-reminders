@@ -524,6 +524,7 @@ export type Database = {
           calendar_token: string | null
           city: string | null
           created_at: string
+          documents_pin_hash: string | null
           email_enabled: boolean
           full_name: string | null
           id: string
@@ -546,6 +547,7 @@ export type Database = {
           calendar_token?: string | null
           city?: string | null
           created_at?: string
+          documents_pin_hash?: string | null
           email_enabled?: boolean
           full_name?: string | null
           id: string
@@ -568,6 +570,7 @@ export type Database = {
           calendar_token?: string | null
           city?: string | null
           created_at?: string
+          documents_pin_hash?: string | null
           email_enabled?: boolean
           full_name?: string | null
           id?: string
