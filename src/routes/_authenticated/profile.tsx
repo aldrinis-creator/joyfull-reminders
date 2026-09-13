@@ -41,7 +41,11 @@ export const Route = createFileRoute("/_authenticated/profile")({
 
 const profileSchema = z.object({
   full_name: z.string().trim().max(100),
-  phone: z.string().trim().max(20),
+  phone: z
+    .string()
+    .trim()
+    .max(20)
+    .refine((v) => isPhoneAcceptable(v), "phoneCountryError"),
   city: z.string().trim().max(80),
   address: z.string().trim().max(300),
   pincode: z.union([z.literal(""), z.string().regex(/^[1-9]\d{5}$/, "family.errPincode")]),
@@ -153,14 +157,7 @@ function ProfilePage() {
                 }}
               />
             </div>
-            <Input
-              id="p-phone"
-              value={phone}
-              maxLength={20}
-              onChange={(e) => setPhone(e.target.value)}
-              className="h-12"
-              placeholder="+919876543210"
-            />
+            <PhoneField id="p-phone" label={t("profile.phone")} value={phone} onChange={setPhone} />
             {profile?.phone_verified_at && phone === (profile.phone ?? "") ? (
               <p className="text-muted-foreground text-xs">{t("profile.verifiedNumber")}</p>
             ) : (
