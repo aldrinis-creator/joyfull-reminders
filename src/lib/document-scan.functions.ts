@@ -88,12 +88,12 @@ export const parseDocumentScan = createServerFn({ method: "POST" })
               content: [
                 {
                   type: "text",
-                  text: `Reader language: ${data.language}\nLocal date and time now: ${data.localNow}\nExtract the reminder fields from this document photo.`,
+                  text: `Reader language: ${data.language}\nLocal date and time now: ${data.localNow}\nExtract the reminder fields from these ${data.images.length} photo(s) of one document (pages or front/back of the same paper).`,
                 },
-                {
-                  type: "image_url",
-                  image_url: { url: `data:${data.mimeType};base64,${data.imageBase64}` },
-                },
+                ...data.images.map((img) => ({
+                  type: "image_url" as const,
+                  image_url: { url: `data:${img.mimeType};base64,${img.imageBase64}` },
+                })),
               ],
             },
           ],
