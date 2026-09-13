@@ -104,6 +104,8 @@ const common: Namespace = {
     "bucket.later": "Later",
 
     // Relative days
+    phoneCountryError: "Please include the country code, like +919876543210.",
+    phoneCountryHint: "Include the country code, like +919876543210.",
     "day.today": "Today",
     "day.tomorrow": "Tomorrow",
     "day.yesterday": "Yesterday",
@@ -209,6 +211,8 @@ const common: Namespace = {
     "bucket.week": "इस हफ़्ते",
     "bucket.later": "बाद में",
 
+    phoneCountryError: "कृपया देश का कोड लगाएँ, जैसे +919876543210।",
+    phoneCountryHint: "देश का कोड लगाएँ, जैसे +919876543210।",
     "day.today": "आज",
     "day.tomorrow": "कल",
     "day.yesterday": "बीता कल",
