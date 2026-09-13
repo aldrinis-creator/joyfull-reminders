@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PhotoCapture, MAX_PHOTOS, type CapturedPhoto } from "@/components/PhotoCapture";
+import { DocumentsPinGate } from "@/components/DocumentsPinGate";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/hooks/useLanguage";
 import { useFamilyMembers } from "@/lib/queries";
@@ -75,6 +76,7 @@ function DocumentsPage() {
   const [adding, setAdding] = useState(false);
 
   return (
+    <DocumentsPinGate>
     <AppShell
       title={t("documents.title")}
       subtitle={t("documents.subtitle")}
@@ -106,6 +108,7 @@ function DocumentsPage() {
 
       {adding ? <DocumentDialog open={adding} onOpenChange={setAdding} /> : null}
     </AppShell>
+    </DocumentsPinGate>
   );
 }
 

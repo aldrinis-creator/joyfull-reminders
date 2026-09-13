@@ -12,6 +12,7 @@ import { PhoneVerifyDialog } from "@/components/PhoneVerifyDialog";
 import { PhoneField, isPhoneAcceptable, normalizePhone } from "@/components/PhoneField";
 import { PushDeviceCard } from "@/components/PushDeviceCard";
 import { AlarmSoundCard } from "@/components/AlarmSoundCard";
+import { DocumentsPinCard } from "@/components/DocumentsPinCard";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -299,6 +300,8 @@ function ProfilePage() {
             <Link to="/documents">{t("documents.open")}</Link>
           </Button>
         </section>
+
+        <DocumentsPinCard />
 
 
         <section className="bg-card shadow-card rounded-3xl p-5">
