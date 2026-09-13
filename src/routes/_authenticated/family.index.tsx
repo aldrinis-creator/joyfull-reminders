@@ -379,6 +379,10 @@ function AddMemberDialog() {
                 toast.error(t(parsed.error.issues[0]?.message ?? "family.errDetails"));
                 return;
               }
+              if (!isPhoneAcceptable(whatsapp)) {
+                toast.error(t("phoneCountryError"));
+                return;
+              }
               setSaving(true);
               const { data: userData } = await supabase.auth.getUser();
               const userId = userData.user?.id;
@@ -614,6 +618,10 @@ function EditMemberDialog({ member }: { member: FamilyMember }) {
               const parsed = memberSchema.safeParse({ full_name: fullName, relationship, gift_hints: giftHints });
               if (!parsed.success) {
                 toast.error(t(parsed.error.issues[0]?.message ?? "family.errDetails"));
+                return;
+              }
+              if (!isPhoneAcceptable(whatsapp)) {
+                toast.error(t("phoneCountryError"));
                 return;
               }
               setSaving(true);
