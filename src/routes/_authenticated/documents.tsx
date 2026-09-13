@@ -122,7 +122,11 @@ function PhotoViewer({ urls, onClose }: { urls: string[]; onClose: () => void })
           <DialogTitle>{t("photos.pageOf", { index: index + 1, total: urls.length })}</DialogTitle>
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-auto p-4">
-          <img src={url} alt={t("photos.photoAlt", { index: index + 1 })} className="w-full rounded-xl" />
+          <img
+            src={url}
+            alt={t("photos.photoAlt", { index: index + 1 })}
+            className="w-full rounded-xl"
+          />
         </div>
         <DialogFooter className="shrink-0 justify-between gap-2 border-t p-4">
           <Button
@@ -133,7 +137,11 @@ function PhotoViewer({ urls, onClose }: { urls: string[]; onClose: () => void })
           >
             <ChevronLeft className="size-4" aria-hidden /> {t("photos.prev")}
           </Button>
-          <Button variant="outline" className="h-12" onClick={() => window.open(url, "_blank", "noopener")}>
+          <Button
+            variant="outline"
+            className="h-12"
+            onClick={() => window.open(url, "_blank", "noopener")}
+          >
             {t("documents.openFile")}
           </Button>
           <Button

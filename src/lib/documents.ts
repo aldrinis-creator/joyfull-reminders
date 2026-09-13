@@ -87,7 +87,8 @@ export async function uploadDocumentFiles(userId: string, files: Blob[]): Promis
   const paths: string[] = [];
   for (const [i, file] of files.entries()) {
     const type = file.type || "image/jpeg";
-    const ext = type === "application/pdf" ? "pdf" : type.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "jpg";
+    const ext =
+      type === "application/pdf" ? "pdf" : type.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "jpg";
     const path = `${userId}/${Date.now()}-${i}.${ext}`;
     const { error } = await supabase.storage
       .from(DOCUMENTS_BUCKET)
@@ -152,7 +153,10 @@ export async function createExpiryReminder(input: {
 }
 
 export async function updateExpiryReminderDate(reminderId: string, expiry: string): Promise<void> {
-  await supabase.from("reminders").update({ due_at: expiryDueAt(expiry) }).eq("id", reminderId);
+  await supabase
+    .from("reminders")
+    .update({ due_at: expiryDueAt(expiry) })
+    .eq("id", reminderId);
 }
 
 export async function deleteExpiryReminder(reminderId: string): Promise<void> {

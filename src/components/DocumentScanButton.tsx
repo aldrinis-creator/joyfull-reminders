@@ -56,7 +56,11 @@ export function DocumentScanButton({ onParsed }: { onParsed: (parsed: ParsedRemi
       <p className="text-muted-foreground mt-1 text-sm">{t("reminders.scanHint")}</p>
 
       <div className="mt-4">
-        <PhotoCapture photos={photos} onChange={setPhotos} buttonLabel={t("reminders.scanAddPhotos")} />
+        <PhotoCapture
+          photos={photos}
+          onChange={setPhotos}
+          buttonLabel={t("reminders.scanAddPhotos")}
+        />
       </div>
 
       <Button
