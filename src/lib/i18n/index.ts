@@ -18,6 +18,7 @@ const NAMESPACES: Record<string, Namespace> = {
   reminders,
   family,
   documents,
+  pin,
   photos,
   market,
   profile,
