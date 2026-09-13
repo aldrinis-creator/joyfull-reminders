@@ -7,6 +7,7 @@ import { z } from "zod";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneField, isPhoneAcceptable, normalizePhone } from "@/components/PhoneField";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -412,7 +413,7 @@ function AddMemberDialog() {
                     .slice(0, 12),
                   gift_hints: parsed.data.gift_hints || null,
                   email: email.trim() || null,
-                  whatsapp_phone: whatsapp.trim() || null,
+                  whatsapp_phone: normalizePhone(whatsapp),
                   pincode: pincode.trim() || null,
                   city: city.trim() || null,
                   greetings_enabled: greetingsEnabled,
@@ -636,7 +637,7 @@ function EditMemberDialog({ member }: { member: FamilyMember }) {
                   music_genres: music.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 12),
                   gift_hints: parsed.data.gift_hints || null,
                   email: email.trim() || null,
-                  whatsapp_phone: whatsapp.trim() || null,
+                  whatsapp_phone: normalizePhone(whatsapp),
                   pincode: pincode.trim() || null,
                   city: city.trim() || null,
                   greetings_enabled: greetingsEnabled,
