@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Paperclip, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -15,22 +15,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PhotoCapture, MAX_PHOTOS, type CapturedPhoto } from "@/components/PhotoCapture";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/hooks/useLanguage";
 import { useFamilyMembers } from "@/lib/queries";
 import { formatDate } from "@/lib/ereminder";
 import {
-  ACCEPTED_DOCUMENT_TYPES,
-  DOCUMENTS_BUCKET,
   DOC_TYPES,
   MAX_DOCUMENT_BYTES,
   createExpiryReminder,
   daysUntil,
   deleteExpiryReminder,
   docTypeLabel,
+  documentPaths,
   expiryTone,
+  removeDocumentFiles,
   signedDocumentUrl,
+  signedDocumentUrls,
   sortDocuments,
+  updateExpiryReminderDate,
+  uploadDocumentFiles,
   type DocType,
   type DocumentRow,
 } from "@/lib/documents";
@@ -100,8 +104,49 @@ function DocumentsPage() {
         </Button>
       </div>
 
-      <AddDocumentDialog open={adding} onOpenChange={setAdding} />
+      {adding ? <DocumentDialog open={adding} onOpenChange={setAdding} /> : null}
     </AppShell>
+  );
+}
+
+/** Pages through all the photos stored for one document. */
+function PhotoViewer({ urls, onClose }: { urls: string[]; onClose: () => void }) {
+  const t = useT();
+  const [index, setIndex] = useState(0);
+  const url = urls[index] ?? "";
+
+  return (
+    <Dialog open onOpenChange={(v) => (!v ? onClose() : undefined)}>
+      <DialogContent className="flex max-h-[92dvh] flex-col gap-0 p-0 sm:max-w-lg">
+        <DialogHeader className="shrink-0 border-b p-4">
+          <DialogTitle>{t("photos.pageOf", { index: index + 1, total: urls.length })}</DialogTitle>
+        </DialogHeader>
+        <div className="min-h-0 flex-1 overflow-auto p-4">
+          <img src={url} alt={t("photos.photoAlt", { index: index + 1 })} className="w-full rounded-xl" />
+        </div>
+        <DialogFooter className="shrink-0 justify-between gap-2 border-t p-4">
+          <Button
+            variant="outline"
+            className="h-12"
+            disabled={index === 0}
+            onClick={() => setIndex((i) => i - 1)}
+          >
+            <ChevronLeft className="size-4" aria-hidden /> {t("photos.prev")}
+          </Button>
+          <Button variant="outline" className="h-12" onClick={() => window.open(url, "_blank", "noopener")}>
+            {t("documents.openFile")}
+          </Button>
+          <Button
+            variant="outline"
+            className="h-12"
+            disabled={index >= urls.length - 1}
+            onClick={() => setIndex((i) => i + 1)}
+          >
+            {t("photos.next")} <ChevronRight className="size-4" aria-hidden />
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -109,10 +154,22 @@ function DocumentRowCard({ doc }: { doc: DocumentRow }) {
   const t = useT();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [viewerUrls, setViewerUrls] = useState<string[] | null>(null);
   const tone = expiryTone(doc.expiry_date);
+  const paths = documentPaths(doc);
 
   const open = async () => {
-    const url = await signedDocumentUrl(doc.file_path);
+    if (paths.length > 1) {
+      const urls = await signedDocumentUrls(paths);
+      if (!urls.length) {
+        toast.error(t("documents.errOpen"));
+        return;
+      }
+      setViewerUrls(urls);
+      return;
+    }
+    const url = paths[0] ? await signedDocumentUrl(paths[0]) : null;
     if (!url) {
       toast.error(t("documents.errOpen"));
       return;
@@ -123,7 +180,7 @@ function DocumentRowCard({ doc }: { doc: DocumentRow }) {
   const remove = async () => {
     if (!window.confirm(t("documents.confirmDelete"))) return;
     setBusy(true);
-    await supabase.storage.from(DOCUMENTS_BUCKET).remove([doc.file_path]);
+    await removeDocumentFiles(paths);
     if (doc.reminder_id) await deleteExpiryReminder(doc.reminder_id);
     await supabase.from("documents").delete().eq("id", doc.id);
     setBusy(false);
@@ -167,12 +224,26 @@ function DocumentRowCard({ doc }: { doc: DocumentRow }) {
           >
             {expiryText()}
           </p>
+          {paths.length > 1 ? (
+            <p className="text-muted-foreground mt-1 text-sm">
+              {t("documents.photoCount", { count: paths.length })}
+            </p>
+          ) : null}
           {doc.notes ? <p className="text-muted-foreground mt-1 text-sm">{doc.notes}</p> : null}
         </div>
       </div>
       <div className="flex gap-2">
         <Button variant="outline" className="h-12 flex-1" onClick={() => void open()}>
           {t("documents.openFile")}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-12"
+          aria-label={t("documents.edit")}
+          onClick={() => setEditing(true)}
+        >
+          <Pencil className="size-5" aria-hidden />
         </Button>
         <Button
           variant="ghost"
@@ -185,106 +256,49 @@ function DocumentRowCard({ doc }: { doc: DocumentRow }) {
           <Trash2 className="size-5" aria-hidden />
         </Button>
       </div>
+
+      {editing ? <DocumentDialog open onOpenChange={setEditing} doc={doc} /> : null}
+      {viewerUrls ? <PhotoViewer urls={viewerUrls} onClose={() => setViewerUrls(null)} /> : null}
     </section>
   );
 }
 
-function AddDocumentDialog({
+/** Add a new document, or edit an existing one — same fields either way. */
+function DocumentDialog({
   open,
   onOpenChange,
+  doc,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  doc?: DocumentRow;
 }) {
   const t = useT();
   const queryClient = useQueryClient();
   const { data: members } = useFamilyMembers();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
 
-  const [title, setTitle] = useState("");
-  const [docType, setDocType] = useState<DocType>("insurance");
-  const [memberId, setMemberId] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [notes, setNotes] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState(doc?.title ?? "");
+  const [docType, setDocType] = useState<DocType>(doc?.doc_type ?? "insurance");
+  const [memberId, setMemberId] = useState(doc?.family_member_id ?? "");
+  const [expiry, setExpiry] = useState(doc?.expiry_date ?? "");
+  const [notes, setNotes] = useState(doc?.notes ?? "");
+  const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
+  const [pdf, setPdf] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const reset = () => {
-    setTitle("");
-    setDocType("insurance");
-    setMemberId("");
-    setExpiry("");
-    setNotes("");
-    setFile(null);
-  };
+  const existingPaths = doc ? documentPaths(doc) : [];
+  const existingIsPdf = existingPaths[0]?.endsWith(".pdf") ?? false;
 
-  const submit = async () => {
-    if (!title.trim()) {
-      toast.error(t("documents.errTitle"));
-      return;
-    }
-    if (!file) {
-      toast.error(t("documents.errFile"));
-      return;
-    }
-    setSaving(true);
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) {
-      setSaving(false);
-      return;
-    }
-    const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = `${userId}/${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from(DOCUMENTS_BUCKET)
-      .upload(path, file, { contentType: file.type, upsert: false });
-    if (uploadError) {
-      setSaving(false);
-      toast.error(t("documents.errSave"));
-      return;
-    }
+  useEffect(() => {
+    if (!open) return;
+    setPhotos([]);
+    setPdf(null);
+  }, [open]);
 
-    const familyMemberId = memberId || null;
-    const reminderId = expiry
-      ? await createExpiryReminder({
-          userId,
-          title: title.trim(),
-          docType,
-          expiry,
-          familyMemberId,
-          notes: notes.trim() || null,
-        })
-      : null;
-
-    const { error } = await supabase.from("documents").insert({
-      user_id: userId,
-      title: title.trim(),
-      doc_type: docType,
-      family_member_id: familyMemberId,
-      file_path: path,
-      expiry_date: expiry || null,
-      notes: notes.trim() || null,
-      reminder_id: reminderId,
-    });
-    setSaving(false);
-    if (error) {
-      await supabase.storage.from(DOCUMENTS_BUCKET).remove([path]);
-      if (reminderId) await deleteExpiryReminder(reminderId);
-      toast.error(t("documents.errSave"));
-      return;
-    }
-    void queryClient.invalidateQueries({ queryKey: ["documents"] });
-    void queryClient.invalidateQueries({ queryKey: ["reminders"] });
-    toast.success(t("documents.saved"));
-    reset();
-    onOpenChange(false);
-  };
-
-  const pickFile = (chosen: File | undefined) => {
+  const pickPdf = (chosen: File | undefined) => {
     if (!chosen) return;
-    const ok = chosen.type.startsWith("image/") || chosen.type === "application/pdf";
-    if (!ok) {
+    if (chosen.type !== "application/pdf") {
       toast.error(t("documents.errFileType"));
       return;
     }
@@ -292,14 +306,127 @@ function AddDocumentDialog({
       toast.error(t("documents.errFileBig"));
       return;
     }
-    setFile(chosen);
+    setPdf(chosen);
+    setPhotos([]);
+  };
+
+  const submit = async () => {
+    if (!title.trim()) {
+      toast.error(t("documents.errTitle"));
+      return;
+    }
+    const newFiles: Blob[] = pdf ? [pdf] : photos.map((p) => p.blob);
+    if (!doc && newFiles.length === 0) {
+      toast.error(t("documents.errFile"));
+      return;
+    }
+
+    setSaving(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) {
+      setSaving(false);
+      return;
+    }
+
+    const uploaded = newFiles.length ? await uploadDocumentFiles(userId, newFiles) : [];
+    if (uploaded === null) {
+      setSaving(false);
+      toast.error(t("documents.errSave"));
+      return;
+    }
+
+    const familyMemberId = memberId || null;
+
+    if (!doc) {
+      const reminderId = expiry
+        ? await createExpiryReminder({
+            userId,
+            title: title.trim(),
+            docType,
+            expiry,
+            familyMemberId,
+            notes: notes.trim() || null,
+          })
+        : null;
+
+      const { error } = await supabase.from("documents").insert({
+        user_id: userId,
+        title: title.trim(),
+        doc_type: docType,
+        family_member_id: familyMemberId,
+        file_path: uploaded[0] ?? "",
+        file_paths: uploaded,
+        expiry_date: expiry || null,
+        notes: notes.trim() || null,
+        reminder_id: reminderId,
+      });
+      setSaving(false);
+      if (error) {
+        await removeDocumentFiles(uploaded);
+        if (reminderId) await deleteExpiryReminder(reminderId);
+        toast.error(t("documents.errSave"));
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: ["documents"] });
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+      toast.success(t("documents.saved"));
+      onOpenChange(false);
+      return;
+    }
+
+    // Editing: a PDF replaces everything, extra photos are added to the set.
+    const replaced = Boolean(pdf);
+    const finalPaths = replaced ? uploaded : [...existingPaths, ...uploaded];
+
+    let reminderId = doc.reminder_id;
+    if (expiry && reminderId) {
+      await updateExpiryReminderDate(reminderId, expiry);
+    } else if (expiry && !reminderId) {
+      reminderId = await createExpiryReminder({
+        userId,
+        title: title.trim(),
+        docType,
+        expiry,
+        familyMemberId,
+        notes: notes.trim() || null,
+      });
+    } else if (!expiry && reminderId) {
+      await deleteExpiryReminder(reminderId);
+      reminderId = null;
+    }
+
+    const { error } = await supabase
+      .from("documents")
+      .update({
+        title: title.trim(),
+        doc_type: docType,
+        family_member_id: familyMemberId,
+        expiry_date: expiry || null,
+        notes: notes.trim() || null,
+        file_path: finalPaths[0] ?? doc.file_path,
+        file_paths: finalPaths,
+        reminder_id: reminderId,
+      })
+      .eq("id", doc.id);
+    setSaving(false);
+    if (error) {
+      await removeDocumentFiles(uploaded);
+      toast.error(t("documents.errSave"));
+      return;
+    }
+    if (replaced) await removeDocumentFiles(existingPaths);
+    void queryClient.invalidateQueries({ queryKey: ["documents"] });
+    void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    toast.success(t("documents.updated"));
+    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-lg">
         <DialogHeader className="shrink-0 border-b p-5">
-          <DialogTitle>{t("documents.addTitle")}</DialogTitle>
+          <DialogTitle>{doc ? t("documents.editTitle") : t("documents.addTitle")}</DialogTitle>
         </DialogHeader>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
@@ -372,28 +499,45 @@ function AddDocumentDialog({
 
           <div className="space-y-2">
             <Label>{t("documents.fieldFile")}</Label>
+            {doc && existingPaths.length ? (
+              <p className="text-muted-foreground text-sm">
+                {existingIsPdf
+                  ? t("documents.existingPdf")
+                  : t("documents.existingPhotos", { count: existingPaths.length })}
+              </p>
+            ) : null}
+            {!pdf ? (
+              <PhotoCapture
+                photos={photos}
+                onChange={setPhotos}
+                max={Math.max(0, MAX_PHOTOS - (doc && !existingIsPdf ? existingPaths.length : 0))}
+                buttonLabel={t("documents.addPhotos")}
+              />
+            ) : null}
             <input
-              ref={fileRef}
+              ref={pdfRef}
               type="file"
-              accept={ACCEPTED_DOCUMENT_TYPES}
+              accept="application/pdf"
               className="hidden"
               onChange={(e) => {
                 const chosen = e.target.files?.[0];
                 e.target.value = "";
-                pickFile(chosen);
+                pickPdf(chosen);
               }}
             />
-            <Button
-              type="button"
-              variant="outline"
-              className="h-12 w-full"
-              onClick={() => fileRef.current?.click()}
-            >
-              <Paperclip className="size-5" aria-hidden /> {t("documents.chooseFile")}
-            </Button>
-            {file ? (
+            {photos.length === 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-12 w-full"
+                onClick={() => pdfRef.current?.click()}
+              >
+                <Paperclip className="size-5" aria-hidden /> {t("documents.choosePdf")}
+              </Button>
+            ) : null}
+            {pdf ? (
               <p className="text-muted-foreground text-sm">
-                {t("documents.fileChosen", { name: file.name })}
+                {t("documents.fileChosen", { name: pdf.name })}
               </p>
             ) : null}
           </div>
