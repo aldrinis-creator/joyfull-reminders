@@ -226,25 +226,9 @@ export function GreetingComposer({
         <DialogBody className="space-y-4">
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="g-occasion">{t("family.occasion")}</Label>
-            <Select value={occasion} onValueChange={regenerate}>
-              <SelectTrigger id="g-occasion" className="h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {OCCASIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.emoji} {t(`family.occ.${o.value}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
+          <div className="bg-muted/60 space-y-3 rounded-3xl p-4">
             <Label>{t("family.whenToSend")}</Label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {(["now", "schedule"] as const).map((value) => (
                 <button
                   key={value}
@@ -253,8 +237,10 @@ export function GreetingComposer({
                   disabled={Boolean(editing) && value === "now"}
                   onClick={() => setMode(value)}
                   className={cn(
-                    "min-h-11 rounded-full px-4 text-sm font-bold disabled:opacity-40",
-                    mode === value ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
+                    "min-h-12 rounded-2xl px-4 text-sm font-bold disabled:opacity-40",
+                    mode === value
+                      ? "bg-primary text-primary-foreground shadow-card"
+                      : "bg-card text-foreground border",
                   )}
                 >
                   {value === "now" ? t("family.sendNow") : t("family.scheduleIt")}
