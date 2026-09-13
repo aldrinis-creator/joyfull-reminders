@@ -71,6 +71,40 @@ export async function signedDocumentUrl(path: string): Promise<string | null> {
   return data?.signedUrl ?? null;
 }
 
+/** Every stored file for a document — newer rows keep a list, older ones a single path. */
+export function documentPaths(doc: Pick<DocumentRow, "file_path" | "file_paths">): string[] {
+  const list = (doc.file_paths ?? []).filter(Boolean);
+  return list.length ? list : doc.file_path ? [doc.file_path] : [];
+}
+
+export async function signedDocumentUrls(paths: string[]): Promise<string[]> {
+  const urls = await Promise.all(paths.map((p) => signedDocumentUrl(p)));
+  return urls.filter((u): u is string => Boolean(u));
+}
+
+/** Uploads one or more files for a document and returns their storage paths. */
+export async function uploadDocumentFiles(userId: string, files: Blob[]): Promise<string[] | null> {
+  const paths: string[] = [];
+  for (const [i, file] of files.entries()) {
+    const type = file.type || "image/jpeg";
+    const ext = type === "application/pdf" ? "pdf" : type.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${userId}/${Date.now()}-${i}.${ext}`;
+    const { error } = await supabase.storage
+      .from(DOCUMENTS_BUCKET)
+      .upload(path, file, { contentType: type, upsert: false });
+    if (error) {
+      await removeDocumentFiles(paths);
+      return null;
+    }
+    paths.push(path);
+  }
+  return paths;
+}
+
+export async function removeDocumentFiles(paths: string[]): Promise<void> {
+  if (paths.length) await supabase.storage.from(DOCUMENTS_BUCKET).remove(paths);
+}
+
 /** Expiry dates become a 9am reminder on the day the paper runs out. */
 export function expiryDueAt(expiry: string): string {
   const [y, m, d] = expiry.split("-").map(Number);
