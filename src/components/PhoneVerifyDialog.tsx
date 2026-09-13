@@ -37,6 +37,35 @@ export function PhoneVerifyDialog({
 
   const parsed = phoneSchema.safeParse(phone);
 
+  async function confirmCode(rawCode: string) {
+    if (!parsed.success) return;
+    setBusy(true);
+    try {
+      const result = await confirmOtp({
+        data: { phone: parsed.data, code: rawCode.trim() },
+      });
+      if (!result.ok) {
+        toast.error(result.detail);
+        return;
+      }
+      toast.success(t("profile.numberVerified"));
+      setOpen(false);
+      setStep("channel");
+      setCode("");
+      onVerified?.();
+    } catch {
+      toast.error(t("profile.errVerifyCode"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Auto-fill SMS codes via WebOTP where the browser supports it.
+  useWebOtp(open && step === "code" && channel === "sms", (received) => {
+    setCode(received);
+    void confirmCode(received);
+  });
+
   async function send(picked: "sms" | "whatsapp") {
     if (!parsed.success) {
       toast.error(t("profile.errPhoneFormat"));
