@@ -51,24 +51,15 @@ function HomePage() {
   const { data: profile } = useProfile();
   const { data: streak } = useStreak();
   const t = useT();
-  useAlarmSettings();
   const queryClient = useQueryClient();
-  const [snoozedIds, setSnoozedIds] = useState<Record<string, number>>({});
   const [showLater, setShowLater] = useState(false);
 
-  // Snoozes persist across reloads: hydrate from localStorage, then the server.
-  useEffect(() => {
-    setSnoozedIds((prev) => ({ ...readSnoozes(), ...prev }));
-    void fetchActiveSnoozes().then((remote) =>
-      setSnoozedIds((prev) => {
-        const next = { ...prev };
-        for (const [id, until] of Object.entries(remote)) {
-          if (until > (next[id] ?? 0)) next[id] = until;
-        }
-        return next;
-      }),
+  /** Drops a reminder from the cached list straight away, so the card goes instantly. */
+  function removeFromCache(id: string) {
+    queryClient.setQueryData<Reminder[]>(["reminders"], (old) =>
+      (old ?? []).filter((r) => r.id !== id),
     );
-  }, []);
+  }
 
   const remove = useMutation({
     mutationFn: async (reminder: Reminder) => {
@@ -77,15 +68,20 @@ function HomePage() {
       const { error } = await supabase.from("reminders").delete().eq("id", reminder.id);
       if (error) throw error;
     },
+    onMutate: (reminder: Reminder) => removeFromCache(reminder.id),
     onSuccess: () => {
       toast.success(t("home.deleted"));
       void queryClient.invalidateQueries({ queryKey: ["reminders"] });
     },
-    onError: () => toast.error(t("home.deleteFailed")),
+    onError: () => {
+      toast.error(t("home.deleteFailed"));
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
   });
 
   const complete = useMutation({
     mutationFn: (reminder: Reminder) => completeReminder(reminder),
+    onMutate: (reminder: Reminder) => removeFromCache(reminder.id),
     onSuccess: (result) => {
       toast.success(
         result.recurring && result.upcoming
