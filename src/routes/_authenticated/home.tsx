@@ -89,60 +89,7 @@ function HomePage() {
   });
 
   const complete = useMutation({
-    mutationFn: async (reminder: Reminder) => {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-      const completedOccurrence = nextOccurrence(reminder);
-      const upcoming = advanceOccurrence(reminder);
-
-      if (userId) {
-        await supabase.from("reminder_occurrences").insert({
-          user_id: userId,
-          reminder_id: reminder.id,
-          occurrence_at: completedOccurrence.toISOString(),
-          status: "completed",
-          acknowledged_at: new Date().toISOString(),
-        });
-      }
-
-      if (upcoming) {
-        // Recurring: roll forward to the next occurrence, keep it active.
-        const { error } = await supabase
-          .from("reminders")
-          .update({ due_at: upcoming.toISOString(), completed: false, completed_at: null })
-          .eq("id", reminder.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("reminders")
-          .update({ completed: true, completed_at: new Date().toISOString() })
-          .eq("id", reminder.id);
-        if (error) throw error;
-      }
-
-      if (userId) {
-        const today = localDayKey();
-        const { data: current } = await supabase
-          .from("user_streaks")
-          .select("*")
-          .eq("user_id", userId)
-          .maybeSingle();
-        const yesterday = localDayKey(new Date(Date.now() - 86_400_000));
-        const next =
-          current?.last_completed_on === today
-            ? current.current_streak
-            : current?.last_completed_on === yesterday
-              ? current.current_streak + 1
-              : 1;
-        await supabase.from("user_streaks").upsert({
-          user_id: userId,
-          current_streak: next,
-          longest_streak: Math.max(next, current?.longest_streak ?? 0),
-          last_completed_on: today,
-        });
-      }
-      return { recurring: Boolean(upcoming), upcoming };
-    },
+    mutationFn: (reminder: Reminder) => completeReminder(reminder),
     onSuccess: (result) => {
       toast.success(
         result.recurring && result.upcoming
