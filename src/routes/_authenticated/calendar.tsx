@@ -1,17 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { ReminderCard } from "@/components/ReminderCard";
+import { ScheduledGreetingsList } from "@/components/ScheduledGreetingsList";
+import { supabase } from "@/integrations/supabase/client";
 import { useReminderRecipients, useReminders } from "@/lib/queries";
+import { completeReminder } from "@/lib/complete-reminder";
 import { useT } from "@/hooks/useLanguage";
 import { activeLocale } from "@/lib/i18n";
 import {
   SELECTABLE_CATEGORIES,
   categoryMeta,
   categoryShortLabel,
+  formatDate,
   nextOccurrence,
+  type Reminder,
   type ReminderCategory,
 } from "@/lib/ereminder";
 import { cn } from "@/lib/utils";
@@ -39,6 +46,47 @@ function CalendarPage() {
   const [monthOffset, setMonthOffset] = useState(0);
   const [category, setCategory] = useState<ReminderCategory | "all">("all");
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [view, setView] = useState<"reminders" | "scheduled">("reminders");
+  const queryClient = useQueryClient();
+
+  function removeFromCache(id: string) {
+    queryClient.setQueryData<Reminder[]>(["reminders"], (old) =>
+      (old ?? []).filter((r) => r.id !== id),
+    );
+  }
+
+  const remove = useMutation({
+    mutationFn: async (reminder: Reminder) => {
+      await supabase.from("reminder_alerts").delete().eq("reminder_id", reminder.id);
+      await supabase.from("reminder_occurrences").delete().eq("reminder_id", reminder.id);
+      const { error } = await supabase.from("reminders").delete().eq("id", reminder.id);
+      if (error) throw error;
+    },
+    onMutate: (reminder: Reminder) => removeFromCache(reminder.id),
+    onSuccess: () => {
+      toast.success(t("home.deleted"));
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
+    onError: () => {
+      toast.error(t("home.deleteFailed"));
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
+  });
+
+  const complete = useMutation({
+    mutationFn: (reminder: Reminder) => completeReminder(reminder),
+    onMutate: (reminder: Reminder) => removeFromCache(reminder.id),
+    onSuccess: (result) => {
+      toast.success(
+        result.recurring && result.upcoming
+          ? t("home.doneNext", { date: formatDate(result.upcoming) })
+          : t("home.doneOnce"),
+      );
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+      void queryClient.invalidateQueries({ queryKey: ["streak"] });
+    },
+    onError: () => toast.error(t("home.updateFailed")),
+  });
 
   const base = new Date();
   const cursor = new Date(base.getFullYear(), base.getMonth() + monthOffset, 1);
@@ -78,6 +126,24 @@ function CalendarPage() {
       title={t("nav.calendar")}
       subtitle={cursor.toLocaleDateString(activeLocale(), { month: "long", year: "numeric" })}
     >
+      <div className="mb-4 flex gap-2">
+        <Chip active={view === "reminders"} onClick={() => setView("reminders")}>
+          {t("reminders.viewReminders")}
+        </Chip>
+        <Chip active={view === "scheduled"} onClick={() => setView("scheduled")}>
+          {t("reminders.viewScheduled")}
+        </Chip>
+      </div>
+
+      {view === "scheduled" ? (
+        <section className="space-y-3 pb-6">
+          <h2 className="text-muted-foreground text-sm font-bold tracking-widest uppercase">
+            {t("reminders.scheduledGreetings")}
+          </h2>
+          <ScheduledGreetingsList />
+        </section>
+      ) : (
+        <>
       <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-2">
         <Chip active={category === "all"} onClick={() => setCategory("all")}>
           {t("reminders.filterAll")}
@@ -176,6 +242,8 @@ function CalendarPage() {
             reminder={reminder}
             occurrence={occurrence}
             recipients={recipientsByReminder?.get(reminder.id)}
+            onComplete={(r) => complete.mutate(r)}
+            onDelete={(r) => remove.mutate(r)}
           />
         ))}
         {(selectedDay ? selectedEvents : events).length === 0 ? (
@@ -184,6 +252,8 @@ function CalendarPage() {
           </p>
         ) : null}
       </section>
+        </>
+      )}
     </AppShell>
   );
 }

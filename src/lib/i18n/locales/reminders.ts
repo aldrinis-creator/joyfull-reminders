@@ -101,6 +101,13 @@ const reminders: Namespace = {
     weekdayInitials: "S,M,T,W,T,F,S",
     upcoming: "Upcoming",
     nothingScheduled: "Nothing scheduled here.",
+    viewReminders: "Reminders",
+    viewScheduled: "Scheduled",
+    scheduledGreetings: "Upcoming greetings",
+    noScheduledGreetings: "No greetings scheduled yet",
+    greetingFor: "For {name}",
+    channelWhatsapp: "WhatsApp",
+    channelEmail: "Email",
   },
   hi: {
     title: "नया रिमाइंडर",
@@ -198,6 +205,13 @@ const reminders: Namespace = {
     weekdayInitials: "र,सो,मं,बु,गु,शु,श",
     upcoming: "आगामी",
     nothingScheduled: "यहाँ कुछ भी तय नहीं है।",
+    viewReminders: "रिमाइंडर",
+    viewScheduled: "तय की गई",
+    scheduledGreetings: "आगामी शुभकामनाएँ",
+    noScheduledGreetings: "अभी कोई शुभकामना तय नहीं है",
+    greetingFor: "{name} के लिए",
+    channelWhatsapp: "व्हाट्सऐप",
+    channelEmail: "ईमेल",
   },
 };
 
