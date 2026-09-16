@@ -23,6 +23,7 @@ import { Route as AuthenticatedFamilyIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedFamilyMemberIdRouteImport } from './routes/_authenticated/family.$memberId'
 import { Route as AuthenticatedMarketIndexRouteImport } from './routes/_authenticated/market.index'
 import { Route as AuthenticatedMarketVendorIdRouteImport } from './routes/_authenticated/market.$vendorId'
+import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders.index'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
 import { Route as AuthenticatedRemindersNewRouteImport } from './routes/_authenticated/reminders.new'
 import { Route as AuthenticatedRemindersReminderIdEditRouteImport } from './routes/_authenticated/reminders.$reminderId.edit'
@@ -107,6 +108,12 @@ const AuthenticatedMarketVendorIdRoute =
   AuthenticatedMarketVendorIdRouteImport.update({
     id: '/market/$vendorId',
     path: '/market/$vendorId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOrdersIndexRoute =
+  AuthenticatedOrdersIndexRouteImport.update({
+    id: '/orders/',
+    path: '/orders/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOrdersOrderIdRoute =
@@ -195,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family/': typeof AuthenticatedFamilyIndexRoute
   '/market/': typeof AuthenticatedMarketIndexRoute
+  '/orders/': typeof AuthenticatedOrdersIndexRoute
   '/reminders/$reminderId/edit': typeof AuthenticatedRemindersReminderIdEditRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/dispatch-reminders': typeof ApiPublicCronDispatchRemindersRoute
@@ -222,6 +230,7 @@ export interface FileRoutesByTo {
   '/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/family': typeof AuthenticatedFamilyIndexRoute
   '/market': typeof AuthenticatedMarketIndexRoute
+  '/orders': typeof AuthenticatedOrdersIndexRoute
   '/reminders/$reminderId/edit': typeof AuthenticatedRemindersReminderIdEditRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/dispatch-reminders': typeof ApiPublicCronDispatchRemindersRoute
@@ -251,6 +260,7 @@ export interface FileRoutesById {
   '/_authenticated/reminders/new': typeof AuthenticatedRemindersNewRoute
   '/_authenticated/family/': typeof AuthenticatedFamilyIndexRoute
   '/_authenticated/market/': typeof AuthenticatedMarketIndexRoute
+  '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
   '/_authenticated/reminders/$reminderId/edit': typeof AuthenticatedRemindersReminderIdEditRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/cron/dispatch-reminders': typeof ApiPublicCronDispatchRemindersRoute
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/reminders/new'
     | '/family/'
     | '/market/'
+    | '/orders/'
     | '/reminders/$reminderId/edit'
     | '/api/public/calendar/$token'
     | '/api/public/cron/dispatch-reminders'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/reminders/new'
     | '/family'
     | '/market'
+    | '/orders'
     | '/reminders/$reminderId/edit'
     | '/api/public/calendar/$token'
     | '/api/public/cron/dispatch-reminders'
@@ -335,6 +347,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reminders/new'
     | '/_authenticated/family/'
     | '/_authenticated/market/'
+    | '/_authenticated/orders/'
     | '/_authenticated/reminders/$reminderId/edit'
     | '/api/public/calendar/$token'
     | '/api/public/cron/dispatch-reminders'
@@ -464,6 +477,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketVendorIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/orders/': {
+      id: '/_authenticated/orders/'
+      path: '/orders'
+      fullPath: '/orders/'
+      preLoaderRoute: typeof AuthenticatedOrdersIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/orders/$orderId': {
       id: '/_authenticated/orders/$orderId'
       path: '/orders/$orderId'
@@ -563,6 +583,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRemindersNewRoute: typeof AuthenticatedRemindersNewRoute
   AuthenticatedFamilyIndexRoute: typeof AuthenticatedFamilyIndexRoute
   AuthenticatedMarketIndexRoute: typeof AuthenticatedMarketIndexRoute
+  AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
   AuthenticatedRemindersReminderIdEditRoute: typeof AuthenticatedRemindersReminderIdEditRoute
 }
 
@@ -578,6 +599,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRemindersNewRoute: AuthenticatedRemindersNewRoute,
   AuthenticatedFamilyIndexRoute: AuthenticatedFamilyIndexRoute,
   AuthenticatedMarketIndexRoute: AuthenticatedMarketIndexRoute,
+  AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
   AuthenticatedRemindersReminderIdEditRoute:
     AuthenticatedRemindersReminderIdEditRoute,
 }
