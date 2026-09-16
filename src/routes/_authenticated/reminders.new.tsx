@@ -4,9 +4,10 @@ import { ReminderForm } from "@/components/ReminderForm";
 import { useT } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/_authenticated/reminders/new")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    date: typeof search.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(search.date) ? search.date : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { date?: string } => {
+    const date = search["date"];
+    return typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date) ? { date } : {};
+  },
   head: () => ({
     meta: [
       { title: "Add a reminder — My-Mitr" },

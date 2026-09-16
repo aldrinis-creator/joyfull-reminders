@@ -270,7 +270,7 @@ function CalendarPage() {
               onClick={() =>
                 void navigate({
                   to: "/reminders/new",
-                  search: selectedDateParam ? { date: selectedDateParam } : {},
+                  search: { date: selectedDateParam ?? undefined },
                 })
               }
             >
