@@ -126,7 +126,7 @@ function ProfilePage() {
     return channels.length ? channels.join(", ") : t("profile.reachNone");
   }, [profile?.email_enabled, t, thisDevice, verified]);
 
-  const save = async () => {
+  const save = async (extra: { latitude?: number; longitude?: number } = {}) => {
     const parsed = profileSchema.safeParse({ full_name: fullName, phone, city, address, pincode });
     if (!parsed.success) {
       toast.error(t(parsed.error.issues[0]?.message ?? "profile.errDetails"));
@@ -147,6 +147,7 @@ function ProfilePage() {
       address: parsed.data.address || null,
       pincode: parsed.data.pincode || null,
       onboarded: true,
+      ...extra,
     });
     setSaving(false);
     if (error) {
@@ -309,8 +310,14 @@ function ProfilePage() {
             <div className="space-y-2"><Label htmlFor="profile-pincode">{t("family.pincode")}</Label><Input id="profile-pincode" value={pincode} inputMode="numeric" maxLength={6} onChange={(event) => setPincode(event.target.value.replace(/\D/g, ""))} className="h-12" /></div>
           </div>
           <Button variant="outline" className="h-12 w-full" onClick={() => {
-            if (!navigator.geolocation) return toast.error(t("profile.errNoGeo"));
-            navigator.geolocation.getCurrentPosition(() => toast.success(t("profile.locationSaved")), () => toast.error(t("profile.errGeo")));
+            if (!navigator.geolocation) {
+              toast.error(t("profile.errNoGeo"));
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(
+              (position) => void save({ latitude: position.coords.latitude, longitude: position.coords.longitude }).then(() => toast.success(t("profile.locationSaved"))),
+              () => toast.error(t("profile.errGeo")),
+            );
           }}><MapPin className="size-5" aria-hidden />{t("profile.useLocation")}</Button>
           <Button className="h-12 w-full" disabled={saving} onClick={() => void save()}>{saving ? t("saving") : t("profile.saveAddress")}</Button>
         </div>
