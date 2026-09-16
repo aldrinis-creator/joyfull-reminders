@@ -327,6 +327,12 @@
   box-shadow: var(--shadow-lifted);
 }
 
+/* Reusable treatment for family and profile photos in the Organic system. */
+@utility washed {
+  filter: saturate(0.6) contrast(0.85) brightness(1.1);
+  opacity: 0.94;
+}
+
 @utility animate-mm-pop {
   animation: mm-pop 380ms ease both;
 }

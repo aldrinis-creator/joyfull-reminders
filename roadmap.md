@@ -6,3 +6,5 @@
 - [x] Rebuild Today as an Organic dated spine with overdue and all-clear states.
 - [x] Add complete English and Hindi copy.
 - [x] Verify build, routes, and mobile/desktop rendering; authenticated interactions require a signed-in preview session.
+- [x] Rebuild the public landing page with the Organic hero, navigation, photo slot, feature cards, and bilingual copy.
+- [x] Verify the Organic landing page build and desktop/mobile presentation.
