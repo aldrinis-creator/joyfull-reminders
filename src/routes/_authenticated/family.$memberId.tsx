@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Gift, MessageCircleHeart, Plus, Share2, Trash2 } from "lucide-react";
+import { ArrowLeft, Gift, MessageCircleHeart, Phone, Plus, Share2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -17,13 +17,15 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { GreetingComposer } from "@/components/GreetingComposer";
+import { dialNumber } from "@/components/RecipientActions";
 import { supabase } from "@/integrations/supabase/client";
 import { isValidPincode } from "@/lib/greetings";
-import { useMemberAnyGreetingState } from "@/lib/queries";
+import { useMemberAnyGreetingState, useVendors } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import {
   SPECIAL_DATE_KINDS,
   specialDateKindLabel,
+  daysUntil,
   formatDate,
   nextAnniversary,
   relativeDay,
@@ -53,28 +55,17 @@ function MemberPage() {
   const t = useT();
   const { memberId } = Route.useParams();
   const queryClient = useQueryClient();
+  const { data: vendors } = useVendors();
 
   const { data } = useQuery({
     queryKey: ["family_member", memberId],
     queryFn: async () => {
       const [member, dates, wishes] = await Promise.all([
         supabase.from("family_members").select("*").eq("id", memberId).maybeSingle(),
-        supabase
-          .from("special_dates")
-          .select("*")
-          .eq("family_member_id", memberId)
-          .order("event_date"),
-        supabase
-          .from("wishlist_items")
-          .select("*")
-          .eq("family_member_id", memberId)
-          .order("created_at"),
+        supabase.from("special_dates").select("*").eq("family_member_id", memberId).order("event_date"),
+        supabase.from("wishlist_items").select("*").eq("family_member_id", memberId).order("created_at"),
       ]);
-      return {
-        member: member.data,
-        dates: dates.data ?? [],
-        wishes: wishes.data ?? [],
-      };
+      return { member: member.data, dates: dates.data ?? [], wishes: wishes.data ?? [] };
     },
   });
 
@@ -82,164 +73,175 @@ function MemberPage() {
   const greetingState = useMemberAnyGreetingState(memberId).data ?? null;
   const [composerOpen, setComposerOpen] = useState(false);
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["family_member", memberId] });
+  const phoneNumber = member ? dialNumber(member as FamilyMember) : null;
+  const firstName = member?.full_name.split(" ")[0] ?? t("family.memberFallback");
+  const initial = member?.full_name.slice(0, 1).toUpperCase() ?? "";
+  const location = [member?.city, member?.pincode].filter(Boolean).join(" ");
+  const relationship = member?.relationship ? t(`family.rel.${member.relationship}`) : "";
+  const identityMeta = [relationship, location].filter(Boolean).join(" · ");
+
+  const todayFact = useMemo(() => {
+    const todayDate = new Date();
+    const date = (data?.dates ?? []).find((item) => item.recurring && daysUntil(nextAnniversary(item.event_date), todayDate) === 0);
+    if (!date) return null;
+    const years = turningAge(date.event_date, todayDate);
+    if (!years) return null;
+    return date.kind === "birthday"
+      ? t("family.ageToday", { age: years })
+      : date.kind === "anniversary"
+        ? t("family.yearsToday", { years })
+        : null;
+  }, [data?.dates, t]);
+
+  const coverage = useMemo(() => {
+    if (!member?.pincode) return [];
+    return (vendors ?? []).filter((vendor) =>
+      vendor.pincode === member.pincode || vendor.serviceable_pincodes.includes(member.pincode ?? ""),
+    );
+  }, [member?.pincode, vendors]);
+  const coverageCounts = useMemo(() => ({
+    bakery: coverage.filter((vendor) => vendor.kind === "bakery").length,
+    florist: coverage.filter((vendor) => vendor.kind === "florist").length,
+    gift: coverage.filter((vendor) => vendor.kind === "gift_shop" || vendor.kind === "other").length,
+  }), [coverage]);
 
   return (
-    <AppShell
-      title={member?.full_name ?? t("family.memberFallback")}
-      subtitle={member?.relationship ? t(`family.rel.${member.relationship}`) : undefined}
-      action={
-        <Button asChild variant="secondary" size="lg" className="h-12">
-          <Link to="/family">
-            <ArrowLeft className="size-5" aria-hidden /> {t("back")}
-          </Link>
-        </Button>
-      }
-    >
-      <div className="space-y-4 pb-8">
-        <section className="bg-card shadow-card rounded-3xl p-5">
-          <h2 className="text-xl">{t("family.specialDates")}</h2>
-          <ul className="mt-3 space-y-2">
-            {(data?.dates ?? []).map((d) => {
-              const when = d.recurring ? nextAnniversary(d.event_date) : new Date(d.event_date);
-              const kind = SPECIAL_DATE_KINDS.find((k) => k.value === d.kind);
-              const age = d.recurring ? turningAge(d.event_date, when) : null;
-              return (
-                <li
-                  key={d.id}
-                  className="bg-muted flex items-center justify-between gap-3 rounded-2xl px-4 py-3"
-                >
-                  <div>
-                    <p className="font-semibold">
-                      {kind?.emoji} {d.title}
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                      {formatDate(when)}
-                      {age ? ` · ${t("family.turning", { age })}` : ""}
-                    </p>
-                  </div>
-                  <span className="text-sm font-bold">{relativeDay(when)}</span>
-                </li>
-              );
-            })}
-            {(data?.dates.length ?? 0) === 0 ? (
-              <li className="text-muted-foreground text-sm">{t("family.noDatesYet")}</li>
-            ) : null}
-          </ul>
-          <AddDateForm memberId={memberId} memberName={member?.full_name ?? ""} onSaved={refresh} />
-        </section>
-
-        {member ? (
-          <section className="bg-card shadow-card rounded-3xl p-5">
-            <h2 className="text-xl">{t("family.happyTitle")}</h2>
-            {member.likes.length === 0 && member.music_genres.length === 0 && !member.gift_hints ? (
-              <p className="text-muted-foreground mt-2 text-sm">{t("family.nothingNoted")}</p>
-            ) : null}
-            {member.likes.length > 0 ? (
-              <div className="mt-3">
-                <p className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
-                  {t("family.likesLabel")}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {member.likes.map((l) => (
-                    <span key={l} className="bg-accent text-accent-foreground rounded-full px-3 py-1.5 text-sm font-semibold">
-                      {l}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {member.music_genres.length > 0 ? (
-              <div className="mt-4">
-                <p className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
-                  {t("family.musicLabel")}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {member.music_genres.map((g) => (
-                    <span key={g} className="bg-muted rounded-full px-3 py-1.5 text-sm font-semibold">
-                      {g}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {member.gift_hints ? (
-              <p className="mt-4 text-base">
-                <span className="font-semibold">{t("family.giftHintsLabel")} </span>
-                {member.gift_hints}
-              </p>
-            ) : null}
-            <div className="mt-5 grid gap-2">
-              <Button asChild size="lg" className="h-13 w-full text-base">
-                <Link
-                  to="/market"
-                  search={{ pin: member.pincode ?? undefined, for: member.id }}
-                >
-                  <Gift className="size-5" aria-hidden />
-                  {member.pincode ? t("family.findGiftNear", { pincode: member.pincode }) : t("family.findGift")}
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant={greetingState ? "default" : "secondary"}
-                className={
-                  greetingState === "scheduled"
-                    ? "h-13 w-full text-base bg-accent text-accent-foreground hover:bg-accent/90"
-                    : greetingState === "sent"
-                      ? "h-13 w-full text-base bg-success text-success-foreground hover:bg-success/90"
-                      : "h-13 w-full text-base"
-                }
-                onClick={() => setComposerOpen(true)}
-              >
-                <MessageCircleHeart className="size-5" aria-hidden /> {t("family.sendGreeting")}
-              </Button>
+    <AppShell title={member?.full_name ?? t("family.memberFallback")} hideHeader>
+      <div className="relative min-h-screen pb-10">
+        <header className="bg-accent-200 relative h-[196px] overflow-hidden">
+          {member?.photo_url ? (
+            <img src={member.photo_url} alt={member.full_name} className="washed h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-accent-200 to-accent-300">
+              <span className="font-display text-accent-800/70 text-[92px]">{initial}</span>
             </div>
-          </section>
-        ) : null}
+          )}
+          <Button asChild variant="secondary" size="icon" className="absolute top-5 left-[22px] size-10 rounded-full shadow-card">
+            <Link to="/family" aria-label={t("back")}><ArrowLeft className="size-5" aria-hidden /></Link>
+          </Button>
+        </header>
 
-        {member ? (
-          <ContactSection member={member as FamilyMember} onSaved={refresh} />
-        ) : null}
-
-        <section className="bg-card shadow-card rounded-3xl p-5">
-          <h2 className="text-xl">{t("family.wishlist")}</h2>
-          <ul className="mt-3 space-y-2">
-            {(data?.wishes ?? []).map((w) => (
-              <li
-                key={w.id}
-                className="bg-muted flex items-center justify-between gap-3 rounded-2xl px-4 py-3"
-              >
-                <span className="font-semibold">{w.title}</span>
-                <span className="flex items-center gap-3">
-                  {w.price_paise ? <span className="text-sm">{rupees(w.price_paise)}</span> : null}
-                  <button
-                    type="button"
-                    aria-label={t("family.removeWish", { title: w.title })}
-                    onClick={async () => {
-                      await supabase.from("wishlist_items").delete().eq("id", w.id);
-                      void refresh();
-                    }}
-                  >
-                    <Trash2 className="text-muted-foreground size-5" aria-hidden />
-                  </button>
-                </span>
-              </li>
-            ))}
-            {(data?.wishes.length ?? 0) === 0 ? (
-              <li className="text-muted-foreground text-sm">{t("family.noWishes")}</li>
+        <div className="relative z-10 -mt-[30px] space-y-5 px-[22px]">
+          <section className="bg-background shadow-lifted rounded-[30px] p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-[27px] leading-tight">{member?.full_name ?? t("family.memberFallback")}</h1>
+                {identityMeta ? <p className="text-foreground/60 mt-1 text-[13.5px] font-semibold">{identityMeta}</p> : null}
+              </div>
+              {todayFact ? <span className="bg-accent-100 text-accent-800 shrink-0 rounded-full px-3 py-1.5 text-[11.5px] font-semibold">{todayFact}</span> : null}
+            </div>
+            {member ? (
+              <div className="mt-5 grid grid-cols-2 gap-2.5">
+                <Button asChild className="h-12 rounded-full text-[15px]">
+                  <Link to="/market" search={{ pin: member.pincode ?? undefined, for: member.id }}>
+                    <Gift className="size-5" aria-hidden />{t("family.sendGift")}
+                  </Link>
+                </Button>
+                <Button asChild={Boolean(phoneNumber)} variant="outline" className="h-12 rounded-full bg-transparent text-[15px]" disabled={!phoneNumber}>
+                  {phoneNumber ? <a href={`tel:+${phoneNumber}`}><Phone className="size-5" aria-hidden />{t("family.call")}</a> : <span><Phone className="size-5" aria-hidden />{t("family.call")}</span>}
+                </Button>
+              </div>
             ) : null}
-          </ul>
-          <AddWishForm memberId={memberId} onSaved={refresh} />
-        </section>
+          </section>
+
+          <section>
+            <p className="text-foreground/55 mb-3 text-[11px] font-semibold uppercase">{t("family.datesKeptFor", { name: firstName })}</p>
+            <ul className="space-y-2.5">
+              {(data?.dates ?? []).map((date) => {
+                const when = date.recurring ? nextAnniversary(date.event_date) : new Date(date.event_date);
+                const kind = SPECIAL_DATE_KINDS.find((item) => item.value === date.kind);
+                const age = date.recurring ? turningAge(date.event_date, when) : null;
+                return (
+                  <li key={date.id} className={`${date.kind === "birthday" || date.kind === "anniversary" ? "bg-accent-100" : "bg-card shadow-card"} rounded-[26px] px-5 py-4`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[15.5px] font-semibold">{kind?.emoji} {date.title}</p>
+                        <p className="text-foreground/55 mt-1 text-[12.5px] font-semibold">
+                          {formatDate(when)} · {age ? t("family.turning", { age }) : relativeDay(when)}
+                        </p>
+                      </div>
+                      {age ? <span className="text-accent-800 text-[12px] font-semibold">{relativeDay(when)}</span> : null}
+                    </div>
+                  </li>
+                );
+              })}
+              {(data?.dates.length ?? 0) === 0 ? <li className="text-muted-foreground text-sm">{t("family.noDatesYet")}</li> : null}
+            </ul>
+            <AddDateForm memberId={memberId} memberName={member?.full_name ?? ""} onSaved={refresh} />
+          </section>
+
+          {member ? <DeliveryPanel member={member as FamilyMember} coverage={coverageCounts} /> : null}
+
+          {member ? (
+            <section className="bg-card shadow-card rounded-[28px] p-5">
+              <h2 className="text-xl">{t("family.happyTitle")}</h2>
+              {member.likes.length === 0 && member.music_genres.length === 0 && !member.gift_hints ? <p className="text-muted-foreground mt-2 text-sm">{t("family.nothingNoted")}</p> : null}
+              {member.likes.length > 0 ? <InfoChips label={t("family.likesLabel")} items={member.likes} accent /> : null}
+              {member.music_genres.length > 0 ? <InfoChips label={t("family.musicLabel")} items={member.music_genres} /> : null}
+              {member.gift_hints ? <p className="mt-4 text-[15px]"><span className="font-semibold">{t("family.giftHintsLabel")} </span>{member.gift_hints}</p> : null}
+              <Button size="lg" variant={greetingState ? "default" : "secondary"} className="mt-5 h-12 w-full rounded-full text-[15px]" onClick={() => setComposerOpen(true)}>
+                <MessageCircleHeart className="size-5" aria-hidden />{t("family.sendGreeting")}
+              </Button>
+            </section>
+          ) : null}
+
+          {member ? <ContactSection member={member as FamilyMember} onSaved={refresh} /> : null}
+
+          <section className="bg-card shadow-card rounded-[28px] p-5">
+            <h2 className="text-xl">{t("family.wishlist")}</h2>
+            <ul className="mt-3 space-y-2.5">
+              {(data?.wishes ?? []).map((wish) => (
+                <li key={wish.id} className="bg-background flex items-center justify-between gap-3 rounded-[22px] px-4 py-3">
+                  <span className="font-semibold">{wish.title}</span>
+                  <span className="flex items-center gap-2">
+                    {wish.price_paise ? <span className="text-sm">{rupees(wish.price_paise)}</span> : null}
+                    <Button type="button" variant="ghost" size="icon" className="size-9 rounded-full" aria-label={t("family.removeWish", { title: wish.title })} onClick={async () => { await supabase.from("wishlist_items").delete().eq("id", wish.id); void refresh(); }}>
+                      <Trash2 className="text-muted-foreground size-4" aria-hidden />
+                    </Button>
+                  </span>
+                </li>
+              ))}
+              {(data?.wishes.length ?? 0) === 0 ? <li className="text-muted-foreground text-sm">{t("family.noWishes")}</li> : null}
+            </ul>
+            <AddWishForm memberId={memberId} onSaved={refresh} />
+          </section>
+        </div>
       </div>
 
-      {member ? (
-        <GreetingComposer
-          member={member as FamilyMember}
-          open={composerOpen}
-          onOpenChange={setComposerOpen}
-        />
-      ) : null}
+      {member ? <GreetingComposer member={member as FamilyMember} open={composerOpen} onOpenChange={setComposerOpen} /> : null}
     </AppShell>
+  );
+}
+
+function InfoChips({ label, items, accent = false }: { label: string; items: string[]; accent?: boolean }) {
+  return (
+    <div className="mt-4">
+      <p className="text-foreground/55 text-[11px] font-semibold uppercase">{label}</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {items.map((item) => <span key={item} className={`${accent ? "bg-accent-100 text-accent-800" : "bg-muted"} rounded-full px-3 py-1.5 text-[13px] font-semibold`}>{item}</span>)}
+      </div>
+    </div>
+  );
+}
+
+function DeliveryPanel({ member, coverage }: { member: FamilyMember; coverage: { bakery: number; florist: number; gift: number } }) {
+  const t = useT();
+  const total = coverage.bakery + coverage.florist + coverage.gift;
+  return (
+    <section className="bg-accent-2-100 rounded-[28px] p-5">
+      {member.pincode ? (
+        <>
+          <h2 className="text-accent-2-900 text-[15.5px] font-semibold">{t("family.deliveringTo", { pincode: member.pincode })}</h2>
+          <p className="text-accent-2-800 mt-2 text-[13px] leading-relaxed">{t("family.shopCoverage", { count: total, bakery: coverage.bakery, florist: coverage.florist, gift: coverage.gift })}</p>
+          <p className="text-accent-2-700 mt-3 text-[12.5px] font-semibold">{[member.city, member.pincode].filter(Boolean).join(" · ")}</p>
+        </>
+      ) : (
+        <>
+          <h2 className="text-accent-2-900 text-[15.5px] font-semibold">{t("family.deliveryNeedsPincode")}</h2>
+          <p className="text-accent-2-700 mt-2 text-[12.5px]">{t("family.deliveryNeedsPincodeBody")}</p>
+        </>
+      )}
+    </section>
   );
 }
 
