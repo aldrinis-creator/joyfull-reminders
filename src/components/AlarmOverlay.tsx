@@ -161,10 +161,17 @@ export function AlarmOverlay({
           variant="secondary"
           className="bg-accent text-accent-foreground hover:bg-accent/90 h-14 w-full text-base"
         >
-          <Link to="/market">
-            <Gift className="size-5" aria-hidden />
-            {isCelebration ? t("home.orderCake") : t("home.takeAction")}
-          </Link>
+          {isCelebration ? (
+            <Link to="/market">
+              <Gift className="size-5" aria-hidden />
+              {t("home.orderCake")}
+            </Link>
+          ) : (
+            <Link to="/reminders/$reminderId/edit" params={{ reminderId: reminder.id }}>
+              <ArrowRight className="size-5" aria-hidden />
+              {t("home.takeAction")}
+            </Link>
+          )}
         </Button>
 
         <div className="grid grid-cols-3 gap-2">
