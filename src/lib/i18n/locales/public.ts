@@ -2,25 +2,31 @@ import type { Namespace } from "../types";
 
 const publicNs: Namespace = {
   en: {
+    navLabel: "Public navigation",
+    navFeatures: "Features",
+    navSignIn: "Sign in",
+    familyTag: "Made for families across India",
+    photoPlaceholder: "Family photograph placeholder",
     heroTitle: "Never miss a moment that matters.",
     heroBody:
-      "Birthdays, bills, PUC, tax filings, exam forms — remembered for you, and celebrated with cake and flowers when the day arrives.",
+      "Remember every birthday, bill and deadline — and make it easy to show up for the people you love.",
     createAccount: "Create your account",
     createAccountShort: "Create account",
-    haveAccount: "I already have an account",
+    haveAccount: "I already have one",
+    freeNote: "Free to remember. Pay only when you send a gift.",
     footer: "Made for busy families across India.",
-    "feature.milestones.title": "Family milestones first",
+    "feature.milestones.title": "Family first",
     "feature.milestones.body":
-      "Birthdays, anniversaries, memorials and exam dates for everyone you love — with the age they're turning.",
+      "Birthdays, anniversaries and memorials — with the age they're turning.",
     "feature.alarms.title": "Alarms you can't sleep through",
     "feature.alarms.body":
-      "A full-screen alert with a 60-second chime, snooze options and a one-tap way to act on it.",
+      "Full-screen alert, 60-second chime, one tap to act.",
     "feature.deadlines.title": "Every deadline covered",
     "feature.deadlines.body":
-      "IT returns, FD maturity, insurance, PUC expiry, rent, SIPs, OTT trials and exam forms.",
+      "Medications, IT returns, FD maturity, insurance, PUC, rent, SIPs, OTT trials.",
     "feature.gifting.title": "Gifting built in",
     "feature.gifting.body":
-      "Order cake, flowers or a hamper from shops near you and track it to the doorstep.",
+      "Cake, flowers or a hamper from shops near them, tracked to the door.",
 
     authTagline: "Your milestones, deadlines and celebrations in one place.",
     continueGoogle: "Continue with Google",
@@ -71,25 +77,31 @@ const publicNs: Namespace = {
     errorBody: "Something went wrong on our end. You can try refreshing or head back home.",
   },
   hi: {
+    navLabel: "सार्वजनिक नेविगेशन",
+    navFeatures: "ख़ासियतें",
+    navSignIn: "साइन इन",
+    familyTag: "पूरे भारत के परिवारों के लिए बनाया गया",
+    photoPlaceholder: "परिवार की तस्वीर के लिए जगह",
     heroTitle: "कोई भी ख़ास पल अब नहीं छूटेगा।",
     heroBody:
-      "जन्मदिन, बिल, PUC, कर भुगतान, परीक्षा फ़ॉर्म — सब हम याद रखेंगे, और दिन आने पर केक और फूलों के साथ ख़ुशी मनाएँगे।",
+      "हर जन्मदिन, बिल और अंतिम तारीख़ याद रखें — और अपनों के लिए हमेशा मौजूद रहना आसान बनाएँ।",
     createAccount: "अपना खाता बनाएँ",
     createAccountShort: "खाता बनाएँ",
     haveAccount: "मेरा खाता पहले से है",
+    freeNote: "याद रखना मुफ़्त है। भुगतान केवल उपहार भेजते समय करें।",
     footer: "पूरे भारत के व्यस्त परिवारों के लिए बनाया गया।",
-    "feature.milestones.title": "परिवार के ख़ास दिन सबसे पहले",
+    "feature.milestones.title": "परिवार सबसे पहले",
     "feature.milestones.body":
-      "अपनों के जन्मदिन, सालगिरह, पुण्यतिथि और परीक्षा की तारीख़ें — साथ में उनकी उम्र भी।",
+      "जन्मदिन, सालगिरह और पुण्यतिथि — साथ में वे कितने साल के होने वाले हैं।",
     "feature.alarms.title": "ऐसे अलार्म जो छूटें नहीं",
     "feature.alarms.body":
-      "पूरी स्क्रीन पर 60 सेकंड की घंटी, स्नूज़ के विकल्प और एक टैप में कार्रवाई।",
+      "पूरी स्क्रीन पर चेतावनी, 60 सेकंड की घंटी और एक टैप में कार्रवाई।",
     "feature.deadlines.title": "हर अंतिम तारीख़ शामिल",
     "feature.deadlines.body":
-      "आयकर रिटर्न, FD मैच्योरिटी, बीमा, PUC, किराया, SIP, OTT ट्रायल और परीक्षा फ़ॉर्म।",
+      "दवाइयाँ, आयकर रिटर्न, FD मैच्योरिटी, बीमा, PUC, किराया, SIP और OTT ट्रायल।",
     "feature.gifting.title": "उपहार भेजना भी आसान",
     "feature.gifting.body":
-      "पास की दुकानों से केक, फूल या हैम्पर मँगाइए और डिलीवरी तक नज़र रखिए।",
+      "उनके पास की दुकानों से केक, फूल या हैम्पर भेजें और दरवाज़े तक ट्रैक करें।",
 
     authTagline: "आपके ख़ास दिन, अंतिम तारीख़ें और ख़ुशियाँ — एक ही जगह।",
     continueGoogle: "Google से जारी रखें",
