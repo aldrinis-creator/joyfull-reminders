@@ -30,12 +30,12 @@ import {
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
-      { title: "Your timeline — e-Reminder" },
+      { title: "Your timeline — My-Mitr" },
       {
         name: "description",
         content: "Every upcoming birthday, bill, renewal and deadline in one chronological feed.",
       },
-      { property: "og:title", content: "Your timeline — e-Reminder" },
+      { property: "og:title", content: "Your timeline — My-Mitr" },
       { property: "og:description", content: "All your upcoming reminders, grouped by urgency." },
     ],
   }),

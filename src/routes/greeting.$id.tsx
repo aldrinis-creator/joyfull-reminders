@@ -7,7 +7,7 @@ import { useT } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/greeting/$id")({
   head: () => ({
     meta: [
-      { title: "A greeting just for you — e-Reminder" },
+      { title: "A greeting just for you — My-Mitr" },
       {
         name: "description",
         content: "Someone who remembers your special day sent you a greeting card.",

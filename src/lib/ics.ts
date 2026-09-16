@@ -92,7 +92,7 @@ export function buildIcs(options: {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//e-Reminder//Calendar Sync//EN",
+    "PRODID:-//My-Mitr//Calendar Sync//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${icsEscape(options.name)}`,

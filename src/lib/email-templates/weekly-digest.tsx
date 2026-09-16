@@ -28,7 +28,7 @@ const WeeklyDigest = ({ recipientName, reminders = [], occasions = [] }: Props) 
       <Preview>{`Your week ahead — ${total} thing${total === 1 ? '' : 's'} coming up`}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Text style={brand}>e-Reminder</Text>
+          <Text style={brand}>My-Mitr</Text>
           <Section style={card}>
             <Text style={eyebrow}>This week</Text>
             <Heading style={heading}>Hi {name}, here&apos;s your week ahead</Heading>
@@ -60,7 +60,7 @@ const WeeklyDigest = ({ recipientName, reminders = [], occasions = [] }: Props) 
           </Section>
           <Text style={footer}>
             You get this summary once a week so nothing slips through. You can turn email
-            updates off any time in your e-Reminder profile.
+            updates off any time in your My-Mitr profile.
           </Text>
         </Container>
       </Body>

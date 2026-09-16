@@ -43,13 +43,13 @@ import {
 export const Route = createFileRoute("/_authenticated/documents")({
   head: () => ({
     meta: [
-      { title: "Document shelf — e-Reminder" },
+      { title: "Document shelf — My-Mitr" },
       {
         name: "description",
         content:
           "Keep insurance, PUC, ID and warranty documents in one private place, with automatic expiry reminders.",
       },
-      { property: "og:title", content: "Document shelf — e-Reminder" },
+      { property: "og:title", content: "Document shelf — My-Mitr" },
       {
         property: "og:description",
         content: "Your important papers, safely stored with expiry reminders.",

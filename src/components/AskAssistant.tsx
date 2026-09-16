@@ -37,7 +37,7 @@ function getRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
 
 type Message = { role: "user" | "assistant"; text: string };
 
-/** Floating "Ask e-Reminder" assistant: answers from the signed-in user's own data. */
+/** Floating "Ask My-Mitr" assistant: answers from the signed-in user's own data. */
 export function AskAssistant() {
   const t = useT();
   const { language } = useLanguage();

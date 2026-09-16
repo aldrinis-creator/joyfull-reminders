@@ -35,13 +35,13 @@ import {
 export const Route = createFileRoute("/_authenticated/vendor")({
   head: () => ({
     meta: [
-      { title: "Vendor portal — e-Reminder" },
+      { title: "Vendor portal — My-Mitr" },
       {
         name: "description",
         content:
           "Florists, bakeries and gift shops: list your shop, publish your catalogue and update delivery status.",
       },
-      { property: "og:title", content: "Vendor portal — e-Reminder" },
+      { property: "og:title", content: "Vendor portal — My-Mitr" },
       { property: "og:description", content: "Register your shop and manage incoming gift orders." },
     ],
   }),

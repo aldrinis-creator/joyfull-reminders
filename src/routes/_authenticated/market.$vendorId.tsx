@@ -32,12 +32,12 @@ export const Route = createFileRoute("/_authenticated/market/$vendorId")({
   }),
   head: () => ({
     meta: [
-      { title: "Shop details — e-Reminder" },
+      { title: "Shop details — My-Mitr" },
       {
         name: "description",
         content: "Browse this shop's cakes, bouquets and hampers and place a gift order.",
       },
-      { property: "og:title", content: "Shop details — e-Reminder" },
+      { property: "og:title", content: "Shop details — My-Mitr" },
       { property: "og:description", content: "Pick a gift and schedule the delivery date." },
     ],
   }),

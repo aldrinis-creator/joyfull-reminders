@@ -36,13 +36,13 @@ import {
 export const Route = createFileRoute("/_authenticated/family/$memberId")({
   head: () => ({
     meta: [
-      { title: "Family member — e-Reminder" },
+      { title: "Family member — My-Mitr" },
       {
         name: "description",
         content:
           "Special dates, likes, music tastes, gift hints and wishlist for one member of your family circle.",
       },
-      { property: "og:title", content: "Family member — e-Reminder" },
+      { property: "og:title", content: "Family member — My-Mitr" },
       { property: "og:description", content: "Dates, gift hints and wishlist in one place." },
     ],
   }),

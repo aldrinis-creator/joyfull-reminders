@@ -49,9 +49,9 @@ const home: Namespace = {
     shareTextWithNotes: "Reminder: {title}\nWhen: {when}\n{notes}",
     shareFailed: "Could not open the share sheet.",
 
-    // Ask e-Reminder assistant
+    // Ask My-Mitr assistant
     askButton: "Ask",
-    askTitle: "Ask e-Reminder",
+    askTitle: "Ask My-Mitr",
     askSubtitle: "Ask about your reminders and family dates. Answers use only your own saved data.",
     askPlaceholder: "Type your question",
     askMic: "Speak your question",
@@ -125,7 +125,7 @@ const home: Namespace = {
     shareFailed: "साझा करने की विंडो नहीं खुल सकी।",
 
     askButton: "पूछें",
-    askTitle: "e-Reminder से पूछें",
+    askTitle: "My-Mitr से पूछें",
     askSubtitle: "अपने रिमाइंडर और परिवार की तारीखों के बारे में पूछें। उत्तर केवल आपके सहेजे डेटा से आते हैं।",
     askPlaceholder: "अपना सवाल लिखें",
     askMic: "बोलकर पूछें",

@@ -6,13 +6,13 @@ import { useT } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/_authenticated/reminders/new")({
   head: () => ({
     meta: [
-      { title: "Add a reminder — e-Reminder" },
+      { title: "Add a reminder — My-Mitr" },
       {
         name: "description",
         content:
           "Create a reminder with a category, due date, recurrence and as many advance alerts as you need.",
       },
-      { property: "og:title", content: "Add a reminder — e-Reminder" },
+      { property: "og:title", content: "Add a reminder — My-Mitr" },
       { property: "og:description", content: "Set the date, recurrence and alerts in one screen." },
     ],
   }),

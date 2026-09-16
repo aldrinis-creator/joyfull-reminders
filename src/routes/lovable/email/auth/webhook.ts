@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "e-Reminder"
+const SITE_NAME = "My-Mitr"
 const SENDER_DOMAIN = "notify.futurewave.in"
 const ROOT_DOMAIN = "futurewave.in"
 const FROM_DOMAIN = "notify.futurewave.in"

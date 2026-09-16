@@ -18,13 +18,13 @@ export const Route = createFileRoute("/_authenticated/market/")({
   }),
   head: () => ({
     meta: [
-      { title: "Gift marketplace — e-Reminder" },
+      { title: "Gift marketplace — My-Mitr" },
       {
         name: "description",
         content:
           "Order cakes, flowers and gifts from florists, bakeries and gift shops near you, or from pan-India sellers.",
       },
-      { property: "og:title", content: "Gift marketplace — e-Reminder" },
+      { property: "og:title", content: "Gift marketplace — My-Mitr" },
       {
         property: "og:description",
         content: "Local florists, bakeries and gift shops ready to deliver for your next milestone.",
