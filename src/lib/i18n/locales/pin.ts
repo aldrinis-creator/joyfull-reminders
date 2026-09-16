@@ -2,6 +2,9 @@ import type { Namespace } from "../types";
 
 const pin: Namespace = {
   en: {
+    lockedTitle: "Your documents",
+    lockedBody: "{count} files, PIN-locked. Nobody else on this phone can open them.",
+    setupBody: "{count} files. Pick a PIN so nobody else on this phone can open them.",
     setTitle: "Set a PIN to protect your documents",
     setHint: "Your documents hold private papers. Choose a 4 to 6 digit PIN only you know.",
     enterTitle: "Enter your PIN",
@@ -36,6 +39,9 @@ const pin: Namespace = {
     errSendCode: "We could not send the code. Please try again.",
   },
   hi: {
+    lockedTitle: "आपके दस्तावेज़",
+    lockedBody: "{count} फ़ाइलें, पिन से बंद। इस फ़ोन पर कोई और इन्हें नहीं खोल सकता।",
+    setupBody: "{count} फ़ाइलें। पिन चुनें ताकि इस फ़ोन पर कोई और इन्हें न खोल सके।",
     setTitle: "अपने दस्तावेज़ों की सुरक्षा के लिए पिन बनाएँ",
     setHint: "आपके दस्तावेज़ निजी कागज़ हैं। 4 से 6 अंकों का पिन चुनें जो सिर्फ़ आप जानते हों।",
     enterTitle: "अपना पिन डालें",
