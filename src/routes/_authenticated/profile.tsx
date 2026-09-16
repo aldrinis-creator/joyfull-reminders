@@ -217,6 +217,7 @@ function ProfilePage() {
           <SettingsRow
             title={t("profile.calendarSync")}
             value={t(calendarOn ? "profile.calendarValueOn" : "profile.calendarValueOff")}
+            onClick={() => calendarOn && setOpenSheet("calendar")}
             control={
               <Switch
                 checked={calendarOn}
@@ -335,8 +336,10 @@ function SettingsPanel({ title, children }: { title: string; children: ReactNode
 }
 
 function SettingsRow({ title, value, onClick, to, control }: { title: string; value: string; onClick?: () => void; to?: "/orders"; control?: ReactNode }) {
-  const content = <><span className="min-w-0 flex-1 py-4"><span className="block text-[15.5px] leading-5 font-semibold">{title}</span><span className="text-foreground/55 mt-0.5 block truncate text-[12.5px] leading-4 font-semibold">{value}</span></span>{control ?? <ChevronRight className="size-5 shrink-0 opacity-45" aria-hidden />}</>;
+  const label = <span className="min-w-0 flex-1 py-4"><span className="block text-[15.5px] leading-5 font-semibold">{title}</span><span className="text-foreground/55 mt-0.5 block truncate text-[12.5px] leading-4 font-semibold">{value}</span></span>;
+  const content = <>{label}{control ?? <ChevronRight className="size-5 shrink-0 opacity-45" aria-hidden />}</>;
   if (to) return <Link to={to} className="flex min-h-[68px] items-center gap-3">{content}</Link>;
+  if (control && onClick) return <div className="flex min-h-[68px] items-center gap-3"><button type="button" onClick={onClick} className="min-w-0 flex-1 text-left">{label}</button>{control}</div>;
   if (onClick) return <button type="button" onClick={onClick} className="flex min-h-[68px] w-full items-center gap-3 text-left">{content}</button>;
   return <div className="flex min-h-[68px] items-center gap-3">{content}</div>;
 }
