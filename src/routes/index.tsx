@@ -84,11 +84,11 @@ function Landing() {
             />
 
             <div
-              className="washed absolute top-[26px] right-[26px] z-10 hidden size-[262px] overflow-hidden rounded-full border border-foreground/10 bg-card shadow-sm md:flex md:items-center md:justify-center"
+              className="washed absolute top-5 -right-4 z-10 flex size-28 items-center justify-center overflow-hidden rounded-full border border-foreground/10 bg-card shadow-sm md:top-[26px] md:right-[26px] md:size-[262px]"
               role="img"
               aria-label={t("public.photoPlaceholder")}
             >
-              <UsersRound className="size-20 text-secondary/75" strokeWidth={1.5} aria-hidden />
+              <UsersRound className="size-10 text-secondary/75 md:size-20" strokeWidth={1.5} aria-hidden />
             </div>
 
             <div className="relative z-20 max-w-[560px]">
