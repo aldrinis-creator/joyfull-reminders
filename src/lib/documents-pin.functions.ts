@@ -75,16 +75,30 @@ export const resetDocumentsPinWithOtp = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => resetSchema.parse(input))
   .handler(async ({ data, context }): Promise<PinResult> => {
-    const { consumeOtp } = await import("@/lib/otp.server");
+    const { consumeOtp, isPhoneTakenByAnother } = await import("@/lib/otp.server");
+
+    const taken = await isPhoneTakenByAnother(data.phone, context.userId);
+    if (taken.error) return { ok: false, detail: "We could not check this number. Please try again." };
+    if (taken.taken) return { ok: false, detail: "This number is already linked to another account." };
+
     const check = await consumeOtp(data.phone, data.code, "verify");
     if (!check.ok) return { ok: false, detail: check.detail };
 
     const { hashPin } = await import("@/lib/documents-pin.server");
-    const hash = await hashPin(data.pin);
+    let hash: string;
+    try {
+      hash = await hashPin(data.pin);
+    } catch (err) {
+      console.error("[documents-pin] hashPin failed", err);
+      return { ok: false, detail: "We could not secure your PIN on this device. Please try again." };
+    }
     const { error } = await context.supabase
       .from("profiles")
       .update({ documents_pin_hash: hash })
       .eq("id", context.userId);
-    if (error) return { ok: false, detail: "We could not save your PIN. Please try again." };
+    if (error) {
+      console.error("[documents-pin] saving PIN failed", error);
+      return { ok: false, detail: "We could not save your PIN. Please try again." };
+    }
     return { ok: true };
   });
