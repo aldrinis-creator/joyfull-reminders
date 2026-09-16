@@ -178,7 +178,7 @@ function MedicinesPage() {
 
                   {dose.taken ? (
                     <span
-                      className="mm-pop flex size-[54px] shrink-0 items-center justify-center rounded-full bg-[var(--accent-2-700)]"
+                      className="animate-mm-pop flex size-[54px] shrink-0 items-center justify-center rounded-full bg-[var(--accent-2-700)]"
                       aria-label={t("medicines.taken", { name: dose.name })}
                     >
                       <Check className="size-7 text-[var(--background)]" strokeWidth={3} aria-hidden />
@@ -201,7 +201,7 @@ function MedicinesPage() {
         ))}
 
         {total > 0 && left === 0 ? (
-          <section className="mm-rise rounded-[28px] bg-[var(--accent-2-100)] p-6 text-center">
+          <section className="animate-mm-rise rounded-[28px] bg-[var(--accent-2-100)] p-6 text-center">
             <p className="text-[17px] font-semibold text-[var(--accent-2-900)]">
               {t("medicines.allTakenTitle")}
             </p>
