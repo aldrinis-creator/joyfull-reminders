@@ -242,6 +242,8 @@ function CalendarPage() {
             reminder={reminder}
             occurrence={occurrence}
             recipients={recipientsByReminder?.get(reminder.id)}
+            onComplete={(r) => complete.mutate(r)}
+            onDelete={(r) => remove.mutate(r)}
           />
         ))}
         {(selectedDay ? selectedEvents : events).length === 0 ? (
@@ -250,6 +252,8 @@ function CalendarPage() {
           </p>
         ) : null}
       </section>
+        </>
+      )}
     </AppShell>
   );
 }
