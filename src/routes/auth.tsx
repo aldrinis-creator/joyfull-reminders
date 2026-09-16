@@ -228,6 +228,15 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
   const [step, setStep] = useState<"phone" | "channel" | "code">("phone");
   const [channel, setChannel] = useState<"sms" | "whatsapp">("sms");
 
+  // Auto-fill SMS codes via WebOTP where the browser supports it.
+  // Must run before any early return so hook order stays stable.
+  useWebOtp(step === "code" && channel === "sms", (received) => {
+    setCode(received);
+    void submitCode(received);
+  });
+
+
+
   async function send(pickedChannel: "sms" | "whatsapp") {
     const parsed = phoneSchema.safeParse(phone);
     if (!parsed.success) {
