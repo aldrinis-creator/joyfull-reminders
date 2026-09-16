@@ -1,17 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { ReminderCard } from "@/components/ReminderCard";
+import { ScheduledGreetingsList } from "@/components/ScheduledGreetingsList";
+import { supabase } from "@/integrations/supabase/client";
 import { useReminderRecipients, useReminders } from "@/lib/queries";
+import { completeReminder } from "@/lib/complete-reminder";
 import { useT } from "@/hooks/useLanguage";
 import { activeLocale } from "@/lib/i18n";
 import {
   SELECTABLE_CATEGORIES,
   categoryMeta,
   categoryShortLabel,
+  formatDate,
   nextOccurrence,
+  type Reminder,
   type ReminderCategory,
 } from "@/lib/ereminder";
 import { cn } from "@/lib/utils";
