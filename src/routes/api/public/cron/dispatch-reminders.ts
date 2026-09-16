@@ -291,7 +291,17 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           greetings = { error: "greetings_dispatch_failed" };
         }
 
-        return Response.json({ ok: true, ranAt: nowIso, ...summary, greetings });
+        // Missed medicine doses escalate to the chosen family member on the
+        // same schedule. A failure here must not sink the reminder summary.
+        let medicines: unknown = null;
+        try {
+          const { escalateMissedDoses } = await import("@/lib/medicine-escalation.server");
+          medicines = await escalateMissedDoses(supabaseAdmin as never);
+        } catch {
+          medicines = { error: "medicine_escalation_failed" };
+        }
+
+        return Response.json({ ok: true, ranAt: nowIso, ...summary, greetings, medicines });
       },
     },
   },

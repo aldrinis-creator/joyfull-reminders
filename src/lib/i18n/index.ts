@@ -6,6 +6,7 @@ import documents from "./locales/documents";
 import pin from "./locales/pin";
 import photos from "./locales/photos";
 import market from "./locales/market";
+import medicines from "./locales/medicines";
 import profile from "./locales/profile";
 import publicNs from "./locales/public";
 import { LANGUAGES, type Language, type Namespace } from "./types";
@@ -21,6 +22,7 @@ const NAMESPACES: Record<string, Namespace> = {
   pin,
   photos,
   market,
+  medicines,
   profile,
   public: publicNs,
 };

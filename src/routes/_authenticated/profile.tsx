@@ -291,6 +291,14 @@ function ProfilePage() {
         <CalendarSyncCard />
 
         <section className="bg-card shadow-card space-y-3 rounded-3xl p-5">
+          <h2 className="text-xl">{t("medicines.cardTitle")}</h2>
+          <p className="text-muted-foreground text-sm">{t("medicines.cardHint")}</p>
+          <Button asChild variant="outline" className="h-12 w-full">
+            <Link to="/medicines">{t("medicines.open")}</Link>
+          </Button>
+        </section>
+
+        <section className="bg-card shadow-card space-y-3 rounded-3xl p-5">
           <div className="flex items-center gap-3">
             <FolderLock className="text-primary size-6" aria-hidden />
             <h2 className="text-xl">{t("documents.cardTitle")}</h2>
