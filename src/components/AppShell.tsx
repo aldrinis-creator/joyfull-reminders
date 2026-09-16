@@ -70,6 +70,7 @@ export function AppShell({
           <li className="flex justify-center">
             <Link
               to="/reminders/new"
+              search={{}}
               aria-label={t("nav.addReminder")}
               className="bg-primary text-primary-foreground shadow-lifted -mt-7 flex size-[60px] items-center justify-center rounded-full"
             >
