@@ -205,6 +205,13 @@ const reminders: Namespace = {
     weekdayInitials: "र,सो,मं,बु,गु,शु,श",
     upcoming: "आगामी",
     nothingScheduled: "यहाँ कुछ भी तय नहीं है।",
+    viewReminders: "रिमाइंडर",
+    viewScheduled: "तय की गई",
+    scheduledGreetings: "आगामी शुभकामनाएँ",
+    noScheduledGreetings: "अभी कोई शुभकामना तय नहीं है",
+    greetingFor: "{name} के लिए",
+    channelWhatsapp: "व्हाट्सऐप",
+    channelEmail: "ईमेल",
   },
 };
 
