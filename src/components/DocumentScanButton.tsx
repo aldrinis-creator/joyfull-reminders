@@ -50,7 +50,16 @@ function useDocumentCount(enabled: boolean) {
 }
 
 /** Photograph a bill/document (up to 10 pages/sides) and let the AI prefill the fields. */
-export function DocumentScanButton({ onParsed }: { onParsed: (parsed: ParsedReminder) => void }) {
+export function DocumentScanButton({
+  onParsed,
+  variant = "card",
+  triggerLabel,
+}: {
+  onParsed: (parsed: ParsedReminder) => void;
+  /** "card" is the explainer card used inside the reminder form; "bare" is a single pill. */
+  variant?: "card" | "bare";
+  triggerLabel?: string;
+}) {
   const t = useT();
   const { language } = useLanguage();
   const locale = language === "hi" ? "hi-IN" : "en-IN";
@@ -167,22 +176,35 @@ export function DocumentScanButton({ onParsed }: { onParsed: (parsed: ParsedRemi
         }}
       />
 
-      <section className="bg-card shadow-card rounded-3xl p-5">
-        <p className="font-semibold">{t("reminders.scanTitle")}</p>
-        <p className="text-muted-foreground mt-1 text-sm">{t("reminders.scanHint")}</p>
-        <Button
+      {variant === "bare" ? (
+        <button
           type="button"
-          size="lg"
-          variant="secondary"
-          className="mt-3 h-14 w-full text-base"
           onClick={() => {
             reset();
             setStep("capture");
           }}
+          className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full border-2 border-dashed border-[var(--accent-400)] text-[15px] font-semibold text-[var(--accent-700)]"
         >
-          <ScanLine className="size-5" aria-hidden /> {t("reminders.scanStart")}
-        </Button>
-      </section>
+          {triggerLabel ?? t("reminders.scanStart")}
+        </button>
+      ) : (
+        <section className="bg-card shadow-card rounded-3xl p-5">
+          <p className="font-semibold">{t("reminders.scanTitle")}</p>
+          <p className="text-muted-foreground mt-1 text-sm">{t("reminders.scanHint")}</p>
+          <Button
+            type="button"
+            size="lg"
+            variant="secondary"
+            className="mt-3 h-14 w-full text-base"
+            onClick={() => {
+              reset();
+              setStep("capture");
+            }}
+          >
+            <ScanLine className="size-5" aria-hidden /> {t("reminders.scanStart")}
+          </Button>
+        </section>
+      )}
 
       {step === "capture" || step === "processing" ? (
         <div
