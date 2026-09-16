@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { BellRing, Clock, Check, Gift, Volume2 } from "lucide-react";
+import { ArrowRight, BellRing, Clock, Check, Gift, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PayNowButtons } from "@/components/PayNowButtons";
 import { CallButtons, isWishingReminder } from "@/components/RecipientActions";
