@@ -175,7 +175,7 @@ export function ReminderCard({
         {hasPayment ? (
           <div className="min-w-0 flex-1"><PayNowButtons shortcut={{ ...reminder, title: reminder.title }} showCopy={false} tone={tone === "overdue" ? "onDark" : "default"} /></div>
         ) : isGiftable ? (
-          <Button asChild className="h-[46px] min-w-0 flex-1">
+          <Button asChild className="order-2 h-[46px] w-full">
             <Link to="/market" search={{ pin: giftMember?.pincode ?? undefined, for: giftMember?.id }}>
               <Gift className="size-4" aria-hidden /> {t("home.sendGift")}
             </Link>
@@ -187,6 +187,7 @@ export function ReminderCard({
             variant="outline"
             className={cn(
               "size-[46px] shrink-0 rounded-full border-[1.5px]",
+              isGiftable && !hasPayment && "order-1 ml-auto",
               tone === "overdue"
                 ? "border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10"
                 : isGiftable

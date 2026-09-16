@@ -18,6 +18,7 @@ import {
 } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import { activeLocale } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import { completeReminder } from "@/lib/complete-reminder";
 import {
   bucketFor,
@@ -97,7 +98,11 @@ function HomePage() {
       void queryClient.invalidateQueries({ queryKey: ["reminders"] });
       void queryClient.invalidateQueries({ queryKey: ["streak"] });
     },
-    onError: () => toast.error(t("home.updateFailed")),
+    onError: () => {
+      setClearedToday(false);
+      toast.error(t("home.updateFailed"));
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
   });
 
 
@@ -138,7 +143,7 @@ function HomePage() {
     if (todayItems.length > 0) setClearedToday(false);
   }, [todayItems.length]);
 
-  const firstName = (profile?.full_name ?? "").split(" ")[0];
+  const firstName = (profile?.full_name ?? "").split(" ")[0] ?? "";
   const profileInitial = firstName.slice(0, 1).toUpperCase() || "M";
   const now = new Date();
   const nextAfterToday = active.find(({ occurrence }) => bucketFor(occurrence) !== "overdue" && bucketFor(occurrence) !== "today")?.occurrence;
@@ -184,7 +189,7 @@ function HomePage() {
               <Skeleton key={i} className="h-32 rounded-3xl" />
             ))}
           </div>
-        ) : active.length === 0 ? (
+        ) : active.length === 0 && !clearedToday ? (
           <div className="px-[22px]"><EmptyState t={t} /></div>
         ) : (
           <div className="pb-6">
