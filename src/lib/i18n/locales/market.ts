@@ -42,7 +42,7 @@ const market: Namespace = {
     payWithGpay: "Pay {amount} with Google Pay",
     payOtherUpi: "Use another UPI app",
     upiHandoffNote:
-      "This opens your own UPI app — e-Reminder never handles the money. The order stays awaiting payment until the shop confirms it.",
+      "This opens your own UPI app — My-Mitr never handles the money. The order stays awaiting payment until the shop confirms it.",
     upiSection: "Google Pay / UPI payments",
     upiHint: "Add your shop's UPI ID so customers can pay you directly from the order screen.",
     upiId: "Shop UPI ID",
@@ -74,7 +74,7 @@ const market: Namespace = {
 
     // Vendor portal
     vendorPortal: "Vendor portal",
-    vendorSubtitle: "Sell cakes, flowers and gifts on e-Reminder",
+    vendorSubtitle: "Sell cakes, flowers and gifts on My-Mitr",
     catalogue: "Your catalogue",
     nothingListed: "Nothing listed yet.",
     incomingOrders: "Incoming orders",
@@ -154,7 +154,7 @@ const market: Namespace = {
     payWithGpay: "Google Pay से {amount} भुगतान करें",
     payOtherUpi: "कोई दूसरा UPI ऐप इस्तेमाल करें",
     upiHandoffNote:
-      "यह आपका अपना UPI ऐप खोलता है — e-Reminder पैसे नहीं संभालता। दुकान की पुष्टि तक ऑर्डर भुगतान-प्रतीक्षा में रहेगा।",
+      "यह आपका अपना UPI ऐप खोलता है — My-Mitr पैसे नहीं संभालता। दुकान की पुष्टि तक ऑर्डर भुगतान-प्रतीक्षा में रहेगा।",
     upiSection: "Google Pay / UPI भुगतान",
     upiHint: "अपनी दुकान की UPI ID जोड़ें ताकि ग्राहक ऑर्डर स्क्रीन से सीधे भुगतान कर सकें।",
     upiId: "दुकान की UPI ID",
@@ -185,7 +185,7 @@ const market: Namespace = {
     errPayStart: "भुगतान शुरू नहीं हो सका। कृपया फिर कोशिश कीजिए।",
 
     vendorPortal: "विक्रेता पोर्टल",
-    vendorSubtitle: "ई-रिमाइंडर पर केक, फूल और उपहार बेचिए",
+    vendorSubtitle: "My-Mitr पर केक, फूल और उपहार बेचिए",
     catalogue: "आपकी सूची",
     nothingListed: "अभी कुछ भी सूचीबद्ध नहीं है।",
     incomingOrders: "आए हुए ऑर्डर",

@@ -11,7 +11,7 @@ import { useT } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/pincode/$memberId")({
   head: () => ({
     meta: [
-      { title: "Share your pincode — e-Reminder" },
+      { title: "Share your pincode — My-Mitr" },
       {
         name: "description",
         content:

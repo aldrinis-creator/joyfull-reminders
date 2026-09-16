@@ -8,13 +8,13 @@ import { useT } from "@/hooks/useLanguage";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "e-Reminder — Never miss a birthday, bill or deadline again" },
+      { title: "My-Mitr — Never miss a birthday, bill or deadline again" },
       {
         name: "description",
         content:
-          "e-Reminder tracks family birthdays, tax and PUC deadlines, bills and exam dates, then helps you send cake, flowers or gifts from shops near you.",
+          "My-Mitr tracks family birthdays, tax and PUC deadlines, bills and exam dates, then helps you send cake, flowers or gifts from shops near you.",
       },
-      { property: "og:title", content: "e-Reminder — Never miss a moment that matters" },
+      { property: "og:title", content: "My-Mitr — Never miss a moment that matters" },
       {
         property: "og:description",
         content:

@@ -1,6 +1,6 @@
 {
-  "name": "e-Reminder",
-  "short_name": "e-Reminder",
+  "name": "My-Mitr",
+  "short_name": "My-Mitr",
   "description": "Never miss a bill, birthday or appointment again.",
   "start_url": "/home",
   "scope": "/",

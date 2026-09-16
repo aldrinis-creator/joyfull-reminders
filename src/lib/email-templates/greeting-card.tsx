@@ -42,7 +42,7 @@ const GreetingCard = ({ senderName, recipientName, occasion, message, cardStyle,
       <Preview>{`${greetingFrom} sent you a greeting for ${occasionLabel}`}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Text style={brand}>e-Reminder</Text>
+          <Text style={brand}>My-Mitr</Text>
           <Section style={{ ...card, backgroundColor: accent.bg, borderColor: accent.border }}>
             <Heading style={heading}>Happy {occasionLabel}, {greetingTo}!</Heading>
             <Hr style={{ ...divider, borderColor: accent.border }} />
@@ -68,7 +68,7 @@ const GreetingCard = ({ senderName, recipientName, occasion, message, cardStyle,
             <Text style={signature}>— {greetingFrom}</Text>
           </Section>
           <Text style={footer}>
-            Sent with e-Reminder — never miss a moment that matters.
+            Sent with My-Mitr — never miss a moment that matters.
           </Text>
         </Container>
       </Body>

@@ -2,7 +2,7 @@ import type { Namespace } from "../types";
 
 const common: Namespace = {
   en: {
-    appName: "e-Reminder",
+    appName: "My-Mitr",
     save: "Save",
     saving: "Saving…",
     cancel: "Cancel",
@@ -117,7 +117,7 @@ const common: Namespace = {
     "day.inMonths": "In {count} months",
   },
   hi: {
-    appName: "ई-रिमाइंडर",
+    appName: "My-Mitr",
     save: "सहेजें",
     saving: "सहेजा जा रहा है…",
     cancel: "रद्द करें",

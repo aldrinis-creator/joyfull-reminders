@@ -10,9 +10,9 @@ import type { Reminder } from "@/lib/ereminder";
 export const Route = createFileRoute("/_authenticated/reminders/$reminderId/edit")({
   head: () => ({
     meta: [
-      { title: "Edit reminder — e-Reminder" },
+      { title: "Edit reminder — My-Mitr" },
       { name: "description", content: "Change the date, recurrence, alerts or payment shortcut of a reminder." },
-      { property: "og:title", content: "Edit reminder — e-Reminder" },
+      { property: "og:title", content: "Edit reminder — My-Mitr" },
       { property: "og:description", content: "Update an existing reminder in one screen." },
     ],
   }),

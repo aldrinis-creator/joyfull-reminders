@@ -19,13 +19,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/calendar")({
   head: () => ({
     meta: [
-      { title: "Calendar & categories — e-Reminder" },
+      { title: "Calendar & categories — My-Mitr" },
       {
         name: "description",
         content:
           "See your month at a glance and filter reminders by tax, vehicle, health, investments, bills and household.",
       },
-      { property: "og:title", content: "Calendar & categories — e-Reminder" },
+      { property: "og:title", content: "Calendar & categories — My-Mitr" },
       { property: "og:description", content: "A month grid plus category filters for everything you track." },
     ],
   }),

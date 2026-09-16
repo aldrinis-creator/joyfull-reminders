@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * e-Reminder design system.
+ * My-Mitr design system.
  * Bright, warm, high-contrast: coral, teal, amber and deep indigo.
  * All colors are oklch semantic tokens. Never hardcode colors in components.
  */

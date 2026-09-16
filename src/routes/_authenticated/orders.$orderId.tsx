@@ -18,12 +18,12 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/orders/$orderId")({
   head: () => ({
     meta: [
-      { title: "Order & delivery tracking — e-Reminder" },
+      { title: "Order & delivery tracking — My-Mitr" },
       {
         name: "description",
         content: "Pay for your gift order and follow it from the shop to the doorstep.",
       },
-      { property: "og:title", content: "Order & delivery tracking — e-Reminder" },
+      { property: "og:title", content: "Order & delivery tracking — My-Mitr" },
       { property: "og:description", content: "Payment status and live delivery updates." },
     ],
   }),
@@ -114,7 +114,7 @@ function OrderPage() {
         order_id: session.providerOrderId,
         amount: session.amountPaise,
         currency: session.currency,
-        name: "e-Reminder",
+        name: "My-Mitr",
         description: session.description,
         prefill: {
           name: session.customerName ?? undefined,

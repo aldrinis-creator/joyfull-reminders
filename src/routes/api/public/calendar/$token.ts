@@ -77,8 +77,8 @@ export const Route = createFileRoute("/api/public/calendar/$token")({
         });
 
         const body = buildIcs({
-          name: profile.full_name ? `${profile.full_name} — e-Reminder` : "e-Reminder",
-          description: "Your reminders from e-Reminder",
+          name: profile.full_name ? `${profile.full_name} — My-Mitr` : "My-Mitr",
+          description: "Your reminders from My-Mitr",
           refreshHours: 1,
           events,
         });

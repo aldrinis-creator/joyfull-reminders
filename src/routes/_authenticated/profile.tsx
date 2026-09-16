@@ -28,13 +28,13 @@ import { formatDate, orderStatusLabel, rupees } from "@/lib/ereminder";
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "Profile & settings — e-Reminder" },
+      { title: "Profile & settings — My-Mitr" },
       {
         name: "description",
         content:
           "Manage your name, saved location, alarm sound, notification preferences and past gift orders.",
       },
-      { property: "og:title", content: "Profile & settings — e-Reminder" },
+      { property: "og:title", content: "Profile & settings — My-Mitr" },
       { property: "og:description", content: "Your account, alerts and payment history." },
     ],
   }),

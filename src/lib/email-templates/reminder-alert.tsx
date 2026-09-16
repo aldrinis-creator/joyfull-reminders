@@ -31,7 +31,7 @@ const ReminderAlert = ({ recipientName, title, category, dueAt, offsetLabel }: P
       <Preview>{`Reminder: ${what} — ${when}`}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Text style={brand}>e-Reminder</Text>
+          <Text style={brand}>My-Mitr</Text>
           <Section style={card}>
             <Text style={eyebrow}>{offsetLabel?.trim() || 'Coming up'}</Text>
             <Heading style={heading}>{what}</Heading>
@@ -46,7 +46,7 @@ const ReminderAlert = ({ recipientName, title, category, dueAt, offsetLabel }: P
             ) : null}
           </Section>
           <Text style={footer}>
-            Hi {name} — this is your e-Reminder alert so nothing slips through.
+            Hi {name} — this is your My-Mitr alert so nothing slips through.
           </Text>
         </Container>
       </Body>

@@ -18,16 +18,16 @@ import { phoneSchema } from "@/lib/otp.schemas";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in to e-Reminder" },
+      { title: "Sign in to My-Mitr" },
       {
         name: "description",
         content:
-          "Sign in or create your e-Reminder account with email, phone OTP or Google to start tracking birthdays, bills and deadlines.",
+          "Sign in or create your My-Mitr account with email, phone OTP or Google to start tracking birthdays, bills and deadlines.",
       },
-      { property: "og:title", content: "Sign in to e-Reminder" },
+      { property: "og:title", content: "Sign in to My-Mitr" },
       {
         property: "og:description",
-        content: "Create your e-Reminder account and never miss a milestone or deadline again.",
+        content: "Create your My-Mitr account and never miss a milestone or deadline again.",
       },
     ],
   }),

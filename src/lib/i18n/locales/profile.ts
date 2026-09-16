@@ -28,7 +28,7 @@ const profile: Namespace = {
     pushHint: "Alerts before each reminder is due.",
     pushDevice: "Alerts on this phone or computer",
     pushDeviceHint:
-      "Turn this on so reminders ring here even when e-Reminder is closed. Do it once on each device you use.",
+      "Turn this on so reminders ring here even when My-Mitr is closed. Do it once on each device you use.",
     pushDeviceOn: "Notifications are on for this device.",
     pushTurnOn: "Turn on notifications here",
     pushTurnOff: "Notifications on — tap to turn off",
@@ -36,12 +36,12 @@ const profile: Namespace = {
     pushOffDevice: "Notifications turned off for this device",
     pushError: "Something went wrong. Please try again.",
     pushIosInstall:
-      "On iPhone, first tap the Share button in Safari and choose 'Add to Home Screen', then open e-Reminder from the new icon.",
+      "On iPhone, first tap the Share button in Safari and choose 'Add to Home Screen', then open My-Mitr from the new icon.",
     push_not_configured: "Notifications aren't set up for this app yet.",
     push_unsupported: "This browser can't show notifications.",
-    push_open_in_new_tab: "Open e-Reminder in its own tab or window, then try again.",
-    push_needs_install: "Add e-Reminder to your home screen first, then try again.",
-    push_denied: "Notifications are blocked. Allow them for e-Reminder in your browser settings.",
+    push_open_in_new_tab: "Open My-Mitr in its own tab or window, then try again.",
+    push_needs_install: "Add My-Mitr to your home screen first, then try again.",
+    push_denied: "Notifications are blocked. Allow them for My-Mitr in your browser settings.",
     saveChanges: "Save changes",
     errSave: "Could not save your profile.",
     errDetails: "Please check your details",
@@ -108,7 +108,7 @@ const profile: Namespace = {
     alarmFileBig: "That file is too large. Please keep it under 2 MB.",
     alarmBlocked: "Tap anywhere on the screen once, then try again.",
     alarmClosedNote:
-      "When the app is closed, your phone plays its own notification sound. Set the e-Reminder notification to a loud tone in your phone settings for the loudest alert.",
+      "When the app is closed, your phone plays its own notification sound. Set the My-Mitr notification to a loud tone in your phone settings for the loudest alert.",
   },
   hi: {
     subtitle: "आपका खाता और पसंद",
@@ -145,12 +145,12 @@ const profile: Namespace = {
     pushOffDevice: "इस डिवाइस पर सूचनाएँ बंद हो गईं",
     pushError: "कुछ गड़बड़ हुई। कृपया फिर कोशिश कीजिए।",
     pushIosInstall:
-      "आईफ़ोन पर पहले Safari में शेयर बटन दबाकर 'Add to Home Screen' चुनिए, फिर नए आइकन से e-Reminder खोलिए।",
+      "आईफ़ोन पर पहले Safari में शेयर बटन दबाकर 'Add to Home Screen' चुनिए, फिर नए आइकन से My-Mitr खोलिए।",
     push_not_configured: "इस ऐप के लिए सूचनाएँ अभी सेट नहीं हैं।",
     push_unsupported: "यह ब्राउज़र सूचनाएँ नहीं दिखा सकता।",
-    push_open_in_new_tab: "e-Reminder को अलग टैब या विंडो में खोलिए, फिर कोशिश कीजिए।",
-    push_needs_install: "पहले e-Reminder को होम स्क्रीन पर जोड़िए, फिर कोशिश कीजिए।",
-    push_denied: "सूचनाएँ रोकी गई हैं। ब्राउज़र सेटिंग में e-Reminder के लिए अनुमति दीजिए।",
+    push_open_in_new_tab: "My-Mitr को अलग टैब या विंडो में खोलिए, फिर कोशिश कीजिए।",
+    push_needs_install: "पहले My-Mitr को होम स्क्रीन पर जोड़िए, फिर कोशिश कीजिए।",
+    push_denied: "सूचनाएँ रोकी गई हैं। ब्राउज़र सेटिंग में My-Mitr के लिए अनुमति दीजिए।",
     saveChanges: "बदलाव सहेजें",
     errSave: "आपकी प्रोफ़ाइल सहेजी नहीं जा सकी।",
     errDetails: "कृपया अपनी जानकारी जाँच लीजिए",
@@ -215,7 +215,7 @@ const profile: Namespace = {
     alarmFileBig: "यह फ़ाइल बहुत बड़ी है। कृपया 2 MB से कम रखिए।",
     alarmBlocked: "स्क्रीन पर एक बार कहीं भी टैप कीजिए, फिर दोबारा कोशिश कीजिए।",
     alarmClosedNote:
-      "ऐप बंद होने पर आपका फ़ोन अपनी ही सूचना ध्वनि बजाता है। सबसे तेज़ अलर्ट के लिए फ़ोन की सेटिंग में e-Reminder की सूचना ध्वनि तेज़ रखिए।",
+      "ऐप बंद होने पर आपका फ़ोन अपनी ही सूचना ध्वनि बजाता है। सबसे तेज़ अलर्ट के लिए फ़ोन की सेटिंग में My-Mitr की सूचना ध्वनि तेज़ रखिए।",
   },
 };
 
