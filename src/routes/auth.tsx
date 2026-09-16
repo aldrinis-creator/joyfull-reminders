@@ -317,11 +317,8 @@ function PhoneForm({ busy, setBusy }: { busy: boolean; setBusy: (v: boolean) => 
     }
   }
 
-  // Auto-fill SMS codes via WebOTP where the browser supports it.
-  useWebOtp(step === "code" && channel === "sms", (received) => {
-    setCode(received);
-    void submitCode(received);
-  });
+
+
 
   if (step === "code") {
     return (
