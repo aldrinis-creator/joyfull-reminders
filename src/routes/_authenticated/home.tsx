@@ -176,6 +176,12 @@ function HomePage() {
                 {firstName ? t("home.greeting", { name: firstName }) : t("home.title")}
               </h1>
               <p className="text-muted-foreground mt-1.5 text-[13.5px] font-semibold">{subtitle}</p>
+              <Link
+                to="/reminders"
+                className="text-accent-700 mt-2 inline-block text-[13px] font-semibold underline underline-offset-4"
+              >
+                {t("reminders.allLink")}
+              </Link>
             </div>
             <Button asChild variant="outline" size="icon" className="bg-card shadow-card size-12 shrink-0 rounded-full text-base font-semibold" aria-label={t("nav.profile")}>
               <Link to="/profile">{profileInitial}</Link>
