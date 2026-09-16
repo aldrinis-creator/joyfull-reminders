@@ -74,40 +74,77 @@ function DocumentsPage() {
   const t = useT();
   const { data: docs } = useDocuments();
   const [adding, setAdding] = useState(false);
+  const [prefill, setPrefill] = useState<{ title?: string; expiry?: string } | undefined>();
+
+  const list = docs ?? [];
+  // "Expiring this month" = within the next 30 days, the same window the
+  // shelf already uses to flag a document as running out.
+  const soon = list.filter((d) => d.expiry_date && daysUntil(d.expiry_date) >= 0 && daysUntil(d.expiry_date) <= 30).length;
 
   return (
     <DocumentsPinGate>
-    <AppShell
-      title={t("documents.title")}
-      subtitle={t("documents.subtitle")}
-      action={
-        <Button
-          size="icon"
-          variant="secondary"
-          className="size-12 rounded-2xl"
-          aria-label={t("documents.add")}
-          onClick={() => setAdding(true)}
-        >
-          <Plus className="size-6" aria-hidden />
-        </Button>
-      }
-    >
-      <div className="space-y-3">
-        {docs && docs.length === 0 ? (
-          <p className="text-muted-foreground bg-card shadow-card rounded-3xl p-5 text-sm">
-            {t("documents.empty")}
-          </p>
-        ) : null}
-        {(docs ?? []).map((doc) => (
-          <DocumentRowCard key={doc.id} doc={doc} />
-        ))}
-        <Button className="h-14 w-full rounded-2xl" onClick={() => setAdding(true)}>
-          <Plus className="size-5" aria-hidden /> {t("documents.add")}
-        </Button>
-      </div>
+      <AppShell title={t("documents.title")} hideHeader>
+        <div className="flex items-start justify-between gap-4 px-[22px] pt-6 pb-4">
+          <div className="min-w-0">
+            <h2 className="text-[28px] leading-tight">{t("documents.title")}</h2>
+            <p className="text-foreground/55 mt-1.5 text-[14px] font-semibold">
+              {soon > 0
+                ? t("documents.headerSubtitle", { count: list.length, soon })
+                : t("documents.headerSubtitleNone", { count: list.length })}
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label={t("documents.lockNow")}
+            onClick={() => {
+              lockDocumentsNow();
+              toast.success(t("documents.locked"));
+            }}
+            className="border-border text-foreground flex size-11 shrink-0 items-center justify-center rounded-full border"
+          >
+            <Lock className="size-5" aria-hidden />
+          </button>
+        </div>
 
-      {adding ? <DocumentDialog open={adding} onOpenChange={setAdding} /> : null}
-    </AppShell>
+        <div className="space-y-3 px-[22px]">
+          {docs && docs.length === 0 ? (
+            <p className="text-muted-foreground bg-card shadow-card rounded-3xl p-5 text-sm">
+              {t("documents.empty")}
+            </p>
+          ) : null}
+          {list.map((doc) => (
+            <DocumentRowCard key={doc.id} doc={doc} />
+          ))}
+
+          <div className="space-y-3 pt-1">
+            <DocumentScanButton
+              variant="bare"
+              triggerLabel={t("documents.scanCta")}
+              onParsed={(parsed) => {
+                setPrefill({
+                  ...(parsed.title ? { title: parsed.title } : {}),
+                  ...(parsed.date ? { expiry: parsed.date } : {}),
+                });
+                setAdding(true);
+              }}
+            />
+            <Button variant="ghost" className="h-12 w-full" onClick={() => setAdding(true)}>
+              <Plus className="size-5" aria-hidden /> {t("documents.add")}
+            </Button>
+          </div>
+        </div>
+
+        {adding ? (
+          <DocumentDialog
+            open={adding}
+            onOpenChange={(v) => {
+              setAdding(v);
+              if (!v) setPrefill(undefined);
+            }}
+            prefill={prefill}
+          />
+        ) : null}
+      </AppShell>
     </DocumentsPinGate>
   );
 }
@@ -167,8 +204,15 @@ function DocumentRowCard({ doc }: { doc: DocumentRow }) {
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const [viewerUrls, setViewerUrls] = useState<string[] | null>(null);
-  const tone = expiryTone(doc.expiry_date);
   const paths = documentPaths(doc);
+  const firstImage = paths.find((p) => !p.endsWith(".pdf"));
+
+  const { data: thumbUrl } = useQuery({
+    queryKey: ["document_thumb", firstImage ?? ""],
+    enabled: Boolean(firstImage),
+    staleTime: 45 * 60 * 1000,
+    queryFn: async () => (firstImage ? await signedDocumentUrl(firstImage) : null),
+  });
 
   const open = async () => {
     if (paths.length > 1) {
@@ -196,77 +240,89 @@ function DocumentRowCard({ doc }: { doc: DocumentRow }) {
     await supabase.from("documents").delete().eq("id", doc.id);
     setBusy(false);
     void queryClient.invalidateQueries({ queryKey: ["documents"] });
+    void queryClient.invalidateQueries({ queryKey: ["documents_count"] });
     void queryClient.invalidateQueries({ queryKey: ["reminders"] });
     toast.success(t("documents.deleted"));
   };
 
-  const expiryText = () => {
-    if (!doc.expiry_date) return t("documents.noExpiry");
-    const days = daysUntil(doc.expiry_date);
-    if (days < 0) return t("documents.expiredOn", { date: formatDate(doc.expiry_date) });
-    if (days === 0) return t("documents.expiringToday");
-    if (days <= 30) return t("documents.expiringSoon", { count: days });
-    return t("documents.expiresOn", { date: formatDate(doc.expiry_date) });
-  };
+  // Urgent = expired or running out inside 30 days; that tints the whole row.
+  const days = doc.expiry_date ? daysUntil(doc.expiry_date) : null;
+  const urgent = days !== null && days <= 30;
+  const tagText = !doc.expiry_date
+    ? t("documents.tagNoExpiry")
+    : days !== null && days < 0
+      ? t("documents.tagExpired", { date: formatDate(doc.expiry_date) })
+      : days === 0
+        ? t("documents.tagToday")
+        : urgent
+          ? t("documents.tagSoon", { count: days ?? 0 })
+          : t("documents.tagLater", { date: formatDate(doc.expiry_date) });
 
   return (
     <section
-      className={`bg-card shadow-card space-y-3 rounded-3xl p-5 ${
-        tone === "past"
-          ? "border-destructive border-2"
-          : tone === "soon"
-            ? "border-accent border-2"
-            : ""
+      className={`shadow-card flex flex-col gap-[7px] rounded-[26px] p-[15px] ${
+        urgent ? "bg-[var(--accent-100)]" : "bg-card"
       }`}
     >
-      <div className="flex items-start gap-3">
-        <FileText className="text-primary mt-1 size-6 shrink-0" aria-hidden />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-lg font-semibold">{doc.title}</p>
-          <p className="text-muted-foreground text-sm">{docTypeLabel(doc.doc_type)}</p>
-          <p
-            className={`mt-1 text-sm font-medium ${
-              tone === "past"
-                ? "text-destructive"
-                : tone === "soon"
-                  ? "text-accent-foreground"
-                  : "text-muted-foreground"
-            }`}
-          >
-            {expiryText()}
+      <div className="flex items-center gap-[13px]">
+        <span className="bg-muted flex h-[66px] w-[54px] shrink-0 items-center justify-center overflow-hidden rounded-[14px]">
+          {thumbUrl ? (
+            <img
+              src={thumbUrl}
+              alt={t("documents.thumbAlt", { title: doc.title })}
+              className="size-full object-cover"
+            />
+          ) : (
+            <FileText className="text-primary size-6" aria-hidden />
+          )}
+        </span>
+
+        <button
+          type="button"
+          onClick={() => void open()}
+          className="min-w-0 flex-1 text-left"
+          aria-label={t("documents.openFile")}
+        >
+          <p className="truncate text-[16px] font-semibold">{doc.title}</p>
+          <p className="text-foreground/55 truncate text-[12.5px]">
+            {doc.notes?.trim() || docTypeLabel(doc.doc_type)}
           </p>
-          {paths.length > 1 ? (
-            <p className="text-muted-foreground mt-1 text-sm">
-              {t("documents.photoCount", { count: paths.length })}
-            </p>
-          ) : null}
-          {doc.notes ? <p className="text-muted-foreground mt-1 text-sm">{doc.notes}</p> : null}
+        </button>
+
+        <div className="flex shrink-0 gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-10"
+            aria-label={t("documents.edit")}
+            onClick={() => setEditing(true)}
+          >
+            <Pencil className="size-4" aria-hidden />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive size-10"
+            disabled={busy}
+            aria-label={t("documents.delete")}
+            onClick={() => void remove()}
+          >
+            <Trash2 className="size-4" aria-hidden />
+          </Button>
         </div>
       </div>
-      <div className="flex gap-2">
-        <Button variant="outline" className="h-12 flex-1" onClick={() => void open()}>
-          {t("documents.openFile")}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-12"
-          aria-label={t("documents.edit")}
-          onClick={() => setEditing(true)}
-        >
-          <Pencil className="size-5" aria-hidden />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-destructive size-12"
-          disabled={busy}
-          aria-label={t("documents.delete")}
-          onClick={() => void remove()}
-        >
-          <Trash2 className="size-5" aria-hidden />
-        </Button>
-      </div>
+
+      <span
+        className={`w-fit rounded-full px-3 py-1 text-[12px] font-semibold ${
+          !doc.expiry_date
+            ? "bg-[var(--neutral-200)] text-[var(--neutral-700)]"
+            : urgent
+              ? "bg-[var(--accent-200)] text-[var(--accent-800)]"
+              : "bg-[var(--accent-2-200)] text-[var(--accent-2-800)]"
+        }`}
+      >
+        {tagText}
+      </span>
 
       {editing ? <DocumentDialog open onOpenChange={setEditing} doc={doc} /> : null}
       {viewerUrls ? <PhotoViewer urls={viewerUrls} onClose={() => setViewerUrls(null)} /> : null}
