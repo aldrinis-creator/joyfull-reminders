@@ -68,9 +68,11 @@ function localParts(iso: string): { date: string; time: string } {
 export function ReminderForm({
   existing,
   existingAlerts,
+  defaultDate,
 }: {
   existing?: Reminder | undefined;
   existingAlerts?: number[] | undefined;
+  defaultDate?: string | undefined;
 }) {
   const t = useT();
   const navigate = useNavigate();
@@ -84,7 +86,9 @@ export function ReminderForm({
     normalizeCategory(existing?.category ?? "personal_family"),
   );
   const [description, setDescription] = useState(existing?.description ?? "");
-  const [dueDate, setDueDate] = useState(initial?.date ?? new Date().toISOString().slice(0, 10));
+  const [dueDate, setDueDate] = useState(
+    initial?.date ?? defaultDate ?? new Date().toISOString().slice(0, 10),
+  );
   const [dueTime, setDueTime] = useState(initial?.time ?? "09:00");
   const [recurrence, setRecurrence] = useState<RecurrenceKind>(existing?.recurrence ?? "once");
   const [intervalDays, setIntervalDays] = useState(
