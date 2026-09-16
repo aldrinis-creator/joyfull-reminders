@@ -30,7 +30,6 @@ import {
   deleteExpiryReminder,
   docTypeLabel,
   documentPaths,
-  expiryTone,
   removeDocumentFiles,
   signedDocumentUrl,
   signedDocumentUrls,
