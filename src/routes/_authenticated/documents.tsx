@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, FileText, Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, Lock, Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PhotoCapture, MAX_PHOTOS, type CapturedPhoto } from "@/components/PhotoCapture";
-import { DocumentsPinGate } from "@/components/DocumentsPinGate";
+import { DocumentsPinGate, lockDocumentsNow } from "@/components/DocumentsPinGate";
+import { DocumentScanButton } from "@/components/DocumentScanButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/hooks/useLanguage";
 import { useFamilyMembers } from "@/lib/queries";
@@ -335,20 +336,23 @@ function DocumentDialog({
   open,
   onOpenChange,
   doc,
+  prefill,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   doc?: DocumentRow;
+  /** Values read off a scanned document, used only when adding a new one. */
+  prefill?: { title?: string; expiry?: string } | undefined;
 }) {
   const t = useT();
   const queryClient = useQueryClient();
   const { data: members } = useFamilyMembers();
   const pdfRef = useRef<HTMLInputElement>(null);
 
-  const [title, setTitle] = useState(doc?.title ?? "");
+  const [title, setTitle] = useState(doc?.title ?? prefill?.title ?? "");
   const [docType, setDocType] = useState<DocType>(doc?.doc_type ?? "insurance");
   const [memberId, setMemberId] = useState(doc?.family_member_id ?? "");
-  const [expiry, setExpiry] = useState(doc?.expiry_date ?? "");
+  const [expiry, setExpiry] = useState(doc?.expiry_date ?? prefill?.expiry ?? "");
   const [notes, setNotes] = useState(doc?.notes ?? "");
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [pdf, setPdf] = useState<File | null>(null);
@@ -436,6 +440,7 @@ function DocumentDialog({
         return;
       }
       void queryClient.invalidateQueries({ queryKey: ["documents"] });
+      void queryClient.invalidateQueries({ queryKey: ["documents_count"] });
       void queryClient.invalidateQueries({ queryKey: ["reminders"] });
       toast.success(t("documents.saved"));
       onOpenChange(false);
