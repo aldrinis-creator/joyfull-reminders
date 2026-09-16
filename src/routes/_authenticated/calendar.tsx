@@ -126,6 +126,24 @@ function CalendarPage() {
       title={t("nav.calendar")}
       subtitle={cursor.toLocaleDateString(activeLocale(), { month: "long", year: "numeric" })}
     >
+      <div className="mb-4 flex gap-2">
+        <Chip active={view === "reminders"} onClick={() => setView("reminders")}>
+          {t("reminders.viewReminders")}
+        </Chip>
+        <Chip active={view === "scheduled"} onClick={() => setView("scheduled")}>
+          {t("reminders.viewScheduled")}
+        </Chip>
+      </div>
+
+      {view === "scheduled" ? (
+        <section className="space-y-3 pb-6">
+          <h2 className="text-muted-foreground text-sm font-bold tracking-widest uppercase">
+            {t("reminders.scheduledGreetings")}
+          </h2>
+          <ScheduledGreetingsList />
+        </section>
+      ) : (
+        <>
       <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-2">
         <Chip active={category === "all"} onClick={() => setCategory("all")}>
           {t("reminders.filterAll")}
