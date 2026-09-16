@@ -13,7 +13,7 @@ const STORAGE_KEY = "ereminder.push.token";
  * Per-device notification switch: FCM tokens are per browser/phone, so this
  * has to be turned on once on each device the person uses.
  */
-export function PushDeviceCard() {
+export function PushDeviceCard({ embedded = false }: { embedded?: boolean }) {
   const t = useT();
   const register = useServerFn(registerPushToken);
   const unregister = useServerFn(removePushToken);
@@ -68,7 +68,7 @@ export function PushDeviceCard() {
   };
 
   return (
-    <div className="space-y-3 border-t pt-4">
+    <div className={embedded ? "space-y-3" : "space-y-3 border-t pt-4"}>
       <div>
         <p className="font-semibold">{t("profile.pushDevice")}</p>
         <p className="text-muted-foreground text-sm">

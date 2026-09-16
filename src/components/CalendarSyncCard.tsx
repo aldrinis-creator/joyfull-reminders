@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { getCalendarToken } from "@/lib/calendar.functions";
 import { useT } from "@/hooks/useLanguage";
 
-export function CalendarSyncCard() {
+export function CalendarSyncCard({ embedded = false }: { embedded?: boolean }) {
   const t = useT();
   const fetchToken = useServerFn(getCalendarToken);
   const [token, setToken] = useState<string | null>(null);
@@ -52,7 +52,7 @@ export function CalendarSyncCard() {
   };
 
   return (
-    <section className="bg-card shadow-card space-y-4 rounded-3xl p-5">
+    <section className={embedded ? "space-y-4" : "bg-card shadow-card space-y-4 rounded-3xl p-5"}>
       <div className="flex items-center gap-3">
         <CalendarPlus className="text-primary size-6" aria-hidden />
         <h2 className="text-xl">{t("profile.calendarSync")}</h2>

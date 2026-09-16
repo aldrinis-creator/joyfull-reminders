@@ -20,7 +20,7 @@ import {
 
 const MAX_BYTES = 2 * 1024 * 1024;
 
-export function AlarmSoundCard() {
+export function AlarmSoundCard({ embedded = false }: { embedded?: boolean }) {
   const t = useT();
   const { data: profile } = useProfile();
   const queryClient = useQueryClient();
@@ -129,7 +129,7 @@ export function AlarmSoundCard() {
   const toneLabel = (id: AlarmToneId) => t(`profile.tone_${id}`);
 
   return (
-    <section className="bg-card shadow-card space-y-4 rounded-3xl p-5">
+    <section className={embedded ? "space-y-4" : "bg-card shadow-card space-y-4 rounded-3xl p-5"}>
       <div>
         <h2 className="flex items-center gap-2 text-xl">
           <BellRing className="size-5" aria-hidden /> {t("profile.alarmTitle")}

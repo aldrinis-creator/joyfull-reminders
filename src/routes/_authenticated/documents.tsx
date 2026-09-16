@@ -20,7 +20,7 @@ import { DocumentsPinGate, lockDocumentsNow } from "@/components/DocumentsPinGat
 import { DocumentScanButton } from "@/components/DocumentScanButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/hooks/useLanguage";
-import { useFamilyMembers } from "@/lib/queries";
+import { useDocuments, useFamilyMembers } from "@/lib/queries";
 import { formatDate } from "@/lib/ereminder";
 import {
   DOC_TYPES,
@@ -58,17 +58,6 @@ export const Route = createFileRoute("/_authenticated/documents")({
   }),
   component: DocumentsPage,
 });
-
-function useDocuments() {
-  return useQuery({
-    queryKey: ["documents"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("documents").select("*");
-      if (error) throw error;
-      return sortDocuments((data ?? []) as DocumentRow[]);
-    },
-  });
-}
 
 function DocumentsPage() {
   const t = useT();

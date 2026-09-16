@@ -38,3 +38,27 @@ export const getCalendarToken = createServerFn({ method: "POST" })
 
     return { token };
   });
+
+/** Enables or disables the private subscribed calendar feed. */
+export const setCalendarSync = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown): { enabled: boolean } => ({
+    enabled:
+      typeof data === "object" && data !== null && (data as { enabled?: unknown }).enabled === true,
+  }))
+  .handler(async ({ data, context }): Promise<{ token: string | null }> => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let token: string | null = null;
+    if (data.enabled) {
+      const bytes = new Uint8Array(24);
+      crypto.getRandomValues(bytes);
+      token = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    }
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ calendar_token: token })
+      .eq("id", userId);
+    if (error) throw new Error("Could not update calendar sync.");
+    return { token };
+  });
