@@ -531,6 +531,8 @@ export type Database = {
           last_digest_sent_at: string | null
           latitude: number | null
           longitude: number | null
+          medicine_alert_enabled: boolean
+          medicine_alert_member_id: string | null
           onboarded: boolean
           phone: string | null
           phone_verified_at: string | null
@@ -554,6 +556,8 @@ export type Database = {
           last_digest_sent_at?: string | null
           latitude?: number | null
           longitude?: number | null
+          medicine_alert_enabled?: boolean
+          medicine_alert_member_id?: string | null
           onboarded?: boolean
           phone?: string | null
           phone_verified_at?: string | null
@@ -577,6 +581,8 @@ export type Database = {
           last_digest_sent_at?: string | null
           latitude?: number | null
           longitude?: number | null
+          medicine_alert_enabled?: boolean
+          medicine_alert_member_id?: string | null
           onboarded?: boolean
           phone?: string | null
           phone_verified_at?: string | null
@@ -584,7 +590,15 @@ export type Database = {
           push_enabled?: boolean
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_medicine_alert_member_id_fkey"
+            columns: ["medicine_alert_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_tokens: {
         Row: {
