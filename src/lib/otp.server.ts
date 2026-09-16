@@ -194,10 +194,21 @@ export async function signInWithPhone(
     }
   }
 
-  await supabaseAdmin
+  const { error: profileError } = await supabaseAdmin
     .from("profiles")
     .update({ phone, phone_verified_at: new Date().toISOString() })
     .eq("id", userId);
+
+  if (profileError) {
+    console.error("[otp] could not stamp phone on profile", profileError);
+    if (profileError.code === "23505") {
+      return {
+        ok: false,
+        reason: "failed",
+        detail: "This number is already linked to another account.",
+      };
+    }
+  }
 
   const anon = createClient<Database>(
     process.env["SUPABASE_URL"]!,
