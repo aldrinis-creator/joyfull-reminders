@@ -267,12 +267,10 @@ function CalendarPage() {
             <p className="text-sage-800 mt-1 text-[13px]">{t("reminders.emptyDayBody")}</p>
             <Button
               className="bg-sage-700 text-primary-foreground hover:bg-sage-800 mt-5 h-[46px] rounded-full px-6 shadow-none"
-              onClick={() =>
-                void navigate({
-                  to: "/reminders/new",
-                  search: { date: selectedDateParam ?? undefined },
-                })
-              }
+              onClick={() => {
+                if (!selectedDateParam) return;
+                void navigate({ to: "/reminders/new", search: { date: selectedDateParam } });
+              }}
             >
               {t("reminders.emptyDayCta")}
             </Button>
