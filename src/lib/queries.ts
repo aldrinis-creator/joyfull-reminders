@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { FamilyMember, Order, Reminder, SpecialDate, Vendor, VendorProduct } from "./ereminder";
+import { sortDocuments, type DocumentRow } from "./documents";
 
 async function requireUserId(): Promise<string> {
   const { data } = await supabase.auth.getUser();
@@ -137,6 +138,17 @@ export function useSpecialDates() {
         .order("event_date", { ascending: true });
       if (error) throw error;
       return (data ?? []) as SpecialDate[];
+    },
+  });
+}
+
+export function useDocuments() {
+  return useQuery({
+    queryKey: ["documents"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("documents").select("*");
+      if (error) throw error;
+      return sortDocuments((data ?? []) as DocumentRow[]);
     },
   });
 }

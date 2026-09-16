@@ -28,7 +28,7 @@ const digits = (v: string) => v.replace(/\D/g, "").slice(0, 6);
 const validPin = (v: string) => /^\d{4,6}$/.test(v);
 
 /** Profile control to set, change or recover the Document Shelf PIN. */
-export function DocumentsPinCard() {
+export function DocumentsPinCard({ embedded = false }: { embedded?: boolean }) {
   const t = useT();
   const queryClient = useQueryClient();
   const { data: profile } = useProfile();
@@ -153,7 +153,7 @@ export function DocumentsPinCard() {
   }
 
   return (
-    <section className="bg-card shadow-card space-y-3 rounded-3xl p-5">
+    <section className={embedded ? "space-y-3" : "bg-card shadow-card space-y-3 rounded-3xl p-5"}>
       <div className="flex items-center gap-3">
         <KeyRound className="text-primary size-6" aria-hidden />
         <h2 className="text-xl">{t("pin.cardTitle")}</h2>
