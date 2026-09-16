@@ -101,6 +101,13 @@ const reminders: Namespace = {
     weekdayInitials: "S,M,T,W,T,F,S",
     upcoming: "Upcoming",
     nothingScheduled: "Nothing scheduled here.",
+    viewReminders: "Reminders",
+    viewScheduled: "Scheduled",
+    scheduledGreetings: "Upcoming greetings",
+    noScheduledGreetings: "No greetings scheduled yet",
+    greetingFor: "For {name}",
+    channelWhatsapp: "WhatsApp",
+    channelEmail: "Email",
   },
   hi: {
     title: "नया रिमाइंडर",
