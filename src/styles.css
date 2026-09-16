@@ -79,7 +79,9 @@
   --color-sage-100: var(--accent-2-100);
   --color-sage-700: var(--accent-2-700);
   --color-sage-800: var(--accent-2-800);
+  --color-sage-900: var(--accent-2-900);
   --color-terracotta-100: var(--accent-100);
+  --color-terracotta-200: var(--accent-200);
   --color-terracotta-800: var(--accent-800);
 
   --color-cat-personal_family: var(--cat-personal-family);
