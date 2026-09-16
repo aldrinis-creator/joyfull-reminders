@@ -36,6 +36,7 @@ const common: Namespace = {
     "nav.add": "Add",
     "nav.market": "Gifts",
     "nav.calendar": "Calendar",
+    "nav.medicines": "Medicines",
     "nav.profile": "Profile",
     "nav.mainLabel": "Main",
     "Use international format, e.g. +919876543210":
@@ -156,6 +157,7 @@ const common: Namespace = {
     "nav.add": "जोड़ें",
     "nav.market": "उपहार",
     "nav.calendar": "कैलेंडर",
+    "nav.medicines": "दवाइयाँ",
     "nav.profile": "प्रोफ़ाइल",
     "nav.mainLabel": "मुख्य मेन्यू",
     "Use international format, e.g. +919876543210":

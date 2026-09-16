@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, PartyPopper } from "lucide-react";
+import { CalendarDays, ChevronDown, PartyPopper, Pill } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { AskAssistant } from "@/components/AskAssistant";
@@ -183,9 +183,17 @@ function HomePage() {
                 {t("reminders.allLink")}
               </Link>
             </div>
-            <Button asChild variant="outline" size="icon" className="bg-card shadow-card size-12 shrink-0 rounded-full text-base font-semibold" aria-label={t("nav.profile")}>
-              <Link to="/profile">{profileInitial}</Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline" size="icon" className="bg-card shadow-card size-12 shrink-0 rounded-full" aria-label={t("nav.calendar")}>
+                <Link to="/calendar"><CalendarDays className="size-5" aria-hidden /></Link>
+              </Button>
+              <Button asChild variant="outline" size="icon" className="bg-card shadow-card size-12 shrink-0 rounded-full" aria-label={t("nav.medicines")}>
+                <Link to="/medicines"><Pill className="size-5" aria-hidden /></Link>
+              </Button>
+              <Button asChild variant="outline" size="icon" className="bg-card shadow-card size-12 shrink-0 rounded-full text-base font-semibold" aria-label={t("nav.profile")}>
+                <Link to="/profile">{profileInitial}</Link>
+              </Button>
+            </div>
           </div>
         </div>
 
