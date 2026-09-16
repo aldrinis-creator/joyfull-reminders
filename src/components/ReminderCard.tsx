@@ -45,6 +45,7 @@ export function ReminderCard({
   memberName,
   member,
   recipients,
+  tone = "default",
 }: {
   reminder: Reminder;
   occurrence: Date;
@@ -54,6 +55,7 @@ export function ReminderCard({
   member?: FamilyMember | undefined;
   /** Everyone linked through reminder_recipients — source of truth when present. */
   recipients?: FamilyMember[] | undefined;
+  tone?: "default" | "overdue" | undefined;
 }) {
   const t = useT();
   const meta = categoryMeta(reminder.category);
@@ -91,38 +93,38 @@ export function ReminderCard({
     <article
       className={cn(
         "shadow-card relative overflow-hidden rounded-[26px] p-5",
-        isGiftable ? "bg-accent-100" : "bg-card",
+        tone === "overdue" ? "bg-accent-800 text-primary-foreground" : isGiftable ? "bg-accent-100" : "bg-card",
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px] font-semibold uppercase">
+          <span className={cn("inline-flex items-center gap-1 text-[11px] font-semibold uppercase", tone === "overdue" ? "text-primary-foreground/75" : "text-muted-foreground")}>
             {meta.emoji} {categoryShortLabel(reminder.category)}
           </span>
           <h3
             className={cn(
               "mt-1 text-[16.5px] font-semibold",
-              isGiftable && "text-accent-900",
+              tone === "overdue" ? "text-primary-foreground" : isGiftable && "text-accent-900",
               reminder.completed && "line-through opacity-60",
             )}
           >
             {reminder.title}
           </h3>
           {memberName ? (
-            <p className="text-muted-foreground text-sm font-semibold">{t("home.forMember", { name: memberName })}</p>
+            <p className={cn("text-sm font-semibold", tone === "overdue" ? "text-primary-foreground/75" : "text-muted-foreground")}>{t("home.forMember", { name: memberName })}</p>
           ) : null}
-          <p className="text-muted-foreground mt-1 text-[12.5px]">{formatDateTime(occurrence)}</p>
+          <p className={cn("mt-1 text-[12.5px]", tone === "overdue" ? "text-primary-foreground/75" : "text-muted-foreground")}>{formatDateTime(occurrence)}</p>
           {reminder.description ? (
-            <p className="text-foreground/80 mt-2 text-sm">{reminder.description}</p>
+            <p className={cn("mt-2 text-sm", tone === "overdue" ? "text-primary-foreground/85" : "text-foreground/80")}>{reminder.description}</p>
           ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <span className="text-muted-foreground hidden text-[11px] font-semibold sm:block">
+          <span className={cn("hidden text-[11px] font-semibold sm:block", tone === "overdue" ? "text-primary-foreground/75" : "text-muted-foreground")}>
             {relativeDay(occurrence)}
           </span>
           <Sheet open={actionsOpen} onOpenChange={setActionsOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-11 rounded-full" aria-label={t("home.moreActions")}>
+              <Button variant="ghost" size="icon" className={cn("size-11 rounded-full", tone === "overdue" && "text-primary-foreground hover:bg-primary-foreground/10")} aria-label={t("home.moreActions")}>
                 <MoreHorizontal className="size-5" aria-hidden />
               </Button>
             </SheetTrigger>
@@ -171,7 +173,7 @@ export function ReminderCard({
 
       <div className={cn("mt-4 flex items-center gap-3", isGiftable && "flex-wrap")}>
         {hasPayment ? (
-          <div className="min-w-0 flex-1"><PayNowButtons shortcut={{ ...reminder, title: reminder.title }} showCopy={false} /></div>
+          <div className="min-w-0 flex-1"><PayNowButtons shortcut={{ ...reminder, title: reminder.title }} showCopy={false} tone={tone === "overdue" ? "onDark" : "default"} /></div>
         ) : isGiftable ? (
           <Button asChild className="h-[46px] min-w-0 flex-1">
             <Link to="/market" search={{ pin: giftMember?.pincode ?? undefined, for: giftMember?.id }}>
@@ -185,7 +187,11 @@ export function ReminderCard({
             variant="outline"
             className={cn(
               "size-[46px] shrink-0 rounded-full border-[1.5px]",
-              isGiftable ? "border-accent-400 text-accent-700" : "border-accent-2-400 text-accent-2-700",
+              tone === "overdue"
+                ? "border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10"
+                : isGiftable
+                  ? "border-accent-400 text-accent-700"
+                  : "border-accent-2-400 text-accent-2-700",
             )}
             onClick={() => onComplete(reminder)}
             aria-label={t("home.markDone")}
