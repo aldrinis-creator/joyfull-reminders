@@ -153,6 +153,25 @@ export async function consumeOtp(
   return { ok: true };
 }
 
+/** True when a different profile already holds this phone number. */
+export async function isPhoneTakenByAnother(
+  phone: string,
+  userId: string,
+): Promise<{ taken: boolean; error: boolean }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("phone", phone)
+    .neq("id", userId)
+    .limit(1);
+  if (error) {
+    console.error("[otp] phone ownership check failed", error);
+    return { taken: false, error: true };
+  }
+  return { taken: (data?.length ?? 0) > 0, error: false };
+}
+
 export async function signInWithPhone(
   phone: string,
 ): Promise<
