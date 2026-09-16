@@ -1,16 +1,15 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { CalendarDays, Home, ShoppingBag, User, Users } from "lucide-react";
+import { Gift, ListChecks, Plus, ShoppingBag, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/hooks/useLanguage";
 import { AlarmHost } from "@/components/AlarmHost";
 
 const TABS = [
-  { to: "/home", labelKey: "nav.home", icon: Home },
-  { to: "/family", labelKey: "nav.family", icon: Users },
-  { to: "/market", labelKey: "nav.market", icon: ShoppingBag },
-  { to: "/calendar", labelKey: "nav.calendar", icon: CalendarDays },
-  { to: "/profile", labelKey: "nav.profile", icon: User },
+  { to: "/home", labelKey: "nav.today", icon: ListChecks },
+  { to: "/family", labelKey: "nav.people", icon: Users },
+  { to: "/market", labelKey: "nav.gifts", icon: Gift },
+  { to: "/orders", labelKey: "nav.orders", icon: ShoppingBag },
 ] as const;
 
 export function AppShell({
@@ -18,49 +17,76 @@ export function AppShell({
   title,
   subtitle,
   action,
+  hideHeader = false,
 }: {
   children: ReactNode;
   title: string;
   subtitle?: string | undefined;
   action?: ReactNode | undefined;
+  hideHeader?: boolean | undefined;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const t = useT();
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <header className="gradient-warm sticky top-0 z-30 rounded-b-3xl px-5 pt-6 pb-7 shadow-card">
-        <div className="mx-auto flex max-w-2xl items-end justify-between gap-4">
-          <div>
-            <h1 className="text-primary-foreground text-3xl">{title}</h1>
+      {!hideHeader ? (
+        <header className="bg-background sticky top-0 z-30 border-b border-border px-[22px] pt-5 pb-4">
+          <div className="mx-auto flex max-w-2xl items-end justify-between gap-4">
+            <div>
+            <h1 className="text-foreground text-3xl">{title}</h1>
             {subtitle ? (
-              <p className="text-primary-foreground/90 mt-1 text-sm font-medium">{subtitle}</p>
+              <p className="text-muted-foreground mt-1 text-sm font-semibold">{subtitle}</p>
             ) : null}
+            </div>
+            {action}
           </div>
-          {action}
-        </div>
-      </header>
+        </header>
+      ) : null}
 
-      <main className="mx-auto -mt-4 max-w-2xl px-4 pt-4">{children}</main>
+      <main className={cn("mx-auto max-w-2xl", hideHeader ? "" : "px-[22px] pt-5")}>{children}</main>
 
       <nav
         aria-label={t("nav.mainLabel")}
-        className="bg-card/95 fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur"
+        className="bg-background fixed inset-x-0 bottom-0 z-40 border-t border-border"
       >
-        <ul className="mx-auto flex max-w-2xl items-stretch justify-between px-2 py-1">
-          {TABS.map((tab) => {
+        <ul className="mx-auto grid max-w-2xl grid-cols-5 items-end px-[18px] pt-[10px] pb-[18px]">
+          {TABS.slice(0, 2).map((tab) => {
             const active = pathname === tab.to || pathname.startsWith(`${tab.to}/`);
             const Icon = tab.icon;
             return (
-              <li key={tab.to} className="flex-1">
+              <li key={tab.to}>
                 <Link
                   to={tab.to}
-                  className={cn(
-                    "flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-xs font-semibold transition-colors",
-                    active ? "text-primary bg-muted" : "text-muted-foreground",
-                  )}
+                  className="text-foreground flex min-h-14 flex-col items-center justify-end gap-1 px-1 text-[11.5px] font-semibold"
                 >
-                  <Icon className="size-6" strokeWidth={active ? 2.6 : 2} aria-hidden />
+                  <span className={cn("size-[7px] rounded-full", active ? "bg-primary" : "bg-transparent")} />
+                  <Icon className="size-5" strokeWidth={2} aria-hidden />
+                  {t(tab.labelKey)}
+                </Link>
+              </li>
+            );
+          })}
+          <li className="flex justify-center">
+            <Link
+              to="/reminders/new"
+              aria-label={t("nav.addReminder")}
+              className="bg-primary text-primary-foreground shadow-lifted -mt-7 flex size-[60px] items-center justify-center rounded-full"
+            >
+              <Plus className="size-7" strokeWidth={2.2} aria-hidden />
+            </Link>
+          </li>
+          {TABS.slice(2).map((tab) => {
+            const active = pathname === tab.to || pathname.startsWith(`${tab.to}/`);
+            const Icon = tab.icon;
+            return (
+              <li key={tab.to}>
+                <Link
+                  to={tab.to}
+                  className="text-foreground flex min-h-14 flex-col items-center justify-end gap-1 px-1 text-[11.5px] font-semibold"
+                >
+                  <span className={cn("size-[7px] rounded-full", active ? "bg-primary" : "bg-transparent")} />
+                  <Icon className="size-5" strokeWidth={2} aria-hidden />
                   {t(tab.labelKey)}
                 </Link>
               </li>

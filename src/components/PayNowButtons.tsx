@@ -18,10 +18,12 @@ export function PayNowButtons({
   shortcut,
   tone = "default",
   size = "sm",
+  showCopy = true,
 }: {
   shortcut: PaymentShortcut;
   tone?: "default" | "onDark";
   size?: "sm" | "lg";
+  showCopy?: boolean;
 }) {
   const t = useT();
   const target = paymentTarget(shortcut);
@@ -32,7 +34,7 @@ export function PayNowButtons({
 
   const buttonClass =
     tone === "onDark"
-      ? "text-indigo-foreground border-white/40 bg-transparent hover:bg-white/10"
+      ? "text-primary-foreground border-primary-foreground/40 bg-transparent hover:bg-primary-foreground/10"
       : "";
 
   async function copyUpi() {
@@ -72,7 +74,7 @@ export function PayNowButtons({
       >
         <IndianRupee className="size-4" aria-hidden /> {isUpi ? t("home.payGpay") : t("home.payNow")}
       </Button>
-      {upiId ? (
+      {upiId && showCopy ? (
         <Button
           size={size === "lg" ? "lg" : "sm"}
           variant="outline"
@@ -86,7 +88,7 @@ export function PayNowButtons({
       {amountIsVariable(shortcut) ? (
         <p
           className={`basis-full text-xs ${
-            tone === "onDark" ? "text-indigo-foreground/80" : "text-muted-foreground"
+            tone === "onDark" ? "text-primary-foreground/80" : "text-muted-foreground"
           }`}
         >
           {t("home.amountVaries")}

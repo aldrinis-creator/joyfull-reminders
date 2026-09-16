@@ -47,6 +47,8 @@ const profile: Namespace = {
     errDetails: "Please check your details",
     orders: "Orders & payments",
     noOrders: "No orders yet.",
+    ordersSubtitle: "Your gifts, payments and delivery updates.",
+    viewOrder: "View order for {item}",
     runShop: "I run a shop — list it here",
     signOut: "Sign out",
 
@@ -155,6 +157,8 @@ const profile: Namespace = {
     errSave: "आपकी प्रोफ़ाइल सहेजी नहीं जा सकी।",
     errDetails: "कृपया अपनी जानकारी जाँच लीजिए",
     orders: "ऑर्डर और भुगतान",
+    ordersSubtitle: "आपके उपहार, भुगतान और डिलीवरी की जानकारी।",
+    viewOrder: "{item} का ऑर्डर देखें",
     noOrders: "अभी कोई ऑर्डर नहीं।",
     runShop: "मेरी दुकान है — यहाँ जोड़ें",
     signOut: "साइन आउट",

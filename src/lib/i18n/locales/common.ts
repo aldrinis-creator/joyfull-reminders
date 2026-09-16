@@ -28,6 +28,11 @@ const common: Namespace = {
     // Navigation
     "nav.home": "Home",
     "nav.family": "Family",
+    "nav.today": "Today",
+    "nav.people": "People",
+    "nav.gifts": "Gifts",
+    "nav.orders": "Orders",
+    "nav.addReminder": "Add reminder",
     "nav.add": "Add",
     "nav.market": "Gifts",
     "nav.calendar": "Calendar",
@@ -143,6 +148,11 @@ const common: Namespace = {
 
     "nav.home": "होम",
     "nav.family": "परिवार",
+    "nav.today": "आज",
+    "nav.people": "लोग",
+    "nav.gifts": "उपहार",
+    "nav.orders": "ऑर्डर",
+    "nav.addReminder": "रिमाइंडर जोड़ें",
     "nav.add": "जोड़ें",
     "nav.market": "उपहार",
     "nav.calendar": "कैलेंडर",
