@@ -5,21 +5,23 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * My-Mitr design system.
- * Bright, warm, high-contrast: coral, teal, amber and deep indigo.
- * All colors are oklch semantic tokens. Never hardcode colors in components.
+ * My-Mitr Organic design system.
+ * Warm cream, terracotta and sage, with neutral ink and natural surfaces.
+ * Components consume semantic tokens so the visual foundation can evolve centrally.
  */
 
 @theme inline {
-  --font-display: "Baloo 2", ui-rounded, system-ui, sans-serif;
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Caprasimo", Georgia, serif;
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 600;
 
-  --radius-sm: calc(var(--radius) - 8px);
-  --radius-md: calc(var(--radius) - 4px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
+  --radius-xl: 30px;
+  --radius-2xl: 34px;
+  --radius-3xl: 38px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -47,6 +49,34 @@
   --color-ring-offset-background: var(--background);
   --color-surface: var(--surface);
 
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
+  --color-accent-100: var(--accent-100);
+  --color-accent-200: var(--accent-200);
+  --color-accent-300: var(--accent-300);
+  --color-accent-400: var(--accent-400);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+  --color-accent-700: var(--accent-700);
+  --color-accent-800: var(--accent-800);
+  --color-accent-900: var(--accent-900);
+  --color-accent-2-100: var(--accent-2-100);
+  --color-accent-2-200: var(--accent-2-200);
+  --color-accent-2-300: var(--accent-2-300);
+  --color-accent-2-400: var(--accent-2-400);
+  --color-accent-2-500: var(--accent-2-500);
+  --color-accent-2-600: var(--accent-2-600);
+  --color-accent-2-700: var(--accent-2-700);
+  --color-accent-2-800: var(--accent-2-800);
+  --color-accent-2-900: var(--accent-2-900);
+
   --color-cat-personal_family: var(--cat-personal-family);
   --color-cat-finance_tax: var(--cat-finance-tax);
   --color-cat-automotive: var(--cat-automotive);
@@ -69,65 +99,115 @@
 }
 
 :root {
-  --radius: 1.25rem;
+  --radius: 16px;
 
-  --background: oklch(0.985 0.014 85);
-  --foreground: oklch(0.27 0.075 276);
-  --surface: oklch(0.965 0.022 82);
+  /* Organic ramps: neutral, terracotta accent, and sage accent-2. */
+  --neutral-100: #f9f4ed;
+  --neutral-200: #eee7db;
+  --neutral-300: #dcd3c4;
+  --neutral-400: #c0b6a5;
+  --neutral-500: #a19786;
+  --neutral-600: #82796a;
+  --neutral-700: #645c50;
+  --neutral-800: #474238;
+  --neutral-900: #2e2b25;
+  --accent-100: #fff2eb;
+  --accent-200: #ffe1d0;
+  --accent-300: #ffc6a5;
+  --accent-400: #f6a06b;
+  --accent-500: #d67f48;
+  --accent-600: #b2622d;
+  --accent-700: #8c491a;
+  --accent-800: #643312;
+  --accent-900: #402310;
+  --accent-2-100: #f0fae1;
+  --accent-2-200: #e1eecc;
+  --accent-2-300: #ccdbb2;
+  --accent-2-400: #aebf92;
+  --accent-2-500: #8fa073;
+  --accent-2-600: #728157;
+  --accent-2-700: #56633f;
+  --accent-2-800: #3d472b;
+  --accent-2-900: #272e1b;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.27 0.075 276);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.27 0.075 276);
-
-  --primary: oklch(0.65 0.185 22);
-  --primary-foreground: oklch(0.99 0.01 85);
-
-  --secondary: oklch(0.63 0.115 196);
-  --secondary-foreground: oklch(0.99 0.01 85);
-
-  --accent: oklch(0.79 0.155 72);
-  --accent-foreground: oklch(0.27 0.075 276);
-
-  --indigo: oklch(0.33 0.105 277);
-  --indigo-foreground: oklch(0.98 0.01 85);
-
-  --muted: oklch(0.955 0.018 84);
-  --muted-foreground: oklch(0.505 0.045 277);
+  /*
+   * Contrast rules:
+   * - Paragraph-size accent text uses terracotta/sage 700, never raw --primary.
+   * - Text on terracotta fills is cream; text on a 100 tint uses that ramp's 800/900.
+   * - Raw accents are reserved for fills, icons, and headline-scale type.
+   */
+  --background: #f5ead8;
+  --foreground: #201e1d;
+  --surface: #ebddc5;
+  --card: #ebddc5;
+  --card-foreground: #201e1d;
+  --popover: #ebddc5;
+  --popover-foreground: #201e1d;
+  --primary: #c67139;
+  --primary-foreground: #f5ead8;
+  --primary-hover: #b2622d;
+  --primary-active: #8c491a;
+  --secondary: #7a8a5e;
+  --secondary-foreground: #f5ead8;
+  --accent: rgba(32, 30, 29, 0.06);
+  --accent-foreground: #201e1d;
+  --indigo: #474238;
+  --indigo-foreground: #f5ead8;
+  --muted: #eee7db;
+  --muted-foreground: rgba(32, 30, 29, 0.55);
 
   --destructive: oklch(0.58 0.225 27);
   --destructive-foreground: oklch(0.99 0.01 85);
   --success: oklch(0.62 0.14 155);
   --success-foreground: oklch(0.99 0.01 85);
 
-  --border: oklch(0.895 0.024 80);
-  --input: oklch(0.895 0.024 80);
-  --ring: oklch(0.65 0.185 22);
+  --border: rgba(32, 30, 29, 0.16);
+  --input: rgba(32, 30, 29, 0.16);
+  --ring: #c67139;
 
-  --cat-personal-family: oklch(0.65 0.185 22);
-  --cat-finance-tax: oklch(0.6 0.12 196);
-  --cat-automotive: oklch(0.45 0.13 277);
-  --cat-academic-career: oklch(0.55 0.13 65);
-  --cat-subscription: oklch(0.58 0.19 315);
-  --cat-health: oklch(0.62 0.14 155);
-  --cat-household: oklch(0.58 0.1 45);
-  --cat-custom: oklch(0.52 0.035 277);
-  --cat-appointment: oklch(0.55 0.135 250);
-  --cat-meeting: oklch(0.53 0.115 133);
+  /* Legacy categories remain stable while using only the three Organic families. */
+  --cat-personal-family: #c67139;
+  --cat-finance-tax: #7a8a5e;
+  --cat-automotive: #82796a;
+  --cat-academic-career: #82796a;
+  --cat-subscription: #7a8a5e;
+  --cat-health: #7a8a5e;
+  --cat-household: #82796a;
+  --cat-custom: #82796a;
+  --cat-appointment: #82796a;
+  --cat-meeting: #82796a;
 
-  --gradient-warm: linear-gradient(135deg, oklch(0.79 0.155 72), oklch(0.65 0.185 22));
-  --gradient-cool: linear-gradient(135deg, oklch(0.63 0.115 196), oklch(0.33 0.105 277));
-  --shadow-card: 0 2px 4px -2px oklch(0.33 0.105 277 / 0.08), 0 8px 24px -12px oklch(0.33 0.105 277 / 0.18);
-  --shadow-lifted: 0 12px 32px -12px oklch(0.65 0.185 22 / 0.35);
+  --space-1: 4.4px;
+  --space-2: 8.8px;
+  --space-3: 13.2px;
+  --space-4: 17.6px;
+  --space-5: 26.4px;
+  --space-6: 35.2px;
+  --space-screen-gutter: 22px;
+  --space-card-padding-min: 16px;
+  --space-card-padding-max: 20px;
+  --space-card-gap-min: 10px;
+  --space-card-gap-max: 12px;
+  --space-section-gap-min: 18px;
+  --space-section-gap-max: 20px;
 
-  --sidebar: oklch(0.985 0.014 85);
-  --sidebar-foreground: oklch(0.27 0.075 276);
-  --sidebar-primary: oklch(0.65 0.185 22);
-  --sidebar-primary-foreground: oklch(0.99 0.01 85);
-  --sidebar-accent: oklch(0.955 0.018 84);
-  --sidebar-accent-foreground: oklch(0.27 0.075 276);
-  --sidebar-border: oklch(0.895 0.024 80);
-  --sidebar-ring: oklch(0.65 0.185 22);
+  /* Per-screen container radii may intentionally differ from these base tokens. */
+  --shadow-sm: 0 1px 2px rgba(46, 43, 37, 0.14);
+  --shadow-md: 0 3px 10px rgba(46, 43, 37, 0.16);
+  --shadow-lg: 0 12px 32px rgba(46, 43, 37, 0.22);
+  --shadow-card: var(--shadow-sm);
+  --shadow-lifted: var(--shadow-md);
+  --gradient-warm: linear-gradient(135deg, var(--accent-400), var(--primary));
+  --gradient-cool: linear-gradient(135deg, var(--accent-2-300), var(--secondary));
+
+  --sidebar: #f5ead8;
+  --sidebar-foreground: #201e1d;
+  --sidebar-primary: #c67139;
+  --sidebar-primary-foreground: #f5ead8;
+  --sidebar-accent: rgba(32, 30, 29, 0.06);
+  --sidebar-accent-foreground: #201e1d;
+  --sidebar-border: rgba(32, 30, 29, 0.16);
+  --sidebar-ring: #c67139;
 }
 
 .dark {
@@ -200,10 +280,35 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-weight: 400 !important;
+    letter-spacing: 0;
     line-height: 1.15;
   }
+
+  /* Organic controls use a 44px minimum target; later screens tune larger controls. */
+  :where(button, [role="button"], input, select, textarea):focus-visible,
+  :where(a):focus-visible {
+    outline: 2px solid #c67139;
+    outline-offset: 2px;
+  }
+
+  :where(button, input, select, textarea):disabled,
+  :where([aria-disabled="true"]) {
+    opacity: 0.45;
+  }
+}
+
+/* Shared interaction states; primary buttons use the approved solid ramp steps. */
+:where(button, a, [role="button"]).bg-primary:hover {
+  background-color: #b2622d;
+}
+
+:where(button, a, [role="button"]).bg-primary:active {
+  background-color: #8c491a;
+}
+
+:where(.bg-primary) :where(button, a, [role="button"]).bg-primary-foreground:hover {
+  background-color: #fff2eb;
 }
 
 @utility gradient-warm {
@@ -222,18 +327,55 @@
   box-shadow: var(--shadow-lifted);
 }
 
-@keyframes ring-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.55;
-  }
-  50% {
-    transform: scale(1.14);
-    opacity: 0.15;
-  }
+@utility animate-mm-pop {
+  animation: mm-pop 380ms ease both;
+}
+
+@utility animate-mm-rise {
+  animation: mm-rise 310ms ease both;
+}
+
+@utility animate-mm-pulse {
+  transform: scale(1);
+  opacity: 0.5;
 }
 
 @utility animate-ring-pulse {
-  animation: ring-pulse 1.6s ease-in-out infinite;
+  transform: scale(1);
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes mm-pop {
+    0% { transform: scale(0.7); opacity: 0; }
+    72% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes mm-rise {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes mm-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.13); opacity: 0.12; }
+  }
+
+  .animate-mm-pulse,
+  .animate-ring-pulse {
+    animation: mm-pulse 1.7s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes mm-pop {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes mm-rise {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }
