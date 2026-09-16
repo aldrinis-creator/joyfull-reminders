@@ -135,6 +135,13 @@ export function AlarmOverlay({
     return () => clearTimeout(timer);
   }, [phase]);
 
+  // The snooze confirmation is a reassurance, not a wall — it steps aside.
+  useEffect(() => {
+    if (phase !== "snoozed") return;
+    const timer = setTimeout(() => onClose?.(), 4000);
+    return () => clearTimeout(timer);
+  }, [phase, onClose]);
+
   const due = occurrence ?? new Date(reminder.due_at);
   const category = normalizeCategory(reminder.category);
   const member = recipients[0];
