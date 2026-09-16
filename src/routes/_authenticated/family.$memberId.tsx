@@ -46,6 +46,8 @@ export const Route = createFileRoute("/_authenticated/family/$memberId")({
       },
       { property: "og:title", content: "Family member — My-Mitr" },
       { property: "og:description", content: "Dates, gift hints and wishlist in one place." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: MemberPage,
@@ -151,13 +153,19 @@ function MemberPage() {
                 const when = date.recurring ? nextAnniversary(date.event_date) : new Date(date.event_date);
                 const kind = SPECIAL_DATE_KINDS.find((item) => item.value === date.kind);
                 const age = date.recurring ? turningAge(date.event_date, when) : null;
+                const dateFact =
+                  age && date.kind === "birthday"
+                    ? t("family.turning", { age })
+                    : age && date.kind === "anniversary"
+                      ? t("family.anniversaryYears", { years: age })
+                      : relativeDay(when);
                 return (
                   <li key={date.id} className={`${date.kind === "birthday" || date.kind === "anniversary" ? "bg-accent-100" : "bg-card shadow-card"} rounded-[26px] px-5 py-4`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-[15.5px] font-semibold">{kind?.emoji} {date.title}</p>
                         <p className="text-foreground/55 mt-1 text-[12.5px] font-semibold">
-                          {formatDate(when)} · {age ? t("family.turning", { age }) : relativeDay(when)}
+                          {formatDate(when)} · {dateFact}
                         </p>
                       </div>
                       {age ? <span className="text-accent-800 text-[12px] font-semibold">{relativeDay(when)}</span> : null}
