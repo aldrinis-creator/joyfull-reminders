@@ -18,10 +18,12 @@ export function PayNowButtons({
   shortcut,
   tone = "default",
   size = "sm",
+  showCopy = true,
 }: {
   shortcut: PaymentShortcut;
   tone?: "default" | "onDark";
   size?: "sm" | "lg";
+  showCopy?: boolean;
 }) {
   const t = useT();
   const target = paymentTarget(shortcut);
@@ -72,7 +74,7 @@ export function PayNowButtons({
       >
         <IndianRupee className="size-4" aria-hidden /> {isUpi ? t("home.payGpay") : t("home.payNow")}
       </Button>
-      {upiId ? (
+      {upiId && showCopy ? (
         <Button
           size={size === "lg" ? "lg" : "sm"}
           variant="outline"

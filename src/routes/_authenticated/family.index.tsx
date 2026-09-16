@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Heart, Edit2, Trash2 } from "lucide-react";
+import { CalendarDays, Plus, Heart, Edit2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/AppShell";
@@ -117,7 +117,14 @@ function FamilyPage() {
     <AppShell
       title={t("nav.family")}
       subtitle={t("family.subtitle")}
-      action={<AddMemberDialog />}
+      action={
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="icon" className="size-12" aria-label={t("nav.calendar")}> 
+            <Link to="/calendar"><CalendarDays className="size-5" aria-hidden /></Link>
+          </Button>
+          <AddMemberDialog />
+        </div>
+      }
     >
       {isLoading ? (
         <div className="space-y-3">
