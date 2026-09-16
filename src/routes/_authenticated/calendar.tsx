@@ -46,6 +46,47 @@ function CalendarPage() {
   const [monthOffset, setMonthOffset] = useState(0);
   const [category, setCategory] = useState<ReminderCategory | "all">("all");
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [view, setView] = useState<"reminders" | "scheduled">("reminders");
+  const queryClient = useQueryClient();
+
+  function removeFromCache(id: string) {
+    queryClient.setQueryData<Reminder[]>(["reminders"], (old) =>
+      (old ?? []).filter((r) => r.id !== id),
+    );
+  }
+
+  const remove = useMutation({
+    mutationFn: async (reminder: Reminder) => {
+      await supabase.from("reminder_alerts").delete().eq("reminder_id", reminder.id);
+      await supabase.from("reminder_occurrences").delete().eq("reminder_id", reminder.id);
+      const { error } = await supabase.from("reminders").delete().eq("id", reminder.id);
+      if (error) throw error;
+    },
+    onMutate: (reminder: Reminder) => removeFromCache(reminder.id),
+    onSuccess: () => {
+      toast.success(t("home.deleted"));
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
+    onError: () => {
+      toast.error(t("home.deleteFailed"));
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
+  });
+
+  const complete = useMutation({
+    mutationFn: (reminder: Reminder) => completeReminder(reminder),
+    onMutate: (reminder: Reminder) => removeFromCache(reminder.id),
+    onSuccess: (result) => {
+      toast.success(
+        result.recurring && result.upcoming
+          ? t("home.doneNext", { date: formatDate(result.upcoming) })
+          : t("home.doneOnce"),
+      );
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+      void queryClient.invalidateQueries({ queryKey: ["streak"] });
+    },
+    onError: () => toast.error(t("home.updateFailed")),
+  });
 
   const base = new Date();
   const cursor = new Date(base.getFullYear(), base.getMonth() + monthOffset, 1);
