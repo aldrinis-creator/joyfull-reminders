@@ -163,11 +163,16 @@ export async function signInWithPhone(
   const email = shadowEmail(phone);
   const password = crypto.randomUUID() + crypto.randomUUID();
 
-  const { data: existing } = await supabaseAdmin
+  const { data: existing, error: lookupError } = await supabaseAdmin
     .from("profiles")
     .select("id")
     .eq("phone", phone)
     .maybeSingle();
+
+  if (lookupError) {
+    console.error("[otp] profile lookup by phone failed", lookupError);
+    return { ok: false, reason: "failed", detail: "Could not sign you in. Please try again." };
+  }
 
   let userId = existing?.id ?? null;
 
