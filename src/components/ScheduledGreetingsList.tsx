@@ -71,7 +71,7 @@ export function ScheduledGreetingsList() {
     <div className="space-y-3">
       {rows.map((g) => {
         const name =
-          (g.family_members as { full_name: string } | null)?.full_name ?? t("family.someone");
+          (g.family_members as { full_name: string } | null)?.full_name ?? "—";
         const member = (members ?? []).find((m) => m.id === g.family_member_id);
         return (
           <article key={g.id} className="bg-card shadow-card rounded-3xl p-4">
