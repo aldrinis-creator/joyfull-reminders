@@ -340,7 +340,7 @@ function EmptyState({ t }: { t: (key: string) => string }) {
       <h2 className="mt-4 text-2xl">{t("home.emptyTitle")}</h2>
       <p className="text-muted-foreground mt-2">{t("home.emptyBody")}</p>
       <Button asChild size="lg" className="mt-6 h-14 px-8 text-base">
-        <Link to="/reminders/new">{t("home.emptyCta")}</Link>
+        <Link to="/reminders/new" search={{}}>{t("home.emptyCta")}</Link>
       </Button>
     </div>
   );

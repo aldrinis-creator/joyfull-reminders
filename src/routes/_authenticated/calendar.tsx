@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -12,15 +12,7 @@ import { useReminderRecipients, useReminders } from "@/lib/queries";
 import { completeReminder } from "@/lib/complete-reminder";
 import { useT } from "@/hooks/useLanguage";
 import { activeLocale } from "@/lib/i18n";
-import {
-  SELECTABLE_CATEGORIES,
-  categoryMeta,
-  categoryShortLabel,
-  formatDate,
-  nextOccurrence,
-  type Reminder,
-  type ReminderCategory,
-} from "@/lib/ereminder";
+import { categoryMeta, formatDate, nextOccurrence, type Reminder } from "@/lib/ereminder";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/calendar")({
@@ -44,10 +36,10 @@ function CalendarPage() {
   const { data: reminders } = useReminders();
   const { data: recipientsByReminder } = useReminderRecipients();
   const [monthOffset, setMonthOffset] = useState(0);
-  const [category, setCategory] = useState<ReminderCategory | "all">("all");
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [view, setView] = useState<"reminders" | "scheduled">("reminders");
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   function removeFromCache(id: string) {
     queryClient.setQueryData<Reminder[]>(["reminders"], (old) =>
@@ -94,10 +86,9 @@ function CalendarPage() {
   const events = useMemo(
     () =>
       (reminders ?? [])
-        .filter((r) => (category === "all" ? true : r.category === category))
         .map((r) => ({ reminder: r, occurrence: nextOccurrence(r) }))
         .sort((a, b) => a.occurrence.getTime() - b.occurrence.getTime()),
-    [reminders, category],
+    [reminders],
   );
 
   const byDay = useMemo(() => {
@@ -120,13 +111,30 @@ function CalendarPage() {
   ];
 
   const selectedEvents = selectedDay ? (byDay.get(selectedDay) ?? []) : [];
+  const visibleMonthEvents = events.filter(
+    ({ occurrence }) =>
+      occurrence.getFullYear() === cursor.getFullYear() && occurrence.getMonth() === cursor.getMonth(),
+  );
+  const panelEvents = selectedDay ? selectedEvents : events.slice(0, 20);
+  const selectedDate = selectedDay ? new Date(selectedDay) : null;
+  const selectedDateParam = selectedDate
+    ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`
+    : null;
+  const monthName = cursor.toLocaleDateString(activeLocale(), { month: "long" });
+  const panelHeading = selectedDate
+    ? t("reminders.dayPanelTitle", {
+        date: selectedDate.toLocaleDateString(activeLocale(), {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        }),
+        count: selectedEvents.length,
+      })
+    : t("reminders.upcoming");
 
   return (
-    <AppShell
-      title={t("nav.calendar")}
-      subtitle={cursor.toLocaleDateString(activeLocale(), { month: "long", year: "numeric" })}
-    >
-      <div className="mb-4 flex gap-2">
+    <AppShell title={t("nav.calendar")} hideHeader>
+      <div className="mb-6 flex gap-2">
         <Chip active={view === "reminders"} onClick={() => setView("reminders")}>
           {t("reminders.viewReminders")}
         </Chip>
@@ -137,57 +145,60 @@ function CalendarPage() {
 
       {view === "scheduled" ? (
         <section className="space-y-3 pb-6">
-          <h2 className="text-muted-foreground text-sm font-bold tracking-widest uppercase">
+          <h2 className="font-display text-[28px] leading-tight">
             {t("reminders.scheduledGreetings")}
           </h2>
           <ScheduledGreetingsList />
         </section>
       ) : (
         <>
-      <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-2">
-        <Chip active={category === "all"} onClick={() => setCategory("all")}>
-          {t("reminders.filterAll")}
-        </Chip>
-        {SELECTABLE_CATEGORIES.map((c) => (
-          <Chip key={c.value} active={category === c.value} onClick={() => setCategory(c.value)}>
-            {c.emoji} {categoryShortLabel(c.value)}
-          </Chip>
-        ))}
-      </div>
-
-      <section className="bg-card shadow-card rounded-3xl p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-12"
-            aria-label={t("reminders.prevMonth")}
-            onClick={() => setMonthOffset((m) => m - 1)}
-          >
-            <ChevronLeft className="size-6" aria-hidden />
-          </Button>
-          <p className="text-lg font-bold">
-            {cursor.toLocaleDateString(activeLocale(), { month: "long", year: "numeric" })}
-          </p>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-12"
-            aria-label={t("reminders.nextMonth")}
-            onClick={() => setMonthOffset((m) => m + 1)}
-          >
-            <ChevronRight className="size-6" aria-hidden />
-          </Button>
+      <section>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="font-display text-[28px] leading-tight">{monthName}</h2>
+            <p className="text-foreground/55 mt-1 text-[13.5px]">
+              {t("reminders.monthSubtitle", {
+                year: cursor.getFullYear(),
+                count: visibleMonthEvents.length,
+              })}
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-10 rounded-full bg-transparent shadow-none"
+              aria-label={t("reminders.prevMonth")}
+              onClick={() => {
+                setMonthOffset((m) => m - 1);
+                setSelectedDay(null);
+              }}
+            >
+              <ChevronLeft className="size-5" aria-hidden />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-10 rounded-full bg-transparent shadow-none"
+              aria-label={t("reminders.nextMonth")}
+              onClick={() => {
+                setMonthOffset((m) => m + 1);
+                setSelectedDay(null);
+              }}
+            >
+              <ChevronRight className="size-5" aria-hidden />
+            </Button>
+          </div>
         </div>
 
-        <div className="text-muted-foreground grid grid-cols-7 gap-1 text-center text-xs font-bold">
+        <div className="text-foreground/45 grid grid-cols-7 gap-0.5 text-center text-[10.5px] font-semibold">
           {t("reminders.weekdayInitials")
             .split(",")
             .map((d, i) => (
               <span key={`${d}-${i}`}>{d}</span>
             ))}
         </div>
-        <div className="mt-1 grid grid-cols-7 gap-1">
+        <div className="mt-2 grid grid-cols-7 gap-0.5">
           {cells.map((day, idx) => {
             if (!day) return <span key={`empty-${idx}`} />;
             const key = day.toDateString();
@@ -198,24 +209,28 @@ function CalendarPage() {
               <button
                 key={key}
                 type="button"
-                onClick={() => setSelectedDay(isSelected ? null : key)}
+                onClick={() => setSelectedDay(key)}
+                aria-pressed={isSelected}
+                aria-label={t("reminders.calendarDayLabel", {
+                  date: day.toLocaleDateString(activeLocale(), {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                  }),
+                  count: dayEvents.length,
+                })}
                 className={cn(
-                  "flex aspect-square flex-col items-center justify-center rounded-xl text-sm font-semibold",
-                  isSelected
-                    ? "bg-primary text-primary-foreground"
-                    : isToday
-                      ? "bg-accent text-accent-foreground"
-                      : dayEvents.length
-                        ? "bg-muted"
-                        : "",
+                  "hover:bg-accent focus-visible:ring-ring relative flex aspect-square items-center justify-center rounded-full text-[14.5px] font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                  isToday && "bg-primary text-primary-foreground hover:bg-primary-hover",
+                  isSelected && !isToday && "ring-primary ring-2",
                 )}
               >
-                {day.getDate()}
-                <span className="mt-0.5 flex gap-0.5">
+                <span>{day.getDate()}</span>
+                <span className="absolute bottom-[3px] flex gap-[2px]">
                   {dayEvents.slice(0, 3).map((e) => (
                     <span
                       key={e.reminder.id}
-                      className="size-1.5 rounded-full"
+                      className="size-[5px] rounded-full"
                       style={{ backgroundColor: categoryMeta(e.reminder.category).colorVar }}
                     />
                   ))}
@@ -224,19 +239,19 @@ function CalendarPage() {
             );
           })}
         </div>
+
+        <div className="text-foreground/55 mt-5 flex items-center justify-center gap-5 text-[11.5px]">
+          <LegendItem color="bg-cat-personal_family" label={t("reminders.legendFamily")} />
+          <LegendItem color="bg-cat-finance_tax" label={t("reminders.legendBills")} />
+          <LegendItem color="bg-cat-automotive" label={t("reminders.legendVehicle")} />
+        </div>
       </section>
 
-      <section className="mt-5 space-y-3 pb-6">
-        <h2 className="text-muted-foreground text-sm font-bold tracking-widest uppercase">
-          {selectedDay
-            ? new Date(selectedDay).toLocaleDateString(activeLocale(), {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })
-            : t("reminders.upcoming")}
+      <section className="mt-7 space-y-3 pb-6">
+        <h2 className="text-foreground/55 text-[11px] font-bold uppercase">
+          {panelHeading}
         </h2>
-        {(selectedDay ? selectedEvents : events.slice(0, 20)).map(({ reminder, occurrence }) => (
+        {panelEvents.map(({ reminder, occurrence }) => (
           <ReminderCard
             key={reminder.id}
             reminder={reminder}
@@ -246,8 +261,22 @@ function CalendarPage() {
             onDelete={(r) => remove.mutate(r)}
           />
         ))}
-        {(selectedDay ? selectedEvents : events).length === 0 ? (
-          <p className="text-muted-foreground bg-card shadow-card rounded-3xl px-6 py-10 text-center">
+        {selectedDay && selectedEvents.length === 0 ? (
+          <div className="bg-accent-2-100 rounded-[26px] px-6 py-8 text-center">
+            <p className="text-sage-900 text-base font-semibold">{t("reminders.emptyDayTitle")}</p>
+            <p className="text-sage-800 mt-1 text-[13px]">{t("reminders.emptyDayBody")}</p>
+            <Button
+              className="bg-sage-700 text-primary-foreground hover:bg-sage-800 mt-5 h-[46px] rounded-full px-6 shadow-none"
+              onClick={() => {
+                if (!selectedDateParam) return;
+                void navigate({ to: "/reminders/new", search: { date: selectedDateParam } });
+              }}
+            >
+              {t("reminders.emptyDayCta")}
+            </Button>
+          </div>
+        ) : !selectedDay && events.length === 0 ? (
+          <p className="bg-card shadow-card text-foreground/55 rounded-[26px] px-6 py-10 text-center">
             {t("reminders.nothingScheduled")}
           </p>
         ) : null}
@@ -255,6 +284,15 @@ function CalendarPage() {
         </>
       )}
     </AppShell>
+  );
+}
+
+function LegendItem({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className={cn("size-[5px] rounded-full", color)} aria-hidden />
+      {label}
+    </span>
   );
 }
 
@@ -273,8 +311,10 @@ function Chip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "min-h-11 shrink-0 rounded-full px-4 text-sm font-bold whitespace-nowrap",
-        active ? "bg-primary text-primary-foreground" : "bg-card text-foreground shadow-card",
+        "min-h-10 shrink-0 rounded-full border px-4 text-[13px] font-semibold whitespace-nowrap transition-colors",
+        active
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border bg-card text-foreground shadow-sm",
       )}
     >
       {children}

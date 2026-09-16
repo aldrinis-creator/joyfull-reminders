@@ -128,7 +128,7 @@ function MedicinesPage() {
             <h3 className="mt-3 text-xl">{t("medicines.emptyTitle")}</h3>
             <p className="text-muted-foreground mt-2 text-sm">{t("medicines.emptyBody")}</p>
             <Button asChild className="mt-4 h-12 w-full">
-              <Link to="/reminders/new">{t("medicines.emptyCta")}</Link>
+              <Link to="/reminders/new" search={{}}>{t("medicines.emptyCta")}</Link>
             </Button>
           </section>
         ) : null}
