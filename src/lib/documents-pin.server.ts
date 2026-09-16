@@ -1,6 +1,7 @@
 /** One-way PIN hashing for the Document Shelf lock (PBKDF2-SHA256, WebCrypto). */
 
-const ITERATIONS = 150_000;
+// Cloudflare Workers' SubtleCrypto caps PBKDF2 at 100,000 iterations.
+const ITERATIONS = 100_000;
 
 function toB64(bytes: Uint8Array): string {
   let s = "";

@@ -153,6 +153,25 @@ export async function consumeOtp(
   return { ok: true };
 }
 
+/** True when a different profile already holds this phone number. */
+export async function isPhoneTakenByAnother(
+  phone: string,
+  userId: string,
+): Promise<{ taken: boolean; error: boolean }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("phone", phone)
+    .neq("id", userId)
+    .limit(1);
+  if (error) {
+    console.error("[otp] phone ownership check failed", error);
+    return { taken: false, error: true };
+  }
+  return { taken: (data?.length ?? 0) > 0, error: false };
+}
+
 export async function signInWithPhone(
   phone: string,
 ): Promise<
@@ -163,11 +182,16 @@ export async function signInWithPhone(
   const email = shadowEmail(phone);
   const password = crypto.randomUUID() + crypto.randomUUID();
 
-  const { data: existing } = await supabaseAdmin
+  const { data: existing, error: lookupError } = await supabaseAdmin
     .from("profiles")
     .select("id")
     .eq("phone", phone)
     .maybeSingle();
+
+  if (lookupError) {
+    console.error("[otp] profile lookup by phone failed", lookupError);
+    return { ok: false, reason: "failed", detail: "Could not sign you in. Please try again." };
+  }
 
   let userId = existing?.id ?? null;
 
@@ -189,10 +213,21 @@ export async function signInWithPhone(
     }
   }
 
-  await supabaseAdmin
+  const { error: profileError } = await supabaseAdmin
     .from("profiles")
     .update({ phone, phone_verified_at: new Date().toISOString() })
     .eq("id", userId);
+
+  if (profileError) {
+    console.error("[otp] could not stamp phone on profile", profileError);
+    if (profileError.code === "23505") {
+      return {
+        ok: false,
+        reason: "failed",
+        detail: "This number is already linked to another account.",
+      };
+    }
+  }
 
   const anon = createClient<Database>(
     process.env["SUPABASE_URL"]!,

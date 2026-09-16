@@ -44,14 +44,24 @@ export const confirmNumberVerification = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => verifyOtpSchema.parse(input))
   .handler(async ({ data, context }): Promise<VerifyNumberResult> => {
-    const { consumeOtp } = await import("@/lib/otp.server");
+    const { consumeOtp, isPhoneTakenByAnother } = await import("@/lib/otp.server");
     const check = await consumeOtp(data.phone, data.code, "verify");
     if (!check.ok) return { ok: false, detail: check.detail };
+
+    const taken = await isPhoneTakenByAnother(data.phone, context.userId);
+    if (taken.error) return { ok: false, detail: "We could not verify this number. Please try again." };
+    if (taken.taken) return { ok: false, detail: "This number is already linked to another account." };
 
     const { error } = await context.supabase
       .from("profiles")
       .update({ phone: data.phone, phone_verified_at: new Date().toISOString() })
       .eq("id", context.userId);
-    if (error) return { ok: false, detail: "Verified, but we could not save it." };
+    if (error) {
+      console.error("[otp] confirmNumberVerification profile update failed", error);
+      if (error.code === "23505") {
+        return { ok: false, detail: "This number is already linked to another account." };
+      }
+      return { ok: false, detail: "Verified, but we could not save it." };
+    }
     return { ok: true };
   });
