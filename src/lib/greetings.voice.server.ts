@@ -10,7 +10,7 @@ export const VOICE_SIGNED_URL_SECONDS = 60 * 60;
 
 /** Public origin used for links we put inside WhatsApp/email messages. */
 export function siteOrigin(): string {
-  return (process.env["PUBLIC_SITE_URL"] ?? "https://e-reminders.lovable.app").replace(/\/+$/, "");
+  return (process.env["PUBLIC_SITE_URL"] ?? "https://mymitr.lovable.app").replace(/\/+$/, "");
 }
 
 export function greetingPageUrl(greetingId: string): string {
