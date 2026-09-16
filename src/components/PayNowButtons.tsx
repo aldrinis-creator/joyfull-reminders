@@ -34,7 +34,7 @@ export function PayNowButtons({
 
   const buttonClass =
     tone === "onDark"
-      ? "text-indigo-foreground border-white/40 bg-transparent hover:bg-white/10"
+      ? "text-primary-foreground border-primary-foreground/40 bg-transparent hover:bg-primary-foreground/10"
       : "";
 
   async function copyUpi() {
@@ -88,7 +88,7 @@ export function PayNowButtons({
       {amountIsVariable(shortcut) ? (
         <p
           className={`basis-full text-xs ${
-            tone === "onDark" ? "text-indigo-foreground/80" : "text-muted-foreground"
+            tone === "onDark" ? "text-primary-foreground/80" : "text-muted-foreground"
           }`}
         >
           {t("home.amountVaries")}
