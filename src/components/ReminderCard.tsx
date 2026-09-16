@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { CalendarPlus, Check, Gift, Pencil, Trash2 } from "lucide-react";
+import { CalendarPlus, Check, Gift, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -15,8 +15,16 @@ import {
 import { RecipientList } from "@/components/RecipientActions";
 import { PayNowButtons } from "@/components/PayNowButtons";
 import { ShareReminderButtons } from "@/components/ShareReminderButtons";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { buildIcs } from "@/lib/ics";
+import { paymentTarget } from "@/lib/pay-link";
 import { useT } from "@/hooks/useLanguage";
 
 import {
@@ -51,8 +59,10 @@ export function ReminderCard({
   const meta = categoryMeta(reminder.category);
   const isGiftable = reminder.category === "personal_family";
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const people = recipients && recipients.length ? recipients : member ? [member] : [];
   const giftMember = people[0] ?? member;
+  const hasPayment = Boolean(paymentTarget(reminder));
 
   function downloadIcs() {
     const ics = buildIcs({
@@ -79,78 +89,111 @@ export function ReminderCard({
 
   return (
     <article
-      className="bg-card shadow-card relative overflow-hidden rounded-3xl p-4 pl-6"
-      style={{ borderLeft: `8px solid ${meta.colorVar}` }}
+      className={cn(
+        "shadow-card relative overflow-hidden rounded-[26px] p-5",
+        isGiftable ? "bg-accent-100" : "bg-card",
+      )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <span
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold text-white"
-            style={{ backgroundColor: meta.colorVar }}
-          >
+          <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px] font-semibold uppercase">
             {meta.emoji} {categoryShortLabel(reminder.category)}
           </span>
-          <h3 className={cn("mt-2 text-xl", reminder.completed && "line-through opacity-60")}>
+          <h3
+            className={cn(
+              "mt-1 text-[16.5px] font-semibold",
+              isGiftable && "text-accent-900",
+              reminder.completed && "line-through opacity-60",
+            )}
+          >
             {reminder.title}
           </h3>
           {memberName ? (
             <p className="text-muted-foreground text-sm font-semibold">{t("home.forMember", { name: memberName })}</p>
           ) : null}
-          <p className="text-muted-foreground mt-1 text-sm">{formatDateTime(occurrence)}</p>
+          <p className="text-muted-foreground mt-1 text-[12.5px]">{formatDateTime(occurrence)}</p>
           {reminder.description ? (
             <p className="text-foreground/80 mt-2 text-sm">{reminder.description}</p>
           ) : null}
         </div>
-        <span
-          className="shrink-0 rounded-2xl px-3 py-2 text-center text-xs font-bold"
-          style={{ backgroundColor: `color-mix(in oklab, ${meta.colorVar} 15%, transparent)` }}
-        >
-          {relativeDay(occurrence)}
-        </span>
+        <div className="flex shrink-0 items-center gap-1">
+          <span className="text-muted-foreground hidden text-[11px] font-semibold sm:block">
+            {relativeDay(occurrence)}
+          </span>
+          <Sheet open={actionsOpen} onOpenChange={setActionsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="size-11 rounded-full" aria-label={t("home.moreActions")}>
+                <MoreHorizontal className="size-5" aria-hidden />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-[28px] border-border bg-background px-[22px] pb-8 shadow-lg">
+              <SheetHeader className="pr-10 text-left">
+                <SheetTitle>{t("home.actionsTitle", { title: reminder.title })}</SheetTitle>
+              </SheetHeader>
+              <div className="mt-5 grid gap-3">
+                {hasPayment ? <PayNowButtons shortcut={{ ...reminder, title: reminder.title }} showCopy /> : null}
+                <Button variant="outline" className="h-12 justify-start" onClick={downloadIcs}>
+                  <CalendarPlus className="size-4" aria-hidden /> {t("home.addToCalendar")}
+                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <ShareReminderButtons reminder={reminder} occurrence={occurrence} />
+                </div>
+                <Button asChild variant="outline" className="h-12 justify-start">
+                  <Link to="/reminders/$reminderId/edit" params={{ reminderId: reminder.id }}>
+                    <Pencil className="size-4" aria-hidden /> {t("home.edit")}
+                  </Link>
+                </Button>
+                {onDelete ? (
+                  <Button
+                    variant="outline"
+                    className="text-destructive h-12 justify-start"
+                    onClick={() => {
+                      setActionsOpen(false);
+                      setConfirmDelete(true);
+                    }}
+                  >
+                    <Trash2 className="size-4" aria-hidden /> {t("home.delete")}
+                  </Button>
+                ) : null}
+                {isGiftable ? (
+                  <Button asChild variant="outline" className="h-12 justify-start">
+                    <Link to="/market" search={{ pin: giftMember?.pincode ?? undefined, for: giftMember?.id }}>
+                      <Gift className="size-4" aria-hidden /> {t("home.sendGift")}
+                    </Link>
+                  </Button>
+                ) : null}
+                <RecipientList reminder={reminder} occurrence={occurrence} recipients={people} />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {onComplete && !reminder.completed ? (
-          <Button size="sm" variant="secondary" className="h-11" onClick={() => onComplete(reminder)}>
-            <Check className="size-4" aria-hidden /> {t("home.markDone")}
-          </Button>
-        ) : null}
-        <PayNowButtons shortcut={{ ...reminder, title: reminder.title }} />
-        <Button size="sm" variant="outline" className="h-11" onClick={downloadIcs}>
-          <CalendarPlus className="size-4" aria-hidden /> {t("home.addToCalendar")}
-        </Button>
-        <ShareReminderButtons reminder={reminder} occurrence={occurrence} />
-
-
-        <Button asChild size="sm" variant="outline" className="h-11">
-          <Link to="/reminders/$reminderId/edit" params={{ reminderId: reminder.id }}>
-            <Pencil className="size-4" aria-hidden /> {t("home.edit")}
-          </Link>
-        </Button>
-        {onDelete ? (
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-destructive h-11"
-            onClick={() => setConfirmDelete(true)}
-          >
-            <Trash2 className="size-4" aria-hidden /> {t("home.delete")}
-          </Button>
-        ) : null}
-
-        {isGiftable ? (
-          <Button asChild size="sm" variant="outline" className="h-11">
-            <Link
-              to="/market"
-              search={{ pin: giftMember?.pincode ?? undefined, for: giftMember?.id }}
-            >
+      <div className={cn("mt-4 flex items-center gap-3", isGiftable && "flex-wrap")}>
+        {hasPayment ? (
+          <div className="min-w-0 flex-1"><PayNowButtons shortcut={{ ...reminder, title: reminder.title }} showCopy={false} /></div>
+        ) : isGiftable ? (
+          <Button asChild className="h-[46px] min-w-0 flex-1">
+            <Link to="/market" search={{ pin: giftMember?.pincode ?? undefined, for: giftMember?.id }}>
               <Gift className="size-4" aria-hidden /> {t("home.sendGift")}
             </Link>
           </Button>
+        ) : <span className="flex-1" />}
+        {onComplete && !reminder.completed ? (
+          <Button
+            size="icon"
+            variant="outline"
+            className={cn(
+              "size-[46px] shrink-0 rounded-full border-[1.5px]",
+              isGiftable ? "border-accent-400 text-accent-700" : "border-accent-2-400 text-accent-2-700",
+            )}
+            onClick={() => onComplete(reminder)}
+            aria-label={t("home.markDone")}
+          >
+            <Check className="size-5" aria-hidden />
+          </Button>
         ) : null}
       </div>
-
-      <RecipientList reminder={reminder} occurrence={occurrence} recipients={people} />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
