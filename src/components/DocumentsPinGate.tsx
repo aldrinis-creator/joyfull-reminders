@@ -2,16 +2,19 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ShieldCheck } from "lucide-react";
+import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/hooks/useLanguage";
 import { hasDocumentsPin, setDocumentsPin, verifyDocumentsPin } from "@/lib/documents-pin.functions";
+import { cn } from "@/lib/utils";
 
 const UNLOCK_KEY = "ereminder.documentsPinUnlocked";
+const LOCK_EVENT = "mymitr:documents-relock";
 const MAX_ATTEMPTS = 5;
 const COOLDOWN_SECONDS = 30;
+const MIN_PIN = 4;
+const MAX_PIN = 6;
 
 function isUnlocked(): boolean {
   try {
@@ -38,8 +41,69 @@ export function clearDocumentsUnlock() {
   }
 }
 
-const digits = (v: string) => v.replace(/\D/g, "").slice(0, 6);
+/** Re-locks the shelf straight away, from anywhere inside it. */
+export function lockDocumentsNow() {
+  clearDocumentsUnlock();
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(LOCK_EVENT));
+}
+
+const digits = (v: string) => v.replace(/\D/g, "").slice(0, MAX_PIN);
 const validPin = (v: string) => /^\d{4,6}$/.test(v);
+
+/**
+ * PIN boxes. The PIN itself is only ever checked on the server, so the app does
+ * not know whether this person chose 4, 5 or 6 digits: the row starts at four
+ * boxes and grows as they type, up to the six the PIN rules allow.
+ */
+function PinCells({
+  value,
+  onChange,
+  disabled,
+  label,
+  id,
+  autoFocus,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  disabled: boolean;
+  label: string;
+  id: string;
+  autoFocus?: boolean;
+}) {
+  const cells = Math.min(MAX_PIN, Math.max(MIN_PIN, value.length + (value.length >= MIN_PIN ? 1 : 0)));
+
+  return (
+    <div className="relative">
+      <input
+        id={id}
+        type="password"
+        inputMode="numeric"
+        autoComplete="off"
+        aria-label={label}
+        autoFocus={autoFocus}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(digits(e.target.value))}
+        className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+      />
+      <div className="flex justify-center gap-[11px]" aria-hidden>
+        {Array.from({ length: cells }).map((_, i) => (
+          <span
+            key={i}
+            className={cn(
+              "bg-card shadow-card flex h-[58px] w-[50px] items-center justify-center rounded-[18px]",
+              i === value.length ? "border-[1.5px] border-[var(--accent-500)]" : "",
+            )}
+          >
+            {i < value.length ? (
+              <span className="bg-foreground size-5 rounded-full" />
+            ) : null}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /** Locks the document shelf behind a 4-6 digit PIN for the browser session. */
 export function DocumentsPinGate({ children }: { children: ReactNode }) {
@@ -54,6 +118,17 @@ export function DocumentsPinGate({ children }: { children: ReactNode }) {
     staleTime: 0,
   });
 
+  const { data: fileCount } = useQuery({
+    queryKey: ["documents_count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true });
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
   const [unlocked, setUnlocked] = useState(false);
   const [skipped, setSkipped] = useState(false);
   const [pin, setPin] = useState("");
@@ -65,6 +140,12 @@ export function DocumentsPinGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setUnlocked(isUnlocked());
+    const relock = () => {
+      setUnlocked(false);
+      setPin("");
+    };
+    window.addEventListener(LOCK_EVENT, relock);
+    return () => window.removeEventListener(LOCK_EVENT, relock);
   }, []);
 
   useEffect(() => {
@@ -143,68 +224,66 @@ export function DocumentsPinGate({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-md px-4 py-10">
-      <div className="bg-card shadow-card space-y-4 rounded-3xl p-6">
-        <div className="flex items-center gap-3">
-          <ShieldCheck className="text-primary size-7" aria-hidden />
-          <h1 className="text-xl font-bold">{hasPin ? t("pin.enterTitle") : t("pin.setTitle")}</h1>
-        </div>
-        <p className="text-muted-foreground text-sm">
-          {hasPin ? t("pin.enterHint") : t("pin.setHint")}
-        </p>
+    <div className="bg-background flex min-h-screen flex-col items-center justify-center px-6 py-12 text-center">
+      <span className="flex size-[74px] items-center justify-center rounded-full bg-[var(--accent-200)]">
+        <Lock className="size-8 text-[var(--accent-800)]" aria-hidden />
+      </span>
 
-        <form
-          className="space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void (hasPin ? unlock() : createPin());
-          }}
-        >
+      <h2 className="mt-5 text-[27px] leading-tight">{t("pin.lockedTitle")}</h2>
+      <p className="text-foreground/60 mt-2.5 max-w-[250px] text-[14.5px]">
+        {hasPin
+          ? t("pin.lockedBody", { count: fileCount ?? 0 })
+          : t("pin.setupBody", { count: fileCount ?? 0 })}
+      </p>
+
+      <form
+        className="mt-7 w-full max-w-sm space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void (hasPin ? unlock() : createPin());
+        }}
+      >
+        <PinCells
+          id="doc-pin"
+          label={t("pin.pinLabel")}
+          value={pin}
+          onChange={setPin}
+          disabled={busy || cooldown > 0}
+          autoFocus
+        />
+
+        {!hasPin ? (
           <div className="space-y-2">
-            <Label htmlFor="doc-pin">{t("pin.pinLabel")}</Label>
-            <Input
-              id="doc-pin"
-              type="password"
-              inputMode="numeric"
-              autoComplete="off"
-              value={pin}
-              disabled={busy || cooldown > 0}
-              onChange={(e) => setPin(digits(e.target.value))}
-              className="h-12 text-center text-2xl tracking-[0.4em]"
+            <p className="text-foreground/60 text-[13px] font-semibold">{t("pin.confirmLabel")}</p>
+            <PinCells
+              id="doc-pin-confirm"
+              label={t("pin.confirmLabel")}
+              value={confirm}
+              onChange={setConfirm}
+              disabled={busy}
             />
           </div>
-          {!hasPin ? (
-            <div className="space-y-2">
-              <Label htmlFor="doc-pin-confirm">{t("pin.confirmLabel")}</Label>
-              <Input
-                id="doc-pin-confirm"
-                type="password"
-                inputMode="numeric"
-                autoComplete="off"
-                value={confirm}
-                disabled={busy}
-                onChange={(e) => setConfirm(digits(e.target.value))}
-                className="h-12 text-center text-2xl tracking-[0.4em]"
-              />
-            </div>
-          ) : null}
+        ) : null}
 
-          {cooldown > 0 ? (
-            <p role="status" className="text-destructive text-sm font-semibold">
-              {t("pin.lockedFor", { count: cooldown })}
-            </p>
-          ) : null}
+        {cooldown > 0 ? (
+          <p role="status" className="text-destructive text-sm font-semibold">
+            {t("pin.lockedFor", { count: cooldown })}
+          </p>
+        ) : null}
 
-          <Button type="submit" className="h-12 w-full" disabled={busy || cooldown > 0}>
-            {hasPin ? t("pin.unlock") : t("pin.save")}
+        <Button
+          type="submit"
+          className="h-[54px] w-full rounded-full text-base"
+          disabled={busy || cooldown > 0}
+        >
+          {hasPin ? t("pin.unlock") : t("pin.save")}
+        </Button>
+        {!hasPin ? (
+          <Button type="button" variant="ghost" className="w-full" onClick={() => setSkipped(true)}>
+            {t("pin.later")}
           </Button>
-          {!hasPin ? (
-            <Button type="button" variant="ghost" className="w-full" onClick={() => setSkipped(true)}>
-              {t("pin.later")}
-            </Button>
-          ) : null}
-        </form>
-      </div>
+        ) : null}
+      </form>
     </div>
   );
 }
