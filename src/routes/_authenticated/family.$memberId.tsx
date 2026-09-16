@@ -273,11 +273,11 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
   }
 
   return (
-    <section className="bg-card shadow-card rounded-3xl p-5">
+    <section className="bg-card shadow-card rounded-[28px] p-5">
       <h2 className="text-xl">{t("family.greetingsSection")}</h2>
       <p className="text-muted-foreground text-sm">{t("family.contactPrivacy")}</p>
       <form
-        className="mt-4 space-y-3"
+        className="mt-4 space-y-3.5"
         onSubmit={async (e) => {
           e.preventDefault();
           if (pincode && !isValidPincode(pincode)) {
@@ -327,7 +327,7 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
           value={whatsapp}
           onChange={setWhatsapp}
         />
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           <div className="flex-1 space-y-1">
             <Label htmlFor="c-pin" className="text-sm">
               {t("family.pincode")}
@@ -358,11 +358,11 @@ function ContactSection({ member, onSaved }: { member: FamilyMember; onSaved: ()
           {t("family.allowGreetingsShort")}
           <Switch checked={enabled} onCheckedChange={setEnabled} />
         </label>
-        <div className="flex gap-2">
-          <Button type="submit" variant="secondary" className="h-12 flex-1" disabled={saving}>
+        <div className="grid grid-cols-2 gap-2.5">
+          <Button type="submit" variant="secondary" className="h-12 rounded-full" disabled={saving}>
             {saving ? t("saving") : t("family.saveDetails")}
           </Button>
-          <Button type="button" variant="outline" className="h-12" onClick={requestPincode}>
+          <Button type="button" variant="outline" className="h-12 rounded-full bg-transparent" onClick={requestPincode}>
             <Share2 className="size-4" aria-hidden /> {t("family.askPincode")}
           </Button>
         </div>
@@ -387,7 +387,7 @@ function AddDateForm({
 
   return (
     <form
-      className="mt-4 space-y-3 border-t pt-4"
+      className="mt-4 space-y-3"
       onSubmit={async (e) => {
         e.preventDefault();
         if (!date) {
@@ -467,7 +467,7 @@ function AddDateForm({
         placeholder={t("family.titlePlaceholder")}
         className="h-12"
       />
-      <Button type="submit" variant="secondary" className="h-12 w-full">
+      <Button type="submit" variant="outline" className="h-[50px] w-full rounded-full border-dashed bg-transparent">
         <Plus className="size-4" aria-hidden /> {t("family.addDate")}
       </Button>
     </form>
@@ -481,7 +481,7 @@ function AddWishForm({ memberId, onSaved }: { memberId: string; onSaved: () => v
 
   return (
     <form
-      className="mt-4 flex gap-2 border-t pt-4"
+      className="mt-4 flex gap-2 border-t border-border pt-4"
       onSubmit={async (e) => {
         e.preventDefault();
         const clean = title.trim();
@@ -521,7 +521,7 @@ function AddWishForm({ memberId, onSaved }: { memberId: string; onSaved: () => v
         placeholder="₹"
         className="h-12 w-24"
       />
-      <Button type="submit" variant="secondary" className="h-12">
+      <Button type="submit" variant="secondary" className="h-12 rounded-full px-5">
         {t("nav.add")}
       </Button>
     </form>
