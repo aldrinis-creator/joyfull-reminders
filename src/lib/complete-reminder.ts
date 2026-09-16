@@ -62,3 +62,42 @@ export async function completeReminder(
 
   return { recurring: Boolean(upcoming), upcoming: upcoming ?? null };
 }
+
+/**
+ * "Skip" from the alarm: the occurrence is acknowledged and a recurring
+ * reminder rolls forward, but the on-time streak is deliberately untouched.
+ */
+export async function skipReminder(
+  reminder: Reminder,
+): Promise<{ recurring: boolean; upcoming: Date | null }> {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  const skipped = nextOccurrence(reminder);
+  const upcoming = advanceOccurrence(reminder);
+
+  if (userId) {
+    await supabase.from("reminder_occurrences").insert({
+      user_id: userId,
+      reminder_id: reminder.id,
+      occurrence_at: skipped.toISOString(),
+      status: "acknowledged",
+      acknowledged_at: new Date().toISOString(),
+    });
+  }
+
+  if (upcoming) {
+    const { error } = await supabase
+      .from("reminders")
+      .update({ due_at: upcoming.toISOString(), completed: false, completed_at: null })
+      .eq("id", reminder.id);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from("reminders")
+      .update({ completed: true, completed_at: new Date().toISOString() })
+      .eq("id", reminder.id);
+    if (error) throw error;
+  }
+
+  return { recurring: Boolean(upcoming), upcoming: upcoming ?? null };
+}
