@@ -80,6 +80,14 @@ export function AlarmHost() {
     onError: () => toast.error(t("home.updateFailed")),
   });
 
+  const skip = useMutation({
+    mutationFn: (reminder: Reminder) => skipReminder(reminder),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
+    onError: () => toast.error(t("home.updateFailed")),
+  });
+
   const dueAlarm = useMemo(() => {
     return (reminders ?? [])
       .filter((r) => !r.completed)
@@ -91,22 +99,48 @@ export function AlarmHost() {
       );
   }, [reminders, snoozedIds, now]);
 
-  if (!dueAlarm) return null;
+  /**
+   * The overlay keeps its own "snoozed" / "handled" screens, so we hold on to
+   * the alarm it is showing instead of unmounting it the moment the reminder
+   * stops being due.
+   */
+  const [held, setHeld] = useState<{ reminder: Reminder; occurrence: Date } | null>(null);
+  const [snoozeCount, setSnoozeCount] = useState(0);
+  const closedKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!dueAlarm) return;
+    const key = snoozeKeyFor(dueAlarm.reminder.id, dueAlarm.occurrence);
+    if (closedKey.current === key) return;
+    setHeld((prev) => (prev ? prev : dueAlarm));
+    setSnoozeCount(readSnoozeCount(key));
+  }, [dueAlarm]);
+
+  if (!held) return null;
+  const heldKey = snoozeKeyFor(held.reminder.id, held.occurrence);
 
   return (
     <AlarmOverlay
-      key={`${dueAlarm.reminder.id}-${dueAlarm.occurrence.getTime()}`}
-      reminder={dueAlarm.reminder}
-      onDismiss={() => complete.mutate(dueAlarm.reminder)}
+      key={heldKey}
+      reminder={held.reminder}
+      occurrence={held.occurrence}
+      snoozeCount={snoozeCount}
+      onDismiss={() => complete.mutate(held.reminder)}
+      onSkip={() => skip.mutate(held.reminder)}
+      onClose={() => {
+        closedKey.current = heldKey;
+        setHeld(null);
+      }}
       recipients={
-        recipientsByReminder?.get(dueAlarm.reminder.id) ??
-        (dueAlarm.reminder.family_member_id
-          ? (members ?? []).filter((m) => m.id === dueAlarm.reminder.family_member_id)
+        recipientsByReminder?.get(held.reminder.id) ??
+        (held.reminder.family_member_id
+          ? (members ?? []).filter((m) => m.id === held.reminder.family_member_id)
           : [])
       }
       onSnooze={(minutes) => {
-        setSnoozedIds(snoozeLocally(dueAlarm.reminder.id, minutes));
-        void recordSnooze(dueAlarm.reminder.id, dueAlarm.occurrence, minutes);
+        setSnoozedIds(snoozeLocally(held.reminder.id, minutes));
+        setSnoozeCount(bumpSnoozeCount(heldKey));
+        void recordSnooze(held.reminder.id, held.occurrence, minutes);
       }}
     />
   );
