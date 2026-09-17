@@ -157,6 +157,8 @@ const home: Namespace = {
 
     forMember: "{name} के लिए",
     markDone: "पूरा हुआ",
+    rowLabelExpanded: "{title}, खुला हुआ — बंद करने के लिए टैप करें",
+    rowLabelCollapsed: "{title}, बंद हुआ — खोलने के लिए टैप करें",
     sendGreeting: "शुभकामना भेजें",
     recipients: "{count} लोगों के लिए",
     call: "कॉल करें",
