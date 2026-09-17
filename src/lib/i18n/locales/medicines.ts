@@ -100,6 +100,15 @@ const medicines: Namespace = {
     everyDay: "Every day",
     everyDays: "Every {count} days",
     onDays: "{days}",
+    endedTitle: "Course ended",
+    endedOn: "Course ended {date}",
+    continueCourse: "Continue",
+    continued: "{name} is ongoing again.",
+    errContinue: "Could not update that. Please try again.",
+    deleteAction: "Delete",
+    deleteTitle: "Delete {name}?",
+    deleteBody: "This removes it and stops its reminders — this can't be undone.",
+
 
   },
   hi: {
@@ -201,6 +210,15 @@ const medicines: Namespace = {
     everyDay: "हर दिन",
     everyDays: "हर {count} दिन",
     onDays: "{days}",
+    endedTitle: "कोर्स पूरा हुआ",
+    endedOn: "कोर्स {date} को पूरा हुआ",
+    continueCourse: "जारी रखें",
+    continued: "{name} फिर से जारी है।",
+    errContinue: "बदलाव सहेजा नहीं जा सका। फिर कोशिश करें।",
+    deleteAction: "हटाएँ",
+    deleteTitle: "{name} हटाएँ?",
+    deleteBody: "यह दवाई और उसके रिमाइंडर हट जाएँगे — इसे वापस नहीं लाया जा सकता।",
+
 
   },
 };

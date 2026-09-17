@@ -6,6 +6,16 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { MedicineForm, type MedicineEdit } from "@/components/MedicineForm";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -145,8 +155,10 @@ function MedicinesPage() {
     () => (records ?? []).filter((m) => isLowStock(m) && !isFinished(m)),
     [records],
   );
+  const finishedRecords = useMemo(() => (records ?? []).filter((m) => isFinished(m)), [records]);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<MedicineEdit | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Medicine | null>(null);
 
   const remindersByMedicine = useMemo(() => {
     const map = new Map<string, typeof reminders extends undefined ? never : NonNullable<typeof reminders>>();
@@ -178,8 +190,18 @@ function MedicinesPage() {
     setFormOpen(true);
   }
 
+  /** Deletes the medicine record and every reminder (and its alerts/occurrences) linked to it. */
   async function removeRecord(medicine: Medicine) {
-    if (!window.confirm(t("medicines.removeConfirm", { name: medicine.name }))) return;
+    const linked = (remindersByMedicine.get(medicine.id) ?? []).map((r) => r.id);
+    if (linked.length > 0) {
+      await supabase.from("reminder_alerts").delete().in("reminder_id", linked);
+      await supabase.from("reminder_occurrences").delete().in("reminder_id", linked);
+      const { error: remErr } = await supabase.from("reminders").delete().in("id", linked);
+      if (remErr) {
+        toast.error(t("medicines.errRemove"));
+        return;
+      }
+    }
     const { error } = await supabase.from("medicines").delete().eq("id", medicine.id);
     if (error) {
       toast.error(t("medicines.errRemove"));
@@ -190,6 +212,22 @@ function MedicinesPage() {
     void queryClient.invalidateQueries({ queryKey: ["reminders"] });
     void queryClient.invalidateQueries({ queryKey: ["dose_occurrences"] });
   }
+
+  /** Clears the end date, so the course simply carries on. */
+  async function continueCourse(medicine: Medicine) {
+    const { error } = await supabase
+      .from("medicines")
+      .update({ end_date: null })
+      .eq("id", medicine.id);
+    if (error) {
+      toast.error(t("medicines.errContinue"));
+      return;
+    }
+    toast.success(t("medicines.continued", { name: medicine.name }));
+    void queryClient.invalidateQueries({ queryKey: ["medicines"] });
+    void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+  }
+
 
   async function removeMedicine(group: MedicineGroup) {
     if (!window.confirm(t("medicines.removeConfirm", { name: group.name }))) return;
@@ -307,6 +345,51 @@ function MedicinesPage() {
             ))}
           </section>
         ) : null}
+
+        {finishedRecords.length > 0 ? (
+          <section className="space-y-3 rounded-[28px] bg-[var(--accent-2-100)] p-5">
+            <p className="text-[11px] font-semibold tracking-[0.1em] text-[var(--accent-2-800)] uppercase">
+              {t("medicines.endedTitle")}
+            </p>
+            {finishedRecords.map((medicine) => (
+              <div key={medicine.id} className="space-y-2.5">
+                <div className="min-w-0">
+                  <p className="text-[15px] font-semibold text-[var(--accent-2-900)]">
+                    {medicine.name}
+                  </p>
+                  <p className="mt-0.5 text-[13px] text-[var(--accent-2-800)]">
+                    {t("medicines.endedOn", {
+                      date: new Date(`${medicine.end_date}T00:00:00`).toLocaleDateString(locale, {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      }),
+                    })}
+                  </p>
+                </div>
+                <div className="flex gap-2.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 flex-1 rounded-full"
+                    onClick={() => void continueCourse(medicine)}
+                  >
+                    {t("medicines.continueCourse")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="h-11 flex-1 rounded-full"
+                    onClick={() => setConfirmDelete(medicine)}
+                  >
+                    {t("medicines.deleteAction")}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </section>
+        ) : null}
+
 
 
         {total === 0 ? (
@@ -458,7 +541,7 @@ function MedicinesPage() {
                       size="icon"
                       className="text-destructive size-11 shrink-0 rounded-full"
                       aria-label={t("medicines.remove", { name: medicine.name })}
-                      onClick={() => void removeRecord(medicine)}
+                      onClick={() => setConfirmDelete(medicine)}
                     >
                       <Trash2 className="size-4" aria-hidden />
                     </Button>
@@ -512,6 +595,34 @@ function MedicinesPage() {
       </div>
 
       <MedicineForm open={formOpen} onOpenChange={setFormOpen} existing={editing} />
+
+      <AlertDialog
+        open={confirmDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("medicines.deleteTitle", { name: confirmDelete?.name ?? "" })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t("medicines.deleteBody")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("medicines.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const target = confirmDelete;
+                setConfirmDelete(null);
+                if (target) void removeRecord(target);
+              }}
+            >
+              {t("medicines.deleteAction")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
