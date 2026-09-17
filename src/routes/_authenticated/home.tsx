@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { completeReminder } from "@/lib/complete-reminder";
 import {
   bucketFor,
+  categoryMeta,
+  categoryShortLabel,
   formatDate,
   localDayKey,
   nextOccurrence,
@@ -313,6 +315,7 @@ function DayGroup({ items, members, recipientsByReminder, memberName, onComplete
   if (!occurrence) return null;
   const today = localDayKey(occurrence) === localDayKey();
   const familyDate = items.some(({ reminder }) => reminder.category === "personal_family");
+  const multi = items.length > 1;
   return (
     <section className="grid grid-cols-[46px_14px_minmax(0,1fr)] gap-x-3 pb-5">
       <div className={today ? "text-accent-700 text-right" : "text-foreground text-right"}>
@@ -324,20 +327,80 @@ function DayGroup({ items, members, recipientsByReminder, memberName, onComplete
         <span className="mt-1 w-0.5 flex-1 bg-border" />
       </div>
       <div className="space-y-2.5">
-        {items.map(({ reminder, occurrence: itemOccurrence }) => (
-          <ReminderCard
-            key={reminder.id}
-            reminder={reminder}
-            occurrence={itemOccurrence}
-            memberName={reminder.family_member_id ? memberName.get(reminder.family_member_id) : undefined}
-            member={reminder.family_member_id ? members.find((member) => member.id === reminder.family_member_id) : undefined}
-            recipients={recipientsByReminder?.get(reminder.id)}
+        {items.map((item) => (
+          <DayGroupItem
+            key={item.reminder.id}
+            item={item}
+            members={members}
+            recipientsByReminder={recipientsByReminder}
+            memberName={memberName}
             onComplete={onComplete}
             onDelete={onDelete}
+            multi={multi}
           />
         ))}
       </div>
     </section>
+  );
+}
+
+function DayGroupItem({ item, members, recipientsByReminder, memberName, onComplete, onDelete, multi }: {
+  item: TimelineItem;
+  members: FamilyMember[];
+  recipientsByReminder: Map<string, FamilyMember[]> | undefined;
+  memberName: Map<string, string>;
+  onComplete: (reminder: Reminder) => void;
+  onDelete: (reminder: Reminder) => void;
+  multi: boolean;
+}) {
+  const t = useT();
+  const { reminder, occurrence } = item;
+  const [expanded, setExpanded] = useState(false);
+  const meta = categoryMeta(reminder.category);
+  const isFamily = reminder.category === "personal_family";
+  const member = reminder.family_member_id ? members.find((m) => m.id === reminder.family_member_id) : undefined;
+
+  const card = (
+    <ReminderCard
+      reminder={reminder}
+      occurrence={occurrence}
+      memberName={reminder.family_member_id ? memberName.get(reminder.family_member_id) : undefined}
+      member={member}
+      recipients={recipientsByReminder?.get(reminder.id)}
+      onComplete={onComplete}
+      onDelete={onDelete}
+    />
+  );
+
+  // Single-item days render the full card directly — no row/accordion.
+  if (!multi) return card;
+
+  const time = occurrence.toLocaleTimeString(activeLocale(), { hour: "numeric", minute: "2-digit" });
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setExpanded((e) => !e)}
+        aria-expanded={expanded}
+        aria-label={t(expanded ? "home.rowLabelExpanded" : "home.rowLabelCollapsed", { title: reminder.title })}
+        className={cn(
+          "shadow-card flex h-14 w-full items-center gap-2.5 rounded-2xl px-3.5 text-left",
+          isFamily ? "bg-accent-100" : "bg-card",
+        )}
+      >
+        <span className="text-base leading-none" aria-hidden>{meta.emoji}</span>
+        <span className="text-muted-foreground shrink-0 text-[11px] font-semibold uppercase" aria-hidden>{categoryShortLabel(reminder.category)}</span>
+        <span className="min-w-0 flex-1 truncate text-[14.5px] font-semibold">{reminder.title}</span>
+        <span className="text-muted-foreground shrink-0 text-[12.5px] font-semibold">{time}</span>
+        <ChevronDown className={cn("size-4 shrink-0 transition-transform", expanded && "rotate-180")} aria-hidden />
+      </button>
+      <div className="mm-expand" data-open={expanded ? "true" : "false"}>
+        <div className="mm-expand-inner">
+          <div className="pt-2.5">{card}</div>
+        </div>
+      </div>
+    </div>
   );
 }
 

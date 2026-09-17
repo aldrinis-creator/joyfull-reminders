@@ -32,6 +32,8 @@ const home: Namespace = {
     // Reminder card
     forMember: "for {name}",
     markDone: "Mark done",
+    rowLabelExpanded: "{title}, expanded — tap to collapse",
+    rowLabelCollapsed: "{title}, collapsed — tap to expand",
     sendGreeting: "Send greeting",
     recipients: "For {count} people",
     call: "Call",
@@ -155,6 +157,8 @@ const home: Namespace = {
 
     forMember: "{name} के लिए",
     markDone: "पूरा हुआ",
+    rowLabelExpanded: "{title}, खुला हुआ — बंद करने के लिए टैप करें",
+    rowLabelCollapsed: "{title}, बंद हुआ — खोलने के लिए टैप करें",
     sendGreeting: "शुभकामना भेजें",
     recipients: "{count} लोगों के लिए",
     call: "कॉल करें",
