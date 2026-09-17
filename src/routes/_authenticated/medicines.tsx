@@ -117,11 +117,72 @@ function MedicinesPage() {
     onError: () => toast.error(t("medicines.takenFailed")),
   });
 
+  const medicines = useMemo(() => groupMedicines(reminders ?? []), [reminders]);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<MedicineGroup | null>(null);
+
+  function openAdd() {
+    setEditing(null);
+    setFormOpen(true);
+  }
+
+  function openEdit(group: MedicineGroup) {
+    setEditing(group);
+    setFormOpen(true);
+  }
+
+  async function removeMedicine(group: MedicineGroup) {
+    if (!window.confirm(t("medicines.removeConfirm", { name: group.name }))) return;
+    const { error } = await supabase
+      .from("reminders")
+      .delete()
+      .in("id", group.reminders.map((r) => r.id));
+    if (error) {
+      toast.error(t("medicines.errRemove"));
+      return;
+    }
+    toast.success(t("medicines.removed"));
+    void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    void queryClient.invalidateQueries({ queryKey: ["dose_occurrences"] });
+  }
+
   return (
     <AppShell title={t("medicines.title")} subtitle={undefined} hideHeader>
-      <div className="px-[22px] pt-6 pb-4">
-        <h2 className="text-foreground text-[29px] leading-tight">{t("medicines.title")}</h2>
-        <p className="text-muted-foreground mt-1.5 text-[14.5px] font-semibold">{subtitle}</p>
+      <div className="flex items-start justify-between gap-3 px-[22px] pt-6 pb-4">
+        <div className="min-w-0">
+          <h2 className="text-foreground text-[29px] leading-tight">{t("medicines.title")}</h2>
+          <p className="text-muted-foreground mt-1.5 text-[14.5px] font-semibold">{subtitle}</p>
+        </div>
+        <Button
+          type="button"
+          size="icon"
+          onClick={openAdd}
+          aria-label={t("medicines.add")}
+          className="size-12 shrink-0 rounded-full"
+        >
+          <Plus className="size-6" aria-hidden />
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-[10px] px-[22px] pb-[18px]">
+        {[
+          { label: t("medicines.statDoses"), value: total, tone: "bg-[var(--accent-100)] text-[var(--accent-800)]" },
+          {
+            label: t("medicines.statTaken"),
+            value: takenCount,
+            tone: "bg-[var(--accent-2-100)] text-[var(--accent-2-800)]",
+          },
+          {
+            label: t("medicines.statStreak"),
+            value: streak?.current_streak ?? 0,
+            tone: "bg-card shadow-card text-foreground",
+          },
+        ].map((tile) => (
+          <div key={tile.label} className={cn("rounded-[24px] p-4 text-center", tile.tone)}>
+            <p className="text-[26px] leading-none">{tile.value}</p>
+            <p className="mt-1.5 text-[11.5px] font-semibold">{tile.label}</p>
+          </div>
+        ))}
       </div>
 
       <div className="space-y-[18px] px-[22px]">
@@ -130,8 +191,8 @@ function MedicinesPage() {
             <Pill className="text-primary mx-auto size-8" aria-hidden />
             <h3 className="mt-3 text-xl">{t("medicines.emptyTitle")}</h3>
             <p className="text-muted-foreground mt-2 text-sm">{t("medicines.emptyBody")}</p>
-            <Button asChild className="mt-4 h-12 w-full">
-              <Link to="/reminders/new" search={{}}>{t("medicines.emptyCta")}</Link>
+            <Button type="button" className="mt-4 h-12 w-full" onClick={openAdd}>
+              {t("medicines.emptyCta")}
             </Button>
           </section>
         ) : null}
