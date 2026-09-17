@@ -1,9 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Pill } from "lucide-react";
+import { Check, Pencil, Pill, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { MedicineForm } from "@/components/MedicineForm";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -22,7 +23,9 @@ import {
   buildTodayDoses,
   formatSlot,
   groupDosesBySlot,
+  groupMedicines,
   type Dose,
+  type MedicineGroup,
 } from "@/lib/medicines";
 import { cn } from "@/lib/utils";
 
