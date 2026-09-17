@@ -346,6 +346,51 @@ function MedicinesPage() {
           </section>
         ) : null}
 
+        {finishedRecords.length > 0 ? (
+          <section className="space-y-3 rounded-[28px] bg-[var(--accent-2-100)] p-5">
+            <p className="text-[11px] font-semibold tracking-[0.1em] text-[var(--accent-2-800)] uppercase">
+              {t("medicines.endedTitle")}
+            </p>
+            {finishedRecords.map((medicine) => (
+              <div key={medicine.id} className="space-y-2.5">
+                <div className="min-w-0">
+                  <p className="text-[15px] font-semibold text-[var(--accent-2-900)]">
+                    {medicine.name}
+                  </p>
+                  <p className="mt-0.5 text-[13px] text-[var(--accent-2-800)]">
+                    {t("medicines.endedOn", {
+                      date: new Date(`${medicine.end_date}T00:00:00`).toLocaleDateString(locale, {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      }),
+                    })}
+                  </p>
+                </div>
+                <div className="flex gap-2.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 flex-1 rounded-full"
+                    onClick={() => void continueCourse(medicine)}
+                  >
+                    {t("medicines.continueCourse")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="h-11 flex-1 rounded-full"
+                    onClick={() => setConfirmDelete(medicine)}
+                  >
+                    {t("medicines.deleteAction")}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </section>
+        ) : null}
+
+
 
         {total === 0 ? (
           <section className="bg-card shadow-card rounded-[28px] p-6 text-center">
