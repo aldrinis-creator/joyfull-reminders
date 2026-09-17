@@ -182,3 +182,29 @@ export function formatSlot(slot: string, locale: string): string {
   d.setHours(Number(h), Number(m), 0, 0);
   return d.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
 }
+
+/* ---------------------------------------------------------------- *
+ * Medicine records (the `medicines` table)                          *
+ * ---------------------------------------------------------------- */
+
+export type Medicine = Database["public"]["Tables"]["medicines"]["Row"];
+export type MedicineFrequency = Database["public"]["Enums"]["medicine_frequency"];
+
+/** Runs low, so the refill banner should call it out. */
+export function isLowStock(medicine: Medicine): boolean {
+  return (
+    medicine.remaining_qty !== null &&
+    medicine.remaining_qty <= (medicine.low_stock_threshold ?? 2)
+  );
+}
+
+/** Past its end date — no more doses are due. */
+export function isFinished(medicine: Medicine, today: Date = new Date()): boolean {
+  if (!medicine.end_date) return false;
+  return medicine.end_date < localDayKey(today);
+}
+
+/** "Mon · Wed · Fri", "Every 3 days" or "Every day" — caller supplies the words. */
+export function weekdayList(days: number[]): number[] {
+  return [...days].sort((a, b) => a - b);
+}
