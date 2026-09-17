@@ -6,6 +6,16 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { MedicineForm, type MedicineEdit } from "@/components/MedicineForm";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
