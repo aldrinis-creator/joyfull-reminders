@@ -125,6 +125,46 @@ export function groupDosesBySlot(doses: Dose[]): { slot: string; part: DosePart;
   return blocks;
 }
 
+/** One medicine, with every daily reminder that makes up its schedule. */
+export type MedicineGroup = {
+  key: string;
+  name: string;
+  amount: string | null;
+  instruction: string | null;
+  /** "08:00", "19:00" … sorted. */
+  times: string[];
+  reminders: Reminder[];
+};
+
+/** Collapses the daily health reminders into one entry per medicine name. */
+export function groupMedicines(reminders: Reminder[]): MedicineGroup[] {
+  const groups = new Map<string, MedicineGroup>();
+  for (const reminder of reminders.filter(isDose)) {
+    const name = doseName(reminder);
+    const key = name.toLowerCase();
+    const slot = slotKey(new Date(reminder.due_at));
+    const existing = groups.get(key);
+    if (existing) {
+      existing.reminders.push(reminder);
+      if (!existing.times.includes(slot)) existing.times.push(slot);
+      existing.instruction ??= reminder.description?.trim() || null;
+      existing.amount ??= parseDoseAmount(reminder);
+    } else {
+      groups.set(key, {
+        key,
+        name,
+        amount: parseDoseAmount(reminder),
+        instruction: reminder.description?.trim() || null,
+        times: [slot],
+        reminders: [reminder],
+      });
+    }
+  }
+  const list = [...groups.values()];
+  for (const group of list) group.times.sort();
+  return list.sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function formatSlot(slot: string, locale: string): string {
   const [h = "0", m = "0"] = slot.split(":");
   const d = new Date();
