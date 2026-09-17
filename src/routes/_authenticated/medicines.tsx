@@ -117,18 +117,59 @@ function MedicinesPage() {
     onError: () => toast.error(t("medicines.takenFailed")),
   });
 
-  const medicines = useMemo(() => groupMedicines(reminders ?? []), [reminders]);
+  const { data: records } = useMedicines();
+  const legacy = useMemo(
+    () => groupMedicines((reminders ?? []).filter((r) => !r.medicine_id)),
+    [reminders],
+  );
+  const lowStock = useMemo(
+    () => (records ?? []).filter((m) => isLowStock(m) && !isFinished(m)),
+    [records],
+  );
   const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<MedicineGroup | null>(null);
+  const [editing, setEditing] = useState<MedicineEdit | null>(null);
+
+  const remindersByMedicine = useMemo(() => {
+    const map = new Map<string, typeof reminders extends undefined ? never : NonNullable<typeof reminders>>();
+    for (const reminder of reminders ?? []) {
+      if (!reminder.medicine_id) continue;
+      const list = map.get(reminder.medicine_id) ?? [];
+      list.push(reminder);
+      map.set(reminder.medicine_id, list);
+    }
+    return map;
+  }, [reminders]);
 
   function openAdd() {
     setEditing(null);
     setFormOpen(true);
   }
 
-  function openEdit(group: MedicineGroup) {
-    setEditing(group);
+  function openEditRecord(medicine: Medicine) {
+    setEditing({
+      kind: "record",
+      medicine,
+      reminders: remindersByMedicine.get(medicine.id) ?? [],
+    });
     setFormOpen(true);
+  }
+
+  function openEditLegacy(group: MedicineGroup) {
+    setEditing({ kind: "legacy", group });
+    setFormOpen(true);
+  }
+
+  async function removeRecord(medicine: Medicine) {
+    if (!window.confirm(t("medicines.removeConfirm", { name: medicine.name }))) return;
+    const { error } = await supabase.from("medicines").delete().eq("id", medicine.id);
+    if (error) {
+      toast.error(t("medicines.errRemove"));
+      return;
+    }
+    toast.success(t("medicines.removed"));
+    void queryClient.invalidateQueries({ queryKey: ["medicines"] });
+    void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    void queryClient.invalidateQueries({ queryKey: ["dose_occurrences"] });
   }
 
   async function removeMedicine(group: MedicineGroup) {
@@ -145,6 +186,42 @@ function MedicinesPage() {
     void queryClient.invalidateQueries({ queryKey: ["reminders"] });
     void queryClient.invalidateQueries({ queryKey: ["dose_occurrences"] });
   }
+
+  async function refill(medicine: Medicine) {
+    const answer = window.prompt(
+      t("medicines.refillPrompt", { name: medicine.name }),
+      medicine.total_qty === null ? "" : String(medicine.total_qty),
+    );
+    if (answer === null) return;
+    const qty = Number.parseInt(answer, 10);
+    if (!Number.isFinite(qty) || qty < 0) return;
+    const { error } = await supabase
+      .from("medicines")
+      .update({ remaining_qty: qty, total_qty: Math.max(qty, medicine.total_qty ?? qty) })
+      .eq("id", medicine.id);
+    if (error) {
+      toast.error(t("medicines.errSave"));
+      return;
+    }
+    toast.success(t("medicines.refilled"));
+    void queryClient.invalidateQueries({ queryKey: ["medicines"] });
+  }
+
+  function scheduleLine(medicine: Medicine): string {
+    const times = [...medicine.times].sort().map((time) => formatSlot(time, locale)).join(" · ");
+    const dayKeys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+    const when =
+      medicine.frequency === "weekly"
+        ? [...(medicine.days_of_week ?? [])]
+            .sort((a, b) => a - b)
+            .map((d) => t(`medicines.day_${dayKeys[d] ?? "sun"}`))
+            .join(" · ")
+        : medicine.frequency === "interval"
+          ? t("medicines.everyDays", { count: medicine.interval_days })
+          : t("medicines.everyDay");
+    return times ? `${when} · ${times}` : when;
+  }
+
 
   return (
     <AppShell title={t("medicines.title")} subtitle={undefined} hideHeader>
