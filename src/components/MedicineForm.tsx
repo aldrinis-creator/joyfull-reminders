@@ -1,9 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Drawer,
   DrawerContent,
@@ -13,51 +21,103 @@ import {
 } from "@/components/ui/drawer";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/hooks/useLanguage";
-import { slotKey, type MedicineGroup } from "@/lib/medicines";
+import { slotKey, type Medicine, type MedicineFrequency, type MedicineGroup } from "@/lib/medicines";
+import type { Reminder } from "@/lib/ereminder";
 import { cn } from "@/lib/utils";
 
-type SlotName = "morning" | "afternoon" | "evening" | "night";
+/** What the screen hands the form: a real record, or an older reminder-only medicine. */
+export type MedicineEdit =
+  | { kind: "record"; medicine: Medicine; reminders: Reminder[] }
+  | { kind: "legacy"; group: MedicineGroup };
 
-const SLOTS: { name: SlotName; defaultTime: string }[] = [
-  { name: "morning", defaultTime: "08:00" },
-  { name: "afternoon", defaultTime: "13:00" },
-  { name: "evening", defaultTime: "19:00" },
-  { name: "night", defaultTime: "21:30" },
-];
-
-function slotOf(time: string): SlotName {
-  const hour = Number(time.split(":")[0] ?? 0);
-  if (hour < 12) return "morning";
-  if (hour < 17) return "afternoon";
-  if (hour < 21) return "evening";
-  return "night";
-}
+const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 function todayKey(): string {
   const d = new Date();
   return `${d.getFullYear()}-${`${d.getMonth() + 1}`.padStart(2, "0")}-${`${d.getDate()}`.padStart(2, "0")}`;
 }
 
-/** Start date + "HH:MM" → a Date, rolled to tomorrow when it is already past. */
-function firstDueAt(startDate: string, time: string): Date {
-  const [y = 1970, m = 1, d = 1] = startDate.split("-").map(Number);
+function atTime(dateKey: string, time: string): Date {
+  const [y = 1970, m = 1, d = 1] = dateKey.split("-").map(Number);
   const [h = 0, min = 0] = time.split(":").map(Number);
-  const at = new Date(y, m - 1, d, h, min, 0, 0);
-  if (at.getTime() < Date.now()) at.setDate(at.getDate() + 1);
+  return new Date(y, m - 1, d, h, min, 0, 0);
+}
+
+/** First moment this dose is due: from the start date, rolled forward if past. */
+function firstDueAt(startDate: string, time: string, weekday: number | null): Date {
+  const at = atTime(startDate, time);
+  if (weekday === null) {
+    while (at.getTime() < Date.now()) at.setDate(at.getDate() + 1);
+    return at;
+  }
+  while (at.getDay() !== weekday || at.getTime() < Date.now()) at.setDate(at.getDate() + 1);
   return at;
 }
 
-type State = Record<SlotName, { on: boolean; time: string }>;
+type Draft = {
+  name: string;
+  dosage: string;
+  instructions: string;
+  frequency: MedicineFrequency;
+  days: number[];
+  intervalDays: number;
+  times: string[];
+  totalQty: string;
+  remainingQty: string;
+  threshold: string;
+  startDate: string;
+  endDate: string;
+};
 
-function initialState(existing?: MedicineGroup | null): State {
-  const state = Object.fromEntries(
-    SLOTS.map((s) => [s.name, { on: false, time: s.defaultTime }]),
-  ) as State;
-  for (const time of existing?.times ?? []) {
-    const slot = slotOf(time);
-    state[slot] = { on: true, time };
+function draftFrom(existing: MedicineEdit | null | undefined): Draft {
+  if (existing?.kind === "record") {
+    const m = existing.medicine;
+    return {
+      name: m.name,
+      dosage: m.dosage ?? "",
+      instructions: m.instructions ?? "",
+      frequency: m.frequency,
+      days: m.days_of_week ?? [],
+      intervalDays: m.interval_days ?? 1,
+      times: m.times.length ? [...m.times].sort() : ["08:00"],
+      totalQty: m.total_qty === null ? "" : String(m.total_qty),
+      remainingQty: m.remaining_qty === null ? "" : String(m.remaining_qty),
+      threshold: String(m.low_stock_threshold ?? 2),
+      startDate: m.start_date,
+      endDate: m.end_date ?? "",
+    };
   }
-  return state;
+  if (existing?.kind === "legacy") {
+    const g = existing.group;
+    return {
+      name: g.name,
+      dosage: g.amount ?? "",
+      instructions: g.instruction ?? "",
+      frequency: "daily",
+      days: [],
+      intervalDays: 1,
+      times: g.times.length ? [...g.times] : ["08:00"],
+      totalQty: "",
+      remainingQty: "",
+      threshold: "2",
+      startDate: todayKey(),
+      endDate: "",
+    };
+  }
+  return {
+    name: "",
+    dosage: "",
+    instructions: "",
+    frequency: "daily",
+    days: [],
+    intervalDays: 1,
+    times: ["08:00"],
+    totalQty: "",
+    remainingQty: "",
+    threshold: "2",
+    startDate: todayKey(),
+    endDate: "",
+  };
 }
 
 export function MedicineForm({
@@ -67,44 +127,38 @@ export function MedicineForm({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  existing?: MedicineGroup | null;
+  existing?: MedicineEdit | null;
 }) {
   const t = useT();
   const queryClient = useQueryClient();
-  const [name, setName] = useState("");
-  const [strength, setStrength] = useState("");
-  const [instruction, setInstruction] = useState("");
-  const [startDate, setStartDate] = useState(todayKey());
-  const [slots, setSlots] = useState<State>(() => initialState(existing));
+  const [draft, setDraft] = useState<Draft>(() => draftFrom(existing));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setName(existing?.name ?? "");
-    setStrength(existing?.amount ?? "");
-    setInstruction(existing?.instruction ?? "");
-    setStartDate(todayKey());
-    setSlots(initialState(existing));
+    setDraft(draftFrom(existing));
   }, [open, existing]);
 
-  const chosen = useMemo(
-    () =>
-      SLOTS.filter((s) => slots[s.name].on)
-        .map((s) => slots[s.name].time)
-        .sort(),
-    [slots],
-  );
+  function patch(next: Partial<Draft>) {
+    setDraft((prev) => ({ ...prev, ...next }));
+  }
 
   async function save() {
-    const trimmedName = name.trim();
-    if (!trimmedName) {
+    const name = draft.name.trim();
+    if (!name) {
       toast.error(t("medicines.errName"));
       return;
     }
-    if (chosen.length === 0) {
+    const times = [...new Set(draft.times.filter(Boolean))].sort();
+    if (times.length === 0) {
       toast.error(t("medicines.errTimes"));
       return;
     }
+    if (draft.frequency === "weekly" && draft.days.length === 0) {
+      toast.error(t("medicines.errDays"));
+      return;
+    }
+
     setSaving(true);
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
@@ -114,49 +168,128 @@ export function MedicineForm({
       return;
     }
 
-    const title = strength.trim() ? `${trimmedName} ${strength.trim()}` : trimmedName;
-    const description = instruction.trim() || null;
+    const toInt = (value: string) => {
+      const n = Number.parseInt(value, 10);
+      return Number.isFinite(n) ? n : null;
+    };
 
-    // Keep a reminder per dose time: reuse the rows that already match a time,
-    // add the new times, drop the ones the user switched off.
-    const current = existing?.reminders ?? [];
-    const byTime = new Map(current.map((r) => [slotKey(new Date(r.due_at)), r]));
-    const keep = new Set(chosen);
+    const payload = {
+      user_id: userId,
+      name,
+      dosage: draft.dosage.trim() || null,
+      instructions: draft.instructions.trim() || null,
+      frequency: draft.frequency,
+      days_of_week: draft.frequency === "weekly" ? [...draft.days].sort() : [],
+      interval_days: draft.frequency === "interval" ? Math.max(1, draft.intervalDays) : 1,
+      times,
+      total_qty: toInt(draft.totalQty),
+      remaining_qty: toInt(draft.remainingQty) ?? toInt(draft.totalQty),
+      low_stock_threshold: toInt(draft.threshold) ?? 2,
+      start_date: draft.startDate || todayKey(),
+      end_date: draft.endDate || null,
+      active: true,
+    };
 
-    const updates = chosen
-      .filter((time) => byTime.has(time))
-      .map((time) => {
-        const reminder = byTime.get(time)!;
-        return supabase
-          .from("reminders")
-          .update({ title, description })
-          .eq("id", reminder.id);
-      });
+    let medicineId = existing?.kind === "record" ? existing.medicine.id : null;
+    if (medicineId) {
+      const { error } = await supabase.from("medicines").update(payload).eq("id", medicineId);
+      if (error) {
+        setSaving(false);
+        toast.error(t("medicines.errSave"));
+        return;
+      }
+    } else {
+      const { data, error } = await supabase
+        .from("medicines")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error || !data) {
+        setSaving(false);
+        toast.error(t("medicines.errSave"));
+        return;
+      }
+      medicineId = data.id;
+    }
 
-    const inserts = chosen
-      .filter((time) => !byTime.has(time))
-      .map((time) => ({
+    // One reminder per dose moment, so alarms, streaks and the late-dose
+    // WhatsApp alert keep working exactly as before.
+    const title = payload.dosage ? `${name} ${payload.dosage}` : name;
+    const description = payload.instructions;
+    const wanted: { time: string; weekday: number | null }[] =
+      draft.frequency === "weekly"
+        ? draft.days.flatMap((day) => times.map((time) => ({ time, weekday: day })))
+        : times.map((time) => ({ time, weekday: null }));
+
+    const currentReminders =
+      existing?.kind === "record"
+        ? existing.reminders
+        : existing?.kind === "legacy"
+          ? existing.group.reminders
+          : [];
+    const keyOf = (time: string, weekday: number | null) => `${weekday ?? "*"}|${time}`;
+    const byKey = new Map(
+      currentReminders.map((r) => {
+        const due = new Date(r.due_at);
+        return [keyOf(slotKey(due), draft.frequency === "weekly" ? due.getDay() : null), r] as const;
+      }),
+    );
+
+    const shared = {
+      title,
+      description,
+      medicine_id: medicineId,
+      category: "health" as const,
+      recurrence:
+        draft.frequency === "daily"
+          ? ("daily" as const)
+          : draft.frequency === "weekly"
+            ? ("weekly" as const)
+            : ("custom" as const),
+      recurrence_interval_days:
+        draft.frequency === "interval" ? Math.max(1, draft.intervalDays) : null,
+    };
+
+    const wantedKeys = new Set(wanted.map((w) => keyOf(w.time, w.weekday)));
+    const ops: Promise<{ error: unknown }>[] = [];
+
+    for (const { time, weekday } of wanted) {
+      const match = byKey.get(keyOf(time, weekday));
+      if (match) {
+        ops.push(
+          supabase.from("reminders").update(shared).eq("id", match.id) as unknown as Promise<{
+            error: unknown;
+          }>,
+        );
+      }
+    }
+
+    const inserts = wanted
+      .filter(({ time, weekday }) => !byKey.has(keyOf(time, weekday)))
+      .map(({ time, weekday }) => ({
+        ...shared,
         user_id: userId,
-        title,
-        description,
-        category: "health" as const,
-        recurrence: "daily" as const,
-        due_at: firstDueAt(startDate, time).toISOString(),
         priority: "normal" as const,
+        due_at: firstDueAt(payload.start_date, time, weekday).toISOString(),
       }));
+    if (inserts.length) {
+      ops.push(
+        supabase.from("reminders").insert(inserts) as unknown as Promise<{ error: unknown }>,
+      );
+    }
 
-    const removedIds = current
-      .filter((r) => !keep.has(slotKey(new Date(r.due_at))))
-      .map((r) => r.id);
+    const removed = [...byKey.entries()]
+      .filter(([key]) => !wantedKeys.has(key))
+      .map(([, reminder]) => reminder.id);
+    if (removed.length) {
+      ops.push(
+        supabase.from("reminders").delete().in("id", removed) as unknown as Promise<{
+          error: unknown;
+        }>,
+      );
+    }
 
-    const results = await Promise.all([
-      ...updates,
-      inserts.length ? supabase.from("reminders").insert(inserts) : Promise.resolve({ error: null }),
-      removedIds.length
-        ? supabase.from("reminders").delete().in("id", removedIds)
-        : Promise.resolve({ error: null }),
-    ]);
-
+    const results = await Promise.all(ops);
     setSaving(false);
     if (results.some((r) => r.error)) {
       toast.error(t("medicines.errSave"));
@@ -164,6 +297,7 @@ export function MedicineForm({
     }
     toast.success(existing ? t("medicines.updated") : t("medicines.added"));
     void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    void queryClient.invalidateQueries({ queryKey: ["medicines"] });
     void queryClient.invalidateQueries({ queryKey: ["dose_occurrences"] });
     onOpenChange(false);
   }
@@ -181,8 +315,8 @@ export function MedicineForm({
             <Label htmlFor="medicine-name">{t("medicines.fieldName")}</Label>
             <Input
               id="medicine-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={draft.name}
+              onChange={(e) => patch({ name: e.target.value })}
               placeholder={t("medicines.fieldNamePlaceholder")}
               className="h-12"
             />
@@ -192,19 +326,83 @@ export function MedicineForm({
             <Label htmlFor="medicine-strength">{t("medicines.fieldStrength")}</Label>
             <Input
               id="medicine-strength"
-              value={strength}
-              onChange={(e) => setStrength(e.target.value)}
+              value={draft.dosage}
+              onChange={(e) => patch({ dosage: e.target.value })}
               placeholder={t("medicines.fieldStrengthPlaceholder")}
               className="h-12"
             />
           </div>
 
           <div className="space-y-1.5">
+            <Label htmlFor="medicine-frequency">{t("medicines.fieldFrequency")}</Label>
+            <Select
+              value={draft.frequency}
+              onValueChange={(value) => patch({ frequency: value as MedicineFrequency })}
+            >
+              <SelectTrigger id="medicine-frequency" className="h-12">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily">{t("medicines.freqDaily")}</SelectItem>
+                <SelectItem value="weekly">{t("medicines.freqWeekly")}</SelectItem>
+                <SelectItem value="interval">{t("medicines.freqInterval")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {draft.frequency === "weekly" ? (
+            <div className="space-y-2">
+              <Label>{t("medicines.fieldDays")}</Label>
+              <div className="flex flex-wrap gap-2">
+                {WEEKDAY_KEYS.map((key, index) => {
+                  const on = draft.days.includes(index);
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() =>
+                        patch({
+                          days: on
+                            ? draft.days.filter((d) => d !== index)
+                            : [...draft.days, index],
+                        })
+                      }
+                      className={cn(
+                        "size-12 rounded-full border-2 text-[13px] font-semibold transition-colors",
+                        on
+                          ? "border-[var(--accent-700)] bg-[var(--accent-100)] text-[var(--accent-900)]"
+                          : "border-border text-muted-foreground",
+                      )}
+                    >
+                      {t(`medicines.day_${key}`)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {draft.frequency === "interval" ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="medicine-interval">{t("medicines.fieldInterval")}</Label>
+              <Input
+                id="medicine-interval"
+                type="number"
+                min={1}
+                value={draft.intervalDays}
+                onChange={(e) => patch({ intervalDays: Math.max(1, Number(e.target.value) || 1) })}
+                className="h-12"
+              />
+            </div>
+          ) : null}
+
+          <div className="space-y-1.5">
             <Label htmlFor="medicine-instruction">{t("medicines.fieldInstruction")}</Label>
             <Input
               id="medicine-instruction"
-              value={instruction}
-              onChange={(e) => setInstruction(e.target.value)}
+              value={draft.instructions}
+              onChange={(e) => patch({ instructions: e.target.value })}
               placeholder={t("medicines.fieldInstructionPlaceholder")}
               className="h-12"
             />
@@ -213,65 +411,109 @@ export function MedicineForm({
           <div className="space-y-2">
             <Label>{t("medicines.fieldTimes")}</Label>
             <div className="space-y-2">
-              {SLOTS.map((slot) => {
-                const state = slots[slot.name];
-                return (
-                  <div key={slot.name} className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      aria-pressed={state.on}
-                      onClick={() =>
-                        setSlots((prev) => ({
-                          ...prev,
-                          [slot.name]: { ...prev[slot.name], on: !prev[slot.name].on },
-                        }))
-                      }
-                      className={cn(
-                        "h-12 flex-1 rounded-2xl border-2 px-4 text-left text-[15px] font-semibold transition-colors",
-                        state.on
-                          ? "border-[var(--accent-700)] bg-[var(--accent-100)] text-[var(--accent-900)]"
-                          : "border-border text-muted-foreground",
-                      )}
-                    >
-                      {t(
-                        `medicines.block${slot.name.charAt(0).toUpperCase()}${slot.name.slice(1)}`,
-                      )}
-                    </button>
-                    <Input
-                      type="time"
-                      value={state.time}
-                      disabled={!state.on}
-                      aria-label={t("medicines.timeFor", {
-                        part: t(
-                          `medicines.block${slot.name.charAt(0).toUpperCase()}${slot.name.slice(1)}`,
+              {draft.times.map((time, index) => (
+                <div key={`${time}-${index}`} className="flex items-center gap-2">
+                  <Input
+                    type="time"
+                    value={time}
+                    aria-label={t("medicines.timeNumber", { number: index + 1 })}
+                    onChange={(e) =>
+                      patch({
+                        times: draft.times.map((value, i) =>
+                          i === index ? e.target.value || value : value,
                         ),
-                      })}
-                      onChange={(e) =>
-                        setSlots((prev) => ({
-                          ...prev,
-                          [slot.name]: { ...prev[slot.name], time: e.target.value || slot.defaultTime },
-                        }))
-                      }
-                      className="h-12 w-[130px]"
-                    />
-                  </div>
-                );
-              })}
+                      })
+                    }
+                    className="h-12 flex-1"
+                  />
+                  {draft.times.length > 1 ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="size-12 shrink-0 rounded-full"
+                      aria-label={t("medicines.removeTime")}
+                      onClick={() => patch({ times: draft.times.filter((_, i) => i !== index) })}
+                    >
+                      <X className="size-4" aria-hidden />
+                    </Button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 w-full"
+              onClick={() => patch({ times: [...draft.times, "20:00"] })}
+            >
+              <Plus className="mr-1 size-4" aria-hidden />
+              {t("medicines.addTime")}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="medicine-total">{t("medicines.fieldTotalQty")}</Label>
+              <Input
+                id="medicine-total"
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={draft.totalQty}
+                onChange={(e) => patch({ totalQty: e.target.value })}
+                className="h-12"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="medicine-remaining">{t("medicines.fieldRemainingQty")}</Label>
+              <Input
+                id="medicine-remaining"
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={draft.remainingQty}
+                onChange={(e) => patch({ remainingQty: e.target.value })}
+                className="h-12"
+              />
             </div>
           </div>
 
-          {existing ? null : (
+          <div className="space-y-1.5">
+            <Label htmlFor="medicine-threshold">{t("medicines.fieldThreshold")}</Label>
+            <Input
+              id="medicine-threshold"
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={draft.threshold}
+              onChange={(e) => patch({ threshold: e.target.value })}
+              className="h-12"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="medicine-start">{t("medicines.fieldStart")}</Label>
               <Input
                 id="medicine-start"
                 type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value || todayKey())}
+                value={draft.startDate}
+                onChange={(e) => patch({ startDate: e.target.value || todayKey() })}
                 className="h-12"
               />
             </div>
-          )}
+            <div className="space-y-1.5">
+              <Label htmlFor="medicine-end">{t("medicines.fieldEnd")}</Label>
+              <Input
+                id="medicine-end"
+                type="date"
+                value={draft.endDate}
+                onChange={(e) => patch({ endDate: e.target.value })}
+                className="h-12"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-3 border-t px-4 py-3">
@@ -283,7 +525,12 @@ export function MedicineForm({
           >
             {t("medicines.cancel")}
           </Button>
-          <Button type="button" className="h-12 flex-1" disabled={saving} onClick={() => void save()}>
+          <Button
+            type="button"
+            className="h-12 flex-1"
+            disabled={saving}
+            onClick={() => void save()}
+          >
             {t("medicines.save")}
           </Button>
         </div>
