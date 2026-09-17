@@ -73,7 +73,7 @@ export const transcribeSpeech = createServerFn({ method: "POST" })
       const form = new FormData();
       form.append(
         "file",
-        new Blob([bytes], { type: data.mimeType }),
+        new Blob([bytes], { type: cleanMime(data.mimeType) }),
         `speech.${extensionFor(data.mimeType)}`,
       );
       form.append("model", "saarika:v2.5");
@@ -116,8 +116,8 @@ export const speakText = createServerFn({ method: "POST" })
         body: JSON.stringify({
           text: data.text.slice(0, 1500),
           target_language_code: langCode(data.language),
-          speaker: "anushka",
-          model: "bulbul:v2",
+          speaker: "priya",
+          model: "bulbul:v3",
           enable_preprocessing: true,
         }),
       });
