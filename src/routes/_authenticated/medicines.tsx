@@ -541,7 +541,7 @@ function MedicinesPage() {
                       size="icon"
                       className="text-destructive size-11 shrink-0 rounded-full"
                       aria-label={t("medicines.remove", { name: medicine.name })}
-                      onClick={() => void removeRecord(medicine)}
+                      onClick={() => setConfirmDelete(medicine)}
                     >
                       <Trash2 className="size-4" aria-hidden />
                     </Button>
@@ -595,6 +595,34 @@ function MedicinesPage() {
       </div>
 
       <MedicineForm open={formOpen} onOpenChange={setFormOpen} existing={editing} />
+
+      <AlertDialog
+        open={confirmDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("medicines.deleteTitle", { name: confirmDelete?.name ?? "" })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t("medicines.deleteBody")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("medicines.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const target = confirmDelete;
+                setConfirmDelete(null);
+                if (target) void removeRecord(target);
+              }}
+            >
+              {t("medicines.deleteAction")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
