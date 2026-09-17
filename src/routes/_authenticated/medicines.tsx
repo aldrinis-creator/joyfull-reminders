@@ -76,6 +76,22 @@ function useTodayDoseOccurrences() {
   });
 }
 
+/** The medicine records themselves: schedule, stock and course dates. */
+function useMedicines() {
+  return useQuery({
+    queryKey: ["medicines"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medicines")
+        .select("*")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+
 function MedicinesPage() {
   const t = useT();
   const { language } = useLanguage();
