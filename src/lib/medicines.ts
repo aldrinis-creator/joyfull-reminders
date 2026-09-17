@@ -1,5 +1,7 @@
+import type { Database } from "@/integrations/supabase/types";
 import type { Reminder } from "@/lib/ereminder";
 import { localDayKey } from "@/lib/ereminder";
+
 
 /**
  * Medicines view helpers.
