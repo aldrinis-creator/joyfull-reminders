@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Pencil, Pill, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { MedicineForm } from "@/components/MedicineForm";
+import { MedicineForm, type MedicineEdit } from "@/components/MedicineForm";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -24,7 +24,10 @@ import {
   formatSlot,
   groupDosesBySlot,
   groupMedicines,
+  isFinished,
+  isLowStock,
   type Dose,
+  type Medicine,
   type MedicineGroup,
 } from "@/lib/medicines";
 import { cn } from "@/lib/utils";
