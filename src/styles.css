@@ -358,6 +358,25 @@
   opacity: 0.5;
 }
 
+/* Expand/collapse wrapper for multi-item day rows on the Today timeline.
+   Uses a 0fr -> 1fr grid-row transition for a smooth height animation. */
+.mm-expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 240ms ease;
+}
+.mm-expand[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+.mm-expand > .mm-expand-inner {
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-expand {
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   @keyframes mm-pop {
     0% { transform: scale(0.7); opacity: 0; }

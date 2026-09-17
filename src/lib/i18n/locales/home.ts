@@ -32,6 +32,8 @@ const home: Namespace = {
     // Reminder card
     forMember: "for {name}",
     markDone: "Mark done",
+    rowLabelExpanded: "{title}, expanded — tap to collapse",
+    rowLabelCollapsed: "{title}, collapsed — tap to expand",
     sendGreeting: "Send greeting",
     recipients: "For {count} people",
     call: "Call",
