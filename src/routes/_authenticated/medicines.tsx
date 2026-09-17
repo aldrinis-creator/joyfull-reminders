@@ -282,6 +282,33 @@ function MedicinesPage() {
       </div>
 
       <div className="space-y-[18px] px-[22px]">
+        {lowStock.length > 0 ? (
+          <section className="space-y-3 rounded-[28px] bg-[#FDF0DC] p-5">
+            <p className="text-[11px] font-semibold tracking-[0.1em] text-[var(--accent-800)] uppercase">
+              {t("medicines.lowTitle")}
+            </p>
+            {lowStock.map((medicine) => (
+              <div key={medicine.id} className="flex items-center gap-3">
+                <p className="min-w-0 flex-1 text-[14.5px] font-semibold text-[var(--accent-900)]">
+                  {t("medicines.lowBody", {
+                    name: medicine.name,
+                    count: medicine.remaining_qty ?? 0,
+                  })}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 shrink-0 rounded-full px-5"
+                  onClick={() => void refill(medicine)}
+                >
+                  {t("medicines.refill")}
+                </Button>
+              </div>
+            ))}
+          </section>
+        ) : null}
+
+
         {total === 0 ? (
           <section className="bg-card shadow-card rounded-[28px] p-6 text-center">
             <Pill className="text-primary mx-auto size-8" aria-hidden />
