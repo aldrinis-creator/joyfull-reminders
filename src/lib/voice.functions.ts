@@ -44,14 +44,21 @@ function decodeBase64(base64: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
+/** "audio/webm;codecs=opus" → "audio/webm" — the provider rejects parameters. */
+function cleanMime(mimeType: string): string {
+  const base = (mimeType.split(";")[0] ?? "").trim().toLowerCase();
+  return base.startsWith("audio/") ? base : "audio/webm";
+}
+
 function extensionFor(mimeType: string): string {
-  const base = mimeType.split(";")[0]?.toLowerCase() ?? "";
+  const base = cleanMime(mimeType);
   if (base.includes("wav")) return "wav";
   if (base.includes("mp4") || base.includes("m4a")) return "mp4";
   if (base.includes("mpeg") || base.includes("mp3")) return "mp3";
   if (base.includes("ogg")) return "ogg";
   return "webm";
 }
+
 
 /** Speech → text via Sarvam Saarika. */
 export const transcribeSpeech = createServerFn({ method: "POST" })
