@@ -270,7 +270,7 @@ export function AskAssistant() {
                 ? "home.askVoiceNotConfigured"
                 : result.reason === "empty"
                   ? "home.askNoSpeech"
-                  : "home.askFailed",
+                  : "home.askHearFailed",
             ),
           },
         ]);

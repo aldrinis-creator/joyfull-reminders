@@ -83,6 +83,8 @@ const home: Namespace = {
     askExample3: "How much do I owe this month?",
     askFailed: "Sorry, that didn't work. Please try again in a moment.",
     askNotConfigured: "The assistant is not set up yet.",
+    askHearFailed: "I could not hear that clearly. Please try speaking again.",
+    askSpeakFailed: "The spoken reply is unavailable right now — here is the answer in writing.",
 
 
     // Alarm overlay
@@ -203,6 +205,8 @@ const home: Namespace = {
     askExample3: "इस महीने मुझे कितना भुगतान करना है?",
     askFailed: "क्षमा करें, यह काम नहीं कर सका। कृपया थोड़ी देर बाद फिर कोशिश करें।",
     askNotConfigured: "सहायक अभी सेट नहीं किया गया है।",
+    askHearFailed: "मैं ठीक से सुन नहीं पाया। कृपया फिर से बोलिए।",
+    askSpeakFailed: "अभी बोलकर जवाब नहीं दे पा रहा — जवाब लिखा हुआ यहाँ है।",
 
 
     alarmAria: "रिमाइंडर का समय: {title}",
