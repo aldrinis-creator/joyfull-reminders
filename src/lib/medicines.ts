@@ -98,7 +98,16 @@ export function buildTodayDoses(
   const todayKey = localDayKey(today);
   return reminders
     .filter(isDose)
+    // A non-daily medicine (certain weekdays, or every N days) only has a dose
+    // today when its next due day is today — or when it was already taken.
+    .filter(
+      (reminder) =>
+        reminder.recurrence === "daily" ||
+        localDayKey(new Date(reminder.due_at)) === todayKey ||
+        takenReminderIds.has(reminder.id),
+    )
     .map((reminder) => {
+
       const at = doseTimeToday(reminder, today);
       // Completing a dose rolls `due_at` past today, which is itself proof the
       // day is handled even when the occurrence row is still being written.
