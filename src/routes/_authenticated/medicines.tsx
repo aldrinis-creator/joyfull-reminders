@@ -194,8 +194,22 @@ function MedicinesPage() {
   async function removeRecord(medicine: Medicine) {
     const linked = (remindersByMedicine.get(medicine.id) ?? []).map((r) => r.id);
     if (linked.length > 0) {
-      await supabase.from("reminder_alerts").delete().in("reminder_id", linked);
-      await supabase.from("reminder_occurrences").delete().in("reminder_id", linked);
+      const { error: alertErr } = await supabase
+        .from("reminder_alerts")
+        .delete()
+        .in("reminder_id", linked);
+      if (alertErr) {
+        toast.error(t("medicines.errRemove"));
+        return;
+      }
+      const { error: occErr } = await supabase
+        .from("reminder_occurrences")
+        .delete()
+        .in("reminder_id", linked);
+      if (occErr) {
+        toast.error(t("medicines.errRemove"));
+        return;
+      }
       const { error: remErr } = await supabase.from("reminders").delete().in("id", linked);
       if (remErr) {
         toast.error(t("medicines.errRemove"));
