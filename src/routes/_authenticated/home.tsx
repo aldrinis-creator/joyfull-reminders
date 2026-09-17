@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { completeReminder } from "@/lib/complete-reminder";
 import {
   bucketFor,
+  categoryMeta,
+  categoryShortLabel,
   formatDate,
   localDayKey,
   nextOccurrence,
