@@ -277,8 +277,60 @@ function MedicinesPage() {
           </section>
         ) : null}
 
+        {medicines.length > 0 ? (
+          <section className="space-y-3">
+            <div className="flex items-center gap-3">
+              <h3 className="text-[11px] font-semibold tracking-[0.1em] whitespace-nowrap text-[var(--accent-700)] uppercase">
+                {t("medicines.listTitle")}
+              </h3>
+              <span className="h-px flex-1 bg-border" aria-hidden />
+            </div>
+            <ul className="space-y-3">
+              {medicines.map((group) => (
+                <li
+                  key={group.key}
+                  className="bg-card shadow-card flex items-center gap-3 rounded-[28px] p-[18px]"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-foreground truncate text-[16.5px] font-semibold">
+                      {group.amount ? `${group.name} · ${group.amount}` : group.name}
+                    </p>
+                    <p className="text-foreground/55 mt-1 truncate text-[13px]">
+                      {t("medicines.listTimes", {
+                        times: group.times.map((time) => formatSlot(time, locale)).join(" · "),
+                      })}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="size-11 shrink-0 rounded-full"
+                    aria-label={t("medicines.edit", { name: group.name })}
+                    onClick={() => openEdit(group)}
+                  >
+                    <Pencil className="size-4" aria-hidden />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="text-destructive size-11 shrink-0 rounded-full"
+                    aria-label={t("medicines.remove", { name: group.name })}
+                    onClick={() => void removeMedicine(group)}
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         <EscalationPanel />
       </div>
+
+      <MedicineForm open={formOpen} onOpenChange={setFormOpen} existing={editing} />
     </AppShell>
   );
 }
