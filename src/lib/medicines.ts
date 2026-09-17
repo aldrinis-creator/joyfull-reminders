@@ -30,8 +30,10 @@ export type Dose = {
 };
 
 export function isDose(reminder: Reminder): boolean {
-  return reminder.category === "health" && reminder.recurrence === "daily";
+  if (reminder.category !== "health") return false;
+  return reminder.recurrence === "daily" || Boolean(reminder.medicine_id);
 }
+
 
 /** Today at the same clock time as the reminder's due moment. */
 export function doseTimeToday(reminder: Reminder, today: Date = new Date()): Date {
