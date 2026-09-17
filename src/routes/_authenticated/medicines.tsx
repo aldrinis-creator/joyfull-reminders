@@ -190,8 +190,18 @@ function MedicinesPage() {
     setFormOpen(true);
   }
 
+  /** Deletes the medicine record and every reminder (and its alerts/occurrences) linked to it. */
   async function removeRecord(medicine: Medicine) {
-    if (!window.confirm(t("medicines.removeConfirm", { name: medicine.name }))) return;
+    const linked = (remindersByMedicine.get(medicine.id) ?? []).map((r) => r.id);
+    if (linked.length > 0) {
+      await supabase.from("reminder_alerts").delete().in("reminder_id", linked);
+      await supabase.from("reminder_occurrences").delete().in("reminder_id", linked);
+      const { error: remErr } = await supabase.from("reminders").delete().in("id", linked);
+      if (remErr) {
+        toast.error(t("medicines.errRemove"));
+        return;
+      }
+    }
     const { error } = await supabase.from("medicines").delete().eq("id", medicine.id);
     if (error) {
       toast.error(t("medicines.errRemove"));
@@ -202,6 +212,22 @@ function MedicinesPage() {
     void queryClient.invalidateQueries({ queryKey: ["reminders"] });
     void queryClient.invalidateQueries({ queryKey: ["dose_occurrences"] });
   }
+
+  /** Clears the end date, so the course simply carries on. */
+  async function continueCourse(medicine: Medicine) {
+    const { error } = await supabase
+      .from("medicines")
+      .update({ end_date: null })
+      .eq("id", medicine.id);
+    if (error) {
+      toast.error(t("medicines.errContinue"));
+      return;
+    }
+    toast.success(t("medicines.continued", { name: medicine.name }));
+    void queryClient.invalidateQueries({ queryKey: ["medicines"] });
+    void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+  }
+
 
   async function removeMedicine(group: MedicineGroup) {
     if (!window.confirm(t("medicines.removeConfirm", { name: group.name }))) return;
