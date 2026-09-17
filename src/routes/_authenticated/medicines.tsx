@@ -357,7 +357,7 @@ function MedicinesPage() {
           </section>
         ) : null}
 
-        {medicines.length > 0 ? (
+        {(records ?? []).length > 0 || legacy.length > 0 ? (
           <section className="space-y-3">
             <div className="flex items-center gap-3">
               <h3 className="text-[11px] font-semibold tracking-[0.1em] whitespace-nowrap text-[var(--accent-700)] uppercase">
@@ -366,7 +366,64 @@ function MedicinesPage() {
               <span className="h-px flex-1 bg-border" aria-hidden />
             </div>
             <ul className="space-y-3">
-              {medicines.map((group) => (
+              {(records ?? []).map((medicine) => {
+                const low = isLowStock(medicine);
+                const done = isFinished(medicine);
+                return (
+                  <li
+                    key={medicine.id}
+                    className={cn(
+                      "shadow-card flex items-center gap-3 rounded-[28px] p-[18px]",
+                      low && !done ? "bg-[#FDF0DC]" : "bg-card",
+                    )}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-foreground truncate text-[16.5px] font-semibold">
+                        {medicine.dosage ? `${medicine.name} · ${medicine.dosage}` : medicine.name}
+                      </p>
+                      <p className="text-foreground/55 mt-1 truncate text-[13px]">
+                        {scheduleLine(medicine)}
+                      </p>
+                      {done ? (
+                        <p className="mt-1 text-[13px] font-semibold text-[var(--accent-2-800)]">
+                          {t("medicines.finished")}
+                        </p>
+                      ) : medicine.remaining_qty !== null ? (
+                        <p
+                          className={cn(
+                            "mt-1 text-[13px] font-semibold",
+                            low ? "text-[var(--accent-800)]" : "text-foreground/55",
+                          )}
+                        >
+                          {t("medicines.remaining", { count: medicine.remaining_qty })}
+                        </p>
+                      ) : null}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="size-11 shrink-0 rounded-full"
+                      aria-label={t("medicines.edit", { name: medicine.name })}
+                      onClick={() => openEditRecord(medicine)}
+                    >
+                      <Pencil className="size-4" aria-hidden />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="text-destructive size-11 shrink-0 rounded-full"
+                      aria-label={t("medicines.remove", { name: medicine.name })}
+                      onClick={() => void removeRecord(medicine)}
+                    >
+                      <Trash2 className="size-4" aria-hidden />
+                    </Button>
+                  </li>
+                );
+              })}
+
+              {legacy.map((group) => (
                 <li
                   key={group.key}
                   className="bg-card shadow-card flex items-center gap-3 rounded-[28px] p-[18px]"
@@ -387,7 +444,7 @@ function MedicinesPage() {
                     size="icon"
                     className="size-11 shrink-0 rounded-full"
                     aria-label={t("medicines.edit", { name: group.name })}
-                    onClick={() => openEdit(group)}
+                    onClick={() => openEditLegacy(group)}
                   >
                     <Pencil className="size-4" aria-hidden />
                   </Button>
@@ -406,6 +463,7 @@ function MedicinesPage() {
             </ul>
           </section>
         ) : null}
+
 
         <EscalationPanel />
       </div>
