@@ -156,7 +156,12 @@ export function AskAssistant() {
     setVoice("speaking");
     try {
       const result = await speak({ data: { text: text.slice(0, 1500), language } });
-      if (!result.ok || !voiceOnRef.current) return;
+      if (!result.ok) {
+        if (result.reason === "failed" && voiceOnRef.current) toast.message(t("home.askSpeakFailed"));
+        return;
+      }
+      if (!voiceOnRef.current) return;
+
       const audio = new Audio(`data:${result.mimeType};base64,${result.audioBase64}`);
       audioRef.current = audio;
       await new Promise<void>((resolve) => {
