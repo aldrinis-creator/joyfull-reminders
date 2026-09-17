@@ -1,5 +1,7 @@
+import type { Database } from "@/integrations/supabase/types";
 import type { Reminder } from "@/lib/ereminder";
 import { localDayKey } from "@/lib/ereminder";
+
 
 /**
  * Medicines view helpers.
@@ -30,8 +32,10 @@ export type Dose = {
 };
 
 export function isDose(reminder: Reminder): boolean {
-  return reminder.category === "health" && reminder.recurrence === "daily";
+  if (reminder.category !== "health") return false;
+  return reminder.recurrence === "daily" || Boolean(reminder.medicine_id);
 }
+
 
 /** Today at the same clock time as the reminder's due moment. */
 export function doseTimeToday(reminder: Reminder, today: Date = new Date()): Date {
@@ -96,7 +100,16 @@ export function buildTodayDoses(
   const todayKey = localDayKey(today);
   return reminders
     .filter(isDose)
+    // A non-daily medicine (certain weekdays, or every N days) only has a dose
+    // today when its next due day is today — or when it was already taken.
+    .filter(
+      (reminder) =>
+        reminder.recurrence === "daily" ||
+        localDayKey(new Date(reminder.due_at)) === todayKey ||
+        takenReminderIds.has(reminder.id),
+    )
     .map((reminder) => {
+
       const at = doseTimeToday(reminder, today);
       // Completing a dose rolls `due_at` past today, which is itself proof the
       // day is handled even when the occurrence row is still being written.
@@ -170,4 +183,30 @@ export function formatSlot(slot: string, locale: string): string {
   const d = new Date();
   d.setHours(Number(h), Number(m), 0, 0);
   return d.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
+}
+
+/* ---------------------------------------------------------------- *
+ * Medicine records (the `medicines` table)                          *
+ * ---------------------------------------------------------------- */
+
+export type Medicine = Database["public"]["Tables"]["medicines"]["Row"];
+export type MedicineFrequency = Database["public"]["Enums"]["medicine_frequency"];
+
+/** Runs low, so the refill banner should call it out. */
+export function isLowStock(medicine: Medicine): boolean {
+  return (
+    medicine.remaining_qty !== null &&
+    medicine.remaining_qty <= (medicine.low_stock_threshold ?? 2)
+  );
+}
+
+/** Past its end date — no more doses are due. */
+export function isFinished(medicine: Medicine, today: Date = new Date()): boolean {
+  if (!medicine.end_date) return false;
+  return medicine.end_date < localDayKey(today);
+}
+
+/** "Mon · Wed · Fri", "Every 3 days" or "Every day" — caller supplies the words. */
+export function weekdayList(days: number[]): number[] {
+  return [...days].sort((a, b) => a - b);
 }

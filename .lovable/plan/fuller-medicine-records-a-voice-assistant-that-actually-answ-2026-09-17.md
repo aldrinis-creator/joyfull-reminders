@@ -10,10 +10,11 @@ A second, hidden fault: the voice used for speaking answers aloud has been retir
 provider, so even a successful question would have stayed silent.
 
 Fix:
+
 - Send a clean audio label (drop the codec suffix) and name the upload to match.
 - Move the speaking voice to the provider's current one.
 - If either step still fails, show the real reason ("I could not hear that clearly", "voice
-  reply unavailable") instead of one generic apology, and keep the answer on screen as text.
+reply unavailable") instead of one generic apology, and keep the answer on screen as text.
 - Verified end to end: a real spoken clip transcribes correctly once the label is clean.
 
 ## 2. Medicines — a proper medicine record
@@ -28,7 +29,7 @@ Each medicine gets:
 - **Day of the week** picker, shown only for the weekly option
 - Instructions (e.g. take after food)
 - **Total quantity** and **remaining**
-- **Low-stock threshold** (default 5)
+- **Low-stock threshold** (default 2)
 - **Schedule times** — add as many times as needed, not just the four fixed slots
 - **Start date** and optional **end date**
 
@@ -40,8 +41,8 @@ reminders after a confirm.
 
 - Each time a dose is ticked as taken, remaining drops by one.
 - When remaining falls to the threshold or below, the medicine card turns amber with
-  "Only {n} left — time to refill", and a refill banner appears at the top of the Medicines
-  screen listing everything running low.
+"Only {n} left — time to refill", and a refill banner appears at the top of the Medicines
+screen listing everything running low.
 - The banner has a "Refilled" button that asks for the new quantity and resets remaining.
 - A medicine past its end date stops producing doses and moves to a finished state.
 

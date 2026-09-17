@@ -262,6 +262,66 @@ export type Database = {
           },
         ]
       }
+      medicines: {
+        Row: {
+          active: boolean
+          created_at: string
+          days_of_week: number[]
+          dosage: string | null
+          end_date: string | null
+          frequency: Database["public"]["Enums"]["medicine_frequency"]
+          id: string
+          instructions: string | null
+          interval_days: number
+          low_stock_threshold: number
+          name: string
+          remaining_qty: number | null
+          start_date: string
+          times: string[]
+          total_qty: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          days_of_week?: number[]
+          dosage?: string | null
+          end_date?: string | null
+          frequency?: Database["public"]["Enums"]["medicine_frequency"]
+          id?: string
+          instructions?: string | null
+          interval_days?: number
+          low_stock_threshold?: number
+          name: string
+          remaining_qty?: number | null
+          start_date?: string
+          times?: string[]
+          total_qty?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          days_of_week?: number[]
+          dosage?: string | null
+          end_date?: string | null
+          frequency?: Database["public"]["Enums"]["medicine_frequency"]
+          id?: string
+          instructions?: string | null
+          interval_days?: number
+          low_stock_threshold?: number
+          name?: string
+          remaining_qty?: number | null
+          start_date?: string
+          times?: string[]
+          total_qty?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_events: {
         Row: {
           created_at: string
@@ -763,6 +823,7 @@ export type Database = {
           id: string
           institution: string | null
           location: string | null
+          medicine_id: string | null
           occasion_kind: Database["public"]["Enums"]["special_date_kind"] | null
           participants: string | null
           payment_amount: number | null
@@ -791,6 +852,7 @@ export type Database = {
           id?: string
           institution?: string | null
           location?: string | null
+          medicine_id?: string | null
           occasion_kind?:
             | Database["public"]["Enums"]["special_date_kind"]
             | null
@@ -821,6 +883,7 @@ export type Database = {
           id?: string
           institution?: string | null
           location?: string | null
+          medicine_id?: string | null
           occasion_kind?:
             | Database["public"]["Enums"]["special_date_kind"]
             | null
@@ -843,6 +906,13 @@ export type Database = {
             columns: ["family_member_id"]
             isOneToOne: false
             referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_medicine_id_fkey"
+            columns: ["medicine_id"]
+            isOneToOne: false
+            referencedRelation: "medicines"
             referencedColumns: ["id"]
           },
         ]
@@ -1130,6 +1200,7 @@ export type Database = {
         | "skipped"
         | "scheduled"
         | "cancelled"
+      medicine_frequency: "daily" | "weekly" | "interval"
       occurrence_status:
         | "pending"
         | "snoozed"
@@ -1318,6 +1389,7 @@ export const Constants = {
         "scheduled",
         "cancelled",
       ],
+      medicine_frequency: ["daily", "weekly", "interval"],
       occurrence_status: [
         "pending",
         "snoozed",

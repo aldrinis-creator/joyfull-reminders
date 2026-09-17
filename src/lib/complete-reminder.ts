@@ -38,7 +38,23 @@ export async function completeReminder(
     if (error) throw error;
   }
 
+  // A medicine dose eats one from the pack.
+  if (reminder.medicine_id) {
+    const { data: medicine } = await supabase
+      .from("medicines")
+      .select("id, remaining_qty")
+      .eq("id", reminder.medicine_id)
+      .maybeSingle();
+    if (medicine && medicine.remaining_qty !== null) {
+      await supabase
+        .from("medicines")
+        .update({ remaining_qty: Math.max(0, medicine.remaining_qty - 1) })
+        .eq("id", medicine.id);
+    }
+  }
+
   if (userId) {
+
     const today = localDayKey();
     const { data: current } = await supabase
       .from("user_streaks")
