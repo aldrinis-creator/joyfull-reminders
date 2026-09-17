@@ -155,7 +155,7 @@ function MedicinesPage() {
     () => (records ?? []).filter((m) => isLowStock(m) && !isFinished(m)),
     [records],
   );
-  const finishedRecords = useMemo(() => (records ?? []).filter(isFinished), [records]);
+  const finishedRecords = useMemo(() => (records ?? []).filter((m) => isFinished(m)), [records]);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<MedicineEdit | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Medicine | null>(null);
