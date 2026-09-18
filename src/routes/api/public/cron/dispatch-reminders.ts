@@ -15,6 +15,13 @@ import type { Database } from "@/integrations/supabase/types";
  */
 
 const BATCH_LIMIT = 200;
+/** Extra push-only nudges after the first send, for one unhandled occurrence. */
+const MAX_RENOTIFY = 3;
+/** Roughly one cron pass apart; the slack absorbs jitter in the schedule. */
+const RENOTIFY_GAP_MS = 9 * 60_000;
+const HANDLED_STATUSES = ["completed", "acknowledged", "missed"] as const;
+/** Never chase a stale occurrence: nudges only run within an hour of due time. */
+const RENOTIFY_WINDOW_MS = 60 * 60_000;
 
 type ReminderCategory = Database["public"]["Enums"]["reminder_category"];
 
@@ -110,12 +117,12 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
         const nowIso = new Date().toISOString();
-        const summary = { checked: 0, sent: 0, skipped: 0, failed: 0 };
+        const summary = { checked: 0, sent: 0, skipped: 0, failed: 0, nagged: 0 };
 
         const { data: alerts, error } = await supabaseAdmin
           .from("reminder_alerts")
           .select(
-            "id, user_id, reminder_id, offset_minutes, last_notified_occurrence_at, reminders!inner(id, title, category, due_at, recurrence, completed)",
+            "id, user_id, reminder_id, offset_minutes, last_notified_occurrence_at, renotify_count, last_renotified_at, reminders!inner(id, title, category, due_at, recurrence, completed)",
           )
           .limit(BATCH_LIMIT);
 
@@ -123,35 +130,86 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           return Response.json({ error: "query_failed", detail: error.message }, { status: 500 });
         }
 
-        // Only alerts whose window has opened and that haven't fired for this occurrence.
-        const due = (alerts ?? []).filter((row) => {
+        type AlertRow = NonNullable<typeof alerts>[number];
+
+        // "full" = first send for this occurrence (every channel).
+        // "nag"  = the occurrence already went out but nobody handled it, so we
+        //          repeat the push only — WhatsApp and email stay single-send.
+        const candidates: { row: AlertRow; mode: "full" | "nag" }[] = [];
+        for (const row of alerts ?? []) {
           const reminder = row.reminders;
-          if (!reminder) return false;
-          if (reminder.recurrence === "once" && reminder.completed) return false;
+          if (!reminder) continue;
+          if (reminder.recurrence === "once" && reminder.completed) continue;
           const dueAt = new Date(reminder.due_at).getTime();
           const fireAt = dueAt - row.offset_minutes * 60_000;
-          if (Date.now() < fireAt) return false;
-          if (!row.last_notified_occurrence_at) return true;
-          return new Date(row.last_notified_occurrence_at).getTime() !== dueAt;
-        });
+          if (Date.now() < fireAt) continue;
+          const stamped = row.last_notified_occurrence_at
+            ? new Date(row.last_notified_occurrence_at).getTime()
+            : null;
+          if (stamped === null || stamped !== dueAt) {
+            candidates.push({ row, mode: "full" });
+            continue;
+          }
+          if ((row.renotify_count ?? 0) >= MAX_RENOTIFY) continue;
+          if (Date.now() - dueAt > RENOTIFY_WINDOW_MS) continue;
+          const lastNag = row.last_renotified_at ? new Date(row.last_renotified_at).getTime() : 0;
+          if (Date.now() - lastNag < RENOTIFY_GAP_MS) continue;
+          candidates.push({ row, mode: "nag" });
+        }
 
         // One message per reminder occurrence, never one per alert row: a
         // reminder usually has several alerts (e.g. 1 day before + at due time)
         // and once the due moment passes every one of their windows is open.
         // We keep the alert closest to the due time and stamp all the siblings.
-        const perReminder = new Map<string, { chosen: (typeof due)[number] }>();
-        for (const row of due) {
+        const perReminder = new Map<string, { chosen: AlertRow; mode: "full" | "nag" }>();
+        for (const { row, mode } of candidates) {
           const key = `${row.reminder_id}|${row.reminders?.due_at}`;
           const entry = perReminder.get(key);
           if (!entry) {
-            perReminder.set(key, { chosen: row });
+            perReminder.set(key, { chosen: row, mode });
             continue;
           }
-          if (row.offset_minutes < entry.chosen.offset_minutes) entry.chosen = row;
+          // A pending first send always wins over a follow-up nudge.
+          if (mode === "full" && entry.mode === "nag") {
+            entry.chosen = row;
+            entry.mode = "full";
+            continue;
+          }
+          if (mode === entry.mode && row.offset_minutes < entry.chosen.offset_minutes) {
+            entry.chosen = row;
+          }
         }
+
+        // Drop nags for occurrences the person already completed, dismissed, or
+        // that were marked missed — one lookup for the whole batch.
+        const nagKeys = [...perReminder.values()].filter((entry) => entry.mode === "nag");
+        if (nagKeys.length) {
+          const { data: handled } = await supabaseAdmin
+            .from("reminder_occurrences")
+            .select("reminder_id, occurrence_at, status")
+            .in(
+              "reminder_id",
+              nagKeys.map((entry) => entry.chosen.reminder_id),
+            )
+            .in("status", [...HANDLED_STATUSES]);
+          const handledKeys = new Set(
+            (handled ?? []).map(
+              (occ) => `${occ.reminder_id}|${new Date(occ.occurrence_at).getTime()}`,
+            ),
+          );
+          for (const entry of nagKeys) {
+            const dueAt = entry.chosen.reminders?.due_at;
+            if (!dueAt) continue;
+            if (handledKeys.has(`${entry.chosen.reminder_id}|${new Date(dueAt).getTime()}`)) {
+              perReminder.delete(`${entry.chosen.reminder_id}|${dueAt}`);
+            }
+          }
+        }
+
         const batches = [...perReminder.values()];
 
         summary.checked = batches.length;
+
 
         // Cache profile + auth email lookups per owner across the batch.
         const ownerCache = new Map<
@@ -202,7 +260,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           return owner;
         }
 
-        for (const { chosen: row } of batches) {
+        for (const { chosen: row, mode } of batches) {
           const reminder = row.reminders;
           if (!reminder) continue;
           try {
@@ -216,7 +274,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
             const label = offsetLabel(row.offset_minutes);
             let delivered = false;
 
-            if (owner.pushEnabled && owner.phoneVerified && owner.phone) {
+            if (mode === "full" && owner.pushEnabled && owner.phoneVerified && owner.phone) {
               const wa = await sendWhatsapp(owner.phone, reminder.title, when);
               if (wa.ok) delivered = true;
             }
@@ -233,7 +291,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
                 // Delivery visibility: without this, a silent zero-token or
                 // gateway failure is indistinguishable from a successful send.
                 console.log(
-                  `[cron] push reminder=${row.reminder_id} sent=${push.sent} failed=${push.failed}`,
+                  `[cron] push reminder=${row.reminder_id} mode=${mode} sent=${push.sent} failed=${push.failed}`,
                 );
                 if (push.sent > 0) delivered = true;
               } catch (err) {
@@ -241,7 +299,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
               }
             }
 
-            if (owner.emailEnabled && owner.email) {
+            if (mode === "full" && owner.emailEnabled && owner.email) {
               try {
                 const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
                 const result = await sendTemplateEmail("reminder-alert", owner.email, {
@@ -267,7 +325,18 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
 
             const { error: stampError } = await supabaseAdmin
               .from("reminder_alerts")
-              .update({ last_notified_occurrence_at: reminder.due_at })
+              .update(
+                mode === "full"
+                  ? {
+                      last_notified_occurrence_at: reminder.due_at,
+                      renotify_count: 0,
+                      last_renotified_at: null,
+                    }
+                  : {
+                      renotify_count: (row.renotify_count ?? 0) + 1,
+                      last_renotified_at: new Date().toISOString(),
+                    },
+              )
               // Every alert of this reminder is stamped for this occurrence, so
               // no sibling row can send a second message for the same event.
               .eq("reminder_id", row.reminder_id);
@@ -275,7 +344,9 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
               summary.failed += 1;
               continue;
             }
-            summary.sent += 1;
+            if (mode === "nag") summary.nagged += 1;
+            else summary.sent += 1;
+
           } catch {
             summary.failed += 1;
           }
