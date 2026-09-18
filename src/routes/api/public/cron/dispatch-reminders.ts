@@ -395,7 +395,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
               .update(
                 mode === "full"
                   ? {
-                      last_notified_occurrence_at: reminder.due_at,
+                      last_notified_occurrence_at: occurrenceIso,
                       renotify_count: 0,
                       last_renotified_at: null,
                     }
