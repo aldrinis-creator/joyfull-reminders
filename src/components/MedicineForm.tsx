@@ -252,10 +252,12 @@ export function MedicineForm({
 
     const wantedKeys = new Set(wanted.map((w) => keyOf(w.time, w.weekday)));
     const ops: Promise<{ error: unknown }>[] = [];
+    const keptIds: string[] = [];
 
     for (const { time, weekday } of wanted) {
       const match = byKey.get(keyOf(time, weekday));
       if (match) {
+        keptIds.push(match.id);
         ops.push(
           supabase.from("reminders").update(shared).eq("id", match.id) as unknown as Promise<{
             error: unknown;
@@ -272,16 +274,31 @@ export function MedicineForm({
         priority: "normal" as const,
         due_at: firstDueAt(payload.start_date, time, weekday).toISOString(),
       }));
+    let createdIds: string[] = [];
     if (inserts.length) {
-      ops.push(
-        supabase.from("reminders").insert(inserts) as unknown as Promise<{ error: unknown }>,
-      );
+      const { data: created, error } = await supabase
+        .from("reminders")
+        .insert(inserts)
+        .select("id");
+      if (error) {
+        setSaving(false);
+        toast.error(t("medicines.errSave"));
+        return;
+      }
+      createdIds = (created ?? []).map((r) => r.id);
     }
 
     const removed = [...byKey.entries()]
       .filter(([key]) => !wantedKeys.has(key))
       .map(([, reminder]) => reminder.id);
     if (removed.length) {
+      // Alerts first: leaving them behind would keep the cron sending pushes
+      // for a dose time the person just took off the schedule.
+      ops.push(
+        supabase.from("reminder_alerts").delete().in("reminder_id", removed) as unknown as Promise<{
+          error: unknown;
+        }>,
+      );
       ops.push(
         supabase.from("reminders").delete().in("id", removed) as unknown as Promise<{
           error: unknown;
@@ -290,11 +307,38 @@ export function MedicineForm({
     }
 
     const results = await Promise.all(ops);
-    setSaving(false);
     if (results.some((r) => r.error)) {
+      setSaving(false);
       toast.error(t("medicines.errSave"));
       return;
     }
+
+    // Every dose reminder needs exactly one "at the time" alert row, otherwise
+    // the delivery cron never sees it and the phone stays silent.
+    const alertRows: { user_id: string; reminder_id: string; offset_minutes: number }[] =
+      createdIds.map((id) => ({ user_id: userId, reminder_id: id, offset_minutes: 0 }));
+    if (keptIds.length) {
+      const { data: existingAlerts } = await supabase
+        .from("reminder_alerts")
+        .select("reminder_id")
+        .in("reminder_id", keptIds);
+      const haveAlerts = new Set((existingAlerts ?? []).map((a) => a.reminder_id));
+      for (const id of keptIds) {
+        if (!haveAlerts.has(id)) {
+          alertRows.push({ user_id: userId, reminder_id: id, offset_minutes: 0 });
+        }
+      }
+    }
+    if (alertRows.length) {
+      const { error: alertError } = await supabase.from("reminder_alerts").insert(alertRows);
+      if (alertError) {
+        setSaving(false);
+        toast.error(t("medicines.errSave"));
+        return;
+      }
+    }
+
+    setSaving(false);
     toast.success(existing ? t("medicines.updated") : t("medicines.added"));
     void queryClient.invalidateQueries({ queryKey: ["reminders"] });
     void queryClient.invalidateQueries({ queryKey: ["medicines"] });
