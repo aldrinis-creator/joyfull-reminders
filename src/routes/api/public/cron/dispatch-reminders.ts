@@ -151,6 +151,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
             continue;
           }
           if ((row.renotify_count ?? 0) >= MAX_RENOTIFY) continue;
+          if (Date.now() - dueAt > RENOTIFY_WINDOW_MS) continue;
           const lastNag = row.last_renotified_at ? new Date(row.last_renotified_at).getTime() : 0;
           if (Date.now() - lastNag < RENOTIFY_GAP_MS) continue;
           candidates.push({ row, mode: "nag" });
