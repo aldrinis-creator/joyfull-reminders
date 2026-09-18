@@ -188,7 +188,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
               "reminder_id",
               nagKeys.map((entry) => entry.chosen.reminder_id),
             )
-            .in("status", HANDLED_STATUSES as unknown as string[]);
+            .in("status", [...HANDLED_STATUSES]);
           const handledKeys = new Set(
             (handled ?? []).map(
               (occ) => `${occ.reminder_id}|${new Date(occ.occurrence_at).getTime()}`,
