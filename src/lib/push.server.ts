@@ -8,7 +8,13 @@ import type { Database } from "@/integrations/supabase/types";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
 
-export type PushPayload = { title: string; body: string; path?: string };
+export type PushPayload = {
+  title: string;
+  body: string;
+  path?: string;
+  /** Enables the notification's "Dismiss" action for this reminder occurrence. */
+  dismiss?: { reminderId: string; occurrenceAt: string };
+};
 
 export async function sendPushToUser(
   admin: SupabaseClient<Database>,
@@ -30,6 +36,16 @@ export async function sendPushToUser(
   let failed = 0;
   const stale: string[] = [];
 
+  const { createDismissToken } = await import("@/lib/dismiss-token.server");
+  const dismissToken = payload.dismiss
+    ? createDismissToken({
+        userId,
+        reminderId: payload.dismiss.reminderId,
+        occurrenceAt: payload.dismiss.occurrenceAt,
+      })
+    : null;
+  const actions = dismissToken ? [{ action: "dismiss", title: "Dismiss" }] : undefined;
+
   for (const { token } of tokens) {
     try {
       const res = await fetch(`${GATEWAY_URL}/v1/projects/_/messages:send`, {
@@ -43,12 +59,20 @@ export async function sendPushToUser(
           message: {
             token,
             notification: { title: payload.title, body: payload.body },
-            data: { path: payload.path ?? "/home" },
+            data: {
+              path: payload.path ?? "/home",
+              ...(dismissToken ? { dismissToken } : {}),
+            },
             webpush: {
               notification: {
                 icon: "/icons/icon-192.png",
                 badge: "/icons/icon-192.png",
                 requireInteraction: true,
+                ...(actions ? { actions } : {}),
+                data: {
+                  path: payload.path ?? "/home",
+                  ...(dismissToken ? { dismissToken } : {}),
+                },
               },
               fcm_options: { link: payload.path ?? "/home" },
             },
