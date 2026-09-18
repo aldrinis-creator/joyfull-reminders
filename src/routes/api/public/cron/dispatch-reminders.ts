@@ -339,10 +339,11 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
               .eq("reminder_id", row.reminder_id);
             if (stampError) {
               summary.failed += 1;
-
               continue;
             }
-            summary.sent += 1;
+            if (mode === "nag") summary.nagged += 1;
+            else summary.sent += 1;
+
           } catch {
             summary.failed += 1;
           }
