@@ -167,7 +167,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
         const { data: alerts, error } = await supabaseAdmin
           .from("reminder_alerts")
           .select(
-            "id, user_id, reminder_id, offset_minutes, last_notified_occurrence_at, renotify_count, last_renotified_at, reminders!inner(id, title, category, due_at, recurrence, completed)",
+            "id, user_id, reminder_id, offset_minutes, last_notified_occurrence_at, renotify_count, last_renotified_at, reminders!inner(id, title, category, due_at, recurrence, recurrence_interval_days, completed)",
           )
           .limit(BATCH_LIMIT);
 
@@ -176,84 +176,104 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
         }
 
         type AlertRow = NonNullable<typeof alerts>[number];
+        type Candidate = { row: AlertRow; mode: "full" | "nag"; occAt: number };
 
         // "full" = first send for this occurrence (every channel).
         // "nag"  = the occurrence already went out but nobody handled it, so we
         //          repeat the push only — WhatsApp and email stay single-send.
-        const candidates: { row: AlertRow; mode: "full" | "nag" }[] = [];
+        const candidates: Candidate[] = [];
         for (const row of alerts ?? []) {
           const reminder = row.reminders;
           if (!reminder) continue;
           if (reminder.recurrence === "once" && reminder.completed) continue;
           const dueAt = new Date(reminder.due_at).getTime();
-          const fireAt = dueAt - row.offset_minutes * 60_000;
+          // The occurrence we are actually delivering, derived from the
+          // recurrence — not the stored `due_at`, which is only rolled forward
+          // by in-app actions and goes stale on untouched recurring reminders.
+          const occAt = currentOccurrence(
+            dueAt,
+            reminder.recurrence,
+            reminder.recurrence_interval_days,
+            Date.now(),
+          );
+          const fireAt = occAt - row.offset_minutes * 60_000;
           if (Date.now() < fireAt) continue;
+          // A recomputed (rolled) occurrence is only ever sent while it is
+          // fresh, so an old reminder never fires at the wrong hour.
+          if (occAt !== dueAt && Date.now() - occAt > DUE_GRACE_MS) continue;
           const stamped = row.last_notified_occurrence_at
             ? new Date(row.last_notified_occurrence_at).getTime()
             : null;
-          if (stamped === null || stamped !== dueAt) {
-            candidates.push({ row, mode: "full" });
+          if (stamped === null || stamped !== occAt) {
+            candidates.push({ row, mode: "full", occAt });
             continue;
           }
           if ((row.renotify_count ?? 0) >= MAX_RENOTIFY) continue;
-          if (Date.now() - dueAt > RENOTIFY_WINDOW_MS) continue;
+          if (Date.now() - occAt > RENOTIFY_WINDOW_MS) continue;
           const lastNag = row.last_renotified_at ? new Date(row.last_renotified_at).getTime() : 0;
           if (Date.now() - lastNag < RENOTIFY_GAP_MS) continue;
-          candidates.push({ row, mode: "nag" });
+          candidates.push({ row, mode: "nag", occAt });
         }
 
         // One message per reminder occurrence, never one per alert row: a
         // reminder usually has several alerts (e.g. 1 day before + at due time)
         // and once the due moment passes every one of their windows is open.
         // We keep the alert closest to the due time and stamp all the siblings.
-        const perReminder = new Map<string, { chosen: AlertRow; mode: "full" | "nag" }>();
-        for (const { row, mode } of candidates) {
-          const key = `${row.reminder_id}|${row.reminders?.due_at}`;
+        const perReminder = new Map<string, Candidate>();
+        for (const candidate of candidates) {
+          const key = `${candidate.row.reminder_id}|${candidate.occAt}`;
           const entry = perReminder.get(key);
           if (!entry) {
-            perReminder.set(key, { chosen: row, mode });
+            perReminder.set(key, { ...candidate });
             continue;
           }
           // A pending first send always wins over a follow-up nudge.
-          if (mode === "full" && entry.mode === "nag") {
-            entry.chosen = row;
+          if (candidate.mode === "full" && entry.mode === "nag") {
+            entry.row = candidate.row;
             entry.mode = "full";
             continue;
           }
-          if (mode === entry.mode && row.offset_minutes < entry.chosen.offset_minutes) {
-            entry.chosen = row;
+          if (
+            candidate.mode === entry.mode &&
+            candidate.row.offset_minutes < entry.row.offset_minutes
+          ) {
+            entry.row = candidate.row;
           }
         }
 
-        // Drop nags for occurrences the person already completed, dismissed, or
-        // that were marked missed — one lookup for the whole batch.
-        const nagKeys = [...perReminder.values()].filter((entry) => entry.mode === "nag");
-        if (nagKeys.length) {
+        // Drop nags the person already handled. We match on when the row was
+        // recorded rather than on `occurrence_at`, because the app stamps an
+        // occurrence from its own clock — anything logged since the dose moment
+        // means they dealt with it.
+        const nagEntries = [...perReminder.entries()].filter(([, e]) => e.mode === "nag");
+        if (nagEntries.length) {
+          const earliest = Math.min(...nagEntries.map(([, e]) => e.occAt));
           const { data: handled } = await supabaseAdmin
             .from("reminder_occurrences")
-            .select("reminder_id, occurrence_at, status")
+            .select("reminder_id, created_at, status")
             .in(
               "reminder_id",
-              nagKeys.map((entry) => entry.chosen.reminder_id),
+              nagEntries.map(([, e]) => e.row.reminder_id),
             )
-            .in("status", [...HANDLED_STATUSES]);
-          const handledKeys = new Set(
-            (handled ?? []).map(
-              (occ) => `${occ.reminder_id}|${new Date(occ.occurrence_at).getTime()}`,
-            ),
-          );
-          for (const entry of nagKeys) {
-            const dueAt = entry.chosen.reminders?.due_at;
-            if (!dueAt) continue;
-            if (handledKeys.has(`${entry.chosen.reminder_id}|${new Date(dueAt).getTime()}`)) {
-              perReminder.delete(`${entry.chosen.reminder_id}|${dueAt}`);
-            }
+            .in("status", [...HANDLED_STATUSES])
+            .gte("created_at", new Date(earliest - 5 * 60_000).toISOString());
+          const latestHandled = new Map<string, number>();
+          for (const occ of handled ?? []) {
+            const at = new Date(occ.created_at).getTime();
+            const prev = latestHandled.get(occ.reminder_id) ?? 0;
+            if (at > prev) latestHandled.set(occ.reminder_id, at);
+          }
+          for (const [key, entry] of nagEntries) {
+            const at = latestHandled.get(entry.row.reminder_id);
+            if (at !== undefined && at >= entry.occAt - 5 * 60_000) perReminder.delete(key);
           }
         }
 
         const batches = [...perReminder.values()];
 
         summary.checked = batches.length;
+
+
 
 
         // Cache profile + auth email lookups per owner across the batch.
