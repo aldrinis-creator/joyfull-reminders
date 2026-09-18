@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { advanceOccurrence, localDayKey, nextOccurrence, type Reminder } from "@/lib/ereminder";
+import { advanceOccurrence, currentOccurrence, localDayKey, type Reminder } from "@/lib/ereminder";
 
 /**
  * Marks a reminder done: logs the occurrence, rolls a recurring reminder
@@ -11,7 +11,7 @@ export async function completeReminder(
 ): Promise<{ recurring: boolean; upcoming: Date | null }> {
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
-  const completedOccurrence = nextOccurrence(reminder);
+  const completedOccurrence = currentOccurrence(reminder);
   const upcoming = advanceOccurrence(reminder);
 
   if (userId) {
@@ -88,7 +88,7 @@ export async function skipReminder(
 ): Promise<{ recurring: boolean; upcoming: Date | null }> {
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
-  const skipped = nextOccurrence(reminder);
+  const skipped = currentOccurrence(reminder);
   const upcoming = advanceOccurrence(reminder);
 
   if (userId) {
