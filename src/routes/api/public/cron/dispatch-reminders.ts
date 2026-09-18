@@ -257,7 +257,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           return owner;
         }
 
-        for (const { chosen: row } of batches) {
+        for (const { chosen: row, mode } of batches) {
           const reminder = row.reminders;
           if (!reminder) continue;
           try {
@@ -271,7 +271,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
             const label = offsetLabel(row.offset_minutes);
             let delivered = false;
 
-            if (owner.pushEnabled && owner.phoneVerified && owner.phone) {
+            if (mode === "full" && owner.pushEnabled && owner.phoneVerified && owner.phone) {
               const wa = await sendWhatsapp(owner.phone, reminder.title, when);
               if (wa.ok) delivered = true;
             }
@@ -288,7 +288,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
                 // Delivery visibility: without this, a silent zero-token or
                 // gateway failure is indistinguishable from a successful send.
                 console.log(
-                  `[cron] push reminder=${row.reminder_id} sent=${push.sent} failed=${push.failed}`,
+                  `[cron] push reminder=${row.reminder_id} mode=${mode} sent=${push.sent} failed=${push.failed}`,
                 );
                 if (push.sent > 0) delivered = true;
               } catch (err) {
@@ -296,7 +296,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
               }
             }
 
-            if (owner.emailEnabled && owner.email) {
+            if (mode === "full" && owner.emailEnabled && owner.email) {
               try {
                 const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
                 const result = await sendTemplateEmail("reminder-alert", owner.email, {
@@ -322,12 +322,24 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
 
             const { error: stampError } = await supabaseAdmin
               .from("reminder_alerts")
-              .update({ last_notified_occurrence_at: reminder.due_at })
+              .update(
+                mode === "full"
+                  ? {
+                      last_notified_occurrence_at: reminder.due_at,
+                      renotify_count: 0,
+                      last_renotified_at: null,
+                    }
+                  : {
+                      renotify_count: (row.renotify_count ?? 0) + 1,
+                      last_renotified_at: new Date().toISOString(),
+                    },
+              )
               // Every alert of this reminder is stamped for this occurrence, so
               // no sibling row can send a second message for the same event.
               .eq("reminder_id", row.reminder_id);
             if (stampError) {
               summary.failed += 1;
+
               continue;
             }
             summary.sent += 1;
