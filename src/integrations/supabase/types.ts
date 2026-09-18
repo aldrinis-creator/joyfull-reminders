@@ -696,8 +696,10 @@ export type Database = {
           id: string
           label: string | null
           last_notified_occurrence_at: string | null
+          last_renotified_at: string | null
           offset_minutes: number
           reminder_id: string
+          renotify_count: number
           user_id: string
         }
         Insert: {
@@ -705,8 +707,10 @@ export type Database = {
           id?: string
           label?: string | null
           last_notified_occurrence_at?: string | null
+          last_renotified_at?: string | null
           offset_minutes?: number
           reminder_id: string
+          renotify_count?: number
           user_id: string
         }
         Update: {
@@ -714,8 +718,10 @@ export type Database = {
           id?: string
           label?: string | null
           last_notified_occurrence_at?: string | null
+          last_renotified_at?: string | null
           offset_minutes?: number
           reminder_id?: string
+          renotify_count?: number
           user_id?: string
         }
         Relationships: [
