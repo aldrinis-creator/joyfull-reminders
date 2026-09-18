@@ -362,9 +362,65 @@ export function localDayKey(d: Date = new Date()): string {
   return `${y}-${m}-${day}`;
 }
 
-/** The occurrence strictly after the given reminder's current due date. */
+/**
+ * The occurrence a reminder is *currently* on: the latest one at or before
+ * `now`, stepped forward from the stored `due_at` by the recurrence pattern.
+ * `due_at` only rolls forward when somebody completes or skips the reminder,
+ * so anything untouched keeps an old `due_at` — this derives the real moment.
+ * Shared by the in-app complete/skip actions and the delivery cron so both
+ * agree on "which occurrence is this".
+ */
+export function occurrenceAtOrBefore(
+  dueAt: number,
+  recurrence: string | null,
+  intervalDays: number | null,
+  now: number,
+): number {
+  if (dueAt >= now || !recurrence || recurrence === "once") return dueAt;
+  const at = new Date(dueAt);
+  for (let i = 0; i < 500; i += 1) {
+    const next = new Date(at);
+    switch (recurrence) {
+      case "daily":
+        next.setDate(next.getDate() + 1);
+        break;
+      case "weekly":
+        next.setDate(next.getDate() + 7);
+        break;
+      case "monthly":
+        next.setMonth(next.getMonth() + 1);
+        break;
+      case "yearly":
+        next.setFullYear(next.getFullYear() + 1);
+        break;
+      case "custom":
+        next.setDate(next.getDate() + Math.max(1, intervalDays ?? 30));
+        break;
+      default:
+        return at.getTime();
+    }
+    if (next.getTime() > now) break;
+    at.setTime(next.getTime());
+  }
+  return at.getTime();
+}
+
+/** Reminder-shaped wrapper around {@link occurrenceAtOrBefore}. */
+export function currentOccurrence(reminder: Reminder, from: Date = new Date()): Date {
+  return new Date(
+    occurrenceAtOrBefore(
+      new Date(reminder.due_at).getTime(),
+      reminder.recurrence,
+      reminder.recurrence_interval_days,
+      from.getTime(),
+    ),
+  );
+}
+
+/** The occurrence strictly after the one the reminder is currently on. */
 export function advanceOccurrence(reminder: Reminder): Date | null {
   if (reminder.recurrence === "once") return null;
-  const from = new Date(Math.max(new Date(reminder.due_at).getTime() + 1000, Date.now()));
-  return nextOccurrence(reminder, from);
+  const current = currentOccurrence(reminder).getTime();
+  return nextOccurrence(reminder, new Date(current + 1000));
 }
+

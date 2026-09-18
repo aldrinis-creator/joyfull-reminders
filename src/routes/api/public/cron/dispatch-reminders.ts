@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
-import { categoryMeta } from "@/lib/ereminder";
+import { categoryMeta, occurrenceAtOrBefore } from "@/lib/ereminder";
 import type { Database } from "@/integrations/supabase/types";
 
 /**
@@ -32,43 +32,6 @@ const RENOTIFY_WINDOW_MS = 60 * 60_000;
 const DUE_GRACE_MS = 2 * 60 * 60_000;
 
 type ReminderCategory = Database["public"]["Enums"]["reminder_category"];
-
-/** Latest occurrence at or before `now`, stepped from the stored `due_at`. */
-function currentOccurrence(
-  dueAt: number,
-  recurrence: string | null,
-  intervalDays: number | null,
-  now: number,
-): number {
-  if (dueAt >= now || !recurrence || recurrence === "once") return dueAt;
-  const at = new Date(dueAt);
-  for (let i = 0; i < 500; i += 1) {
-    const next = new Date(at);
-    switch (recurrence) {
-      case "daily":
-        next.setDate(next.getDate() + 1);
-        break;
-      case "weekly":
-        next.setDate(next.getDate() + 7);
-        break;
-      case "monthly":
-        next.setMonth(next.getMonth() + 1);
-        break;
-      case "yearly":
-        next.setFullYear(next.getFullYear() + 1);
-        break;
-      case "custom":
-        next.setDate(next.getDate() + Math.max(1, intervalDays ?? 30));
-        break;
-      default:
-        return at.getTime();
-    }
-    if (next.getTime() > now) break;
-    at.setTime(next.getTime());
-  }
-  return at.getTime();
-}
-
 
 function formatDue(dueAt: string): string {
   return new Date(dueAt).toLocaleString("en-IN", {
@@ -190,7 +153,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           // The occurrence we are actually delivering, derived from the
           // recurrence — not the stored `due_at`, which is only rolled forward
           // by in-app actions and goes stale on untouched recurring reminders.
-          const occAt = currentOccurrence(
+          const occAt = occurrenceAtOrBefore(
             dueAt,
             reminder.recurrence,
             reminder.recurrence_interval_days,
