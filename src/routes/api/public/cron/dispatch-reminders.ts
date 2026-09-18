@@ -377,7 +377,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
                     dueAt: when,
                     offsetLabel: label,
                   },
-                  idempotencyKey: `reminder-${row.id}-${reminder.due_at}`,
+                  idempotencyKey: `reminder-${row.id}-${occurrenceIso}`,
                 });
                 if (result.sent) delivered = true;
               } catch {
