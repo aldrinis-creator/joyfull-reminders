@@ -353,7 +353,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
                   title: reminder.title,
                   body: `${label} · ${when}`,
                   path: "/home",
-                  dismiss: { reminderId: reminder.id, occurrenceAt: reminder.due_at },
+                  dismiss: { reminderId: reminder.id, occurrenceAt: occurrenceIso },
                 });
                 // Delivery visibility: without this, a silent zero-token or
                 // gateway failure is indistinguishable from a successful send.
