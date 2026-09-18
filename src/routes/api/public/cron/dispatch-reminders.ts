@@ -20,6 +20,8 @@ const MAX_RENOTIFY = 3;
 /** Roughly one cron pass apart; the slack absorbs jitter in the schedule. */
 const RENOTIFY_GAP_MS = 9 * 60_000;
 const HANDLED_STATUSES = ["completed", "acknowledged", "missed"] as const;
+/** Never chase a stale occurrence: nudges only run within an hour of due time. */
+const RENOTIFY_WINDOW_MS = 60 * 60_000;
 
 type ReminderCategory = Database["public"]["Enums"]["reminder_category"];
 
