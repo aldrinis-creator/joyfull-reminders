@@ -15,6 +15,11 @@ import type { Database } from "@/integrations/supabase/types";
  */
 
 const BATCH_LIMIT = 200;
+/** Extra push-only nudges after the first send, for one unhandled occurrence. */
+const MAX_RENOTIFY = 3;
+/** Roughly one cron pass apart; the slack absorbs jitter in the schedule. */
+const RENOTIFY_GAP_MS = 9 * 60_000;
+const HANDLED_STATUSES = ["completed", "acknowledged", "missed"] as const;
 
 type ReminderCategory = Database["public"]["Enums"]["reminder_category"];
 
