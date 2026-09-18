@@ -8,7 +8,13 @@ import type { Database } from "@/integrations/supabase/types";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
 
-export type PushPayload = { title: string; body: string; path?: string };
+export type PushPayload = {
+  title: string;
+  body: string;
+  path?: string;
+  /** Enables the notification's "Dismiss" action for this reminder occurrence. */
+  dismiss?: { reminderId: string; occurrenceAt: string };
+};
 
 export async function sendPushToUser(
   admin: SupabaseClient<Database>,
