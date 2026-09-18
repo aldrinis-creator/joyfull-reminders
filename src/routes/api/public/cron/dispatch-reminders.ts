@@ -22,8 +22,53 @@ const RENOTIFY_GAP_MS = 9 * 60_000;
 const HANDLED_STATUSES = ["completed", "acknowledged", "missed"] as const;
 /** Never chase a stale occurrence: nudges only run within an hour of due time. */
 const RENOTIFY_WINDOW_MS = 60 * 60_000;
+/**
+ * How late a recomputed occurrence may still be delivered. `due_at` only rolls
+ * forward when somebody completes or skips the reminder in the app, so a
+ * recurring reminder nobody touches keeps an old `due_at` forever. We derive
+ * today's occurrence from the recurrence instead, and only send it if its
+ * moment is recent — never a dose time from days ago.
+ */
+const DUE_GRACE_MS = 2 * 60 * 60_000;
 
 type ReminderCategory = Database["public"]["Enums"]["reminder_category"];
+
+/** Latest occurrence at or before `now`, stepped from the stored `due_at`. */
+function currentOccurrence(
+  dueAt: number,
+  recurrence: string | null,
+  intervalDays: number | null,
+  now: number,
+): number {
+  if (dueAt >= now || !recurrence || recurrence === "once") return dueAt;
+  const at = new Date(dueAt);
+  for (let i = 0; i < 500; i += 1) {
+    const next = new Date(at);
+    switch (recurrence) {
+      case "daily":
+        next.setDate(next.getDate() + 1);
+        break;
+      case "weekly":
+        next.setDate(next.getDate() + 7);
+        break;
+      case "monthly":
+        next.setMonth(next.getMonth() + 1);
+        break;
+      case "yearly":
+        next.setFullYear(next.getFullYear() + 1);
+        break;
+      case "custom":
+        next.setDate(next.getDate() + Math.max(1, intervalDays ?? 30));
+        break;
+      default:
+        return at.getTime();
+    }
+    if (next.getTime() > now) break;
+    at.setTime(next.getTime());
+  }
+  return at.getTime();
+}
+
 
 function formatDue(dueAt: string): string {
   return new Date(dueAt).toLocaleString("en-IN", {
