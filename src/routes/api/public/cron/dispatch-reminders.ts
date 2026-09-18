@@ -325,7 +325,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           return owner;
         }
 
-        for (const { chosen: row, mode } of batches) {
+        for (const { row, mode, occAt } of batches) {
           const reminder = row.reminders;
           if (!reminder) continue;
           try {
@@ -335,8 +335,10 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
               continue;
             }
 
-            const when = formatDue(reminder.due_at);
+            const occurrenceIso = new Date(occAt).toISOString();
+            const when = formatDue(occurrenceIso);
             const label = offsetLabel(row.offset_minutes);
+
             let delivered = false;
 
             if (mode === "full" && owner.pushEnabled && owner.phoneVerified && owner.phone) {
