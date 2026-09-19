@@ -734,6 +734,45 @@ export type Database = {
           },
         ]
       }
+      reminder_deliveries: {
+        Row: {
+          channel: string
+          created_at: string
+          detail: string | null
+          id: string
+          mode: string | null
+          occurrence_at: string | null
+          outcome: string
+          reminder_id: string | null
+          target: string | null
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          mode?: string | null
+          occurrence_at?: string | null
+          outcome: string
+          reminder_id?: string | null
+          target?: string | null
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          mode?: string | null
+          occurrence_at?: string | null
+          outcome?: string
+          reminder_id?: string | null
+          target?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       reminder_occurrences: {
         Row: {
           acknowledged_at: string | null
