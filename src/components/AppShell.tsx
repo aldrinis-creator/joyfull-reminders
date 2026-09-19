@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/hooks/useLanguage";
 import { AlarmHost } from "@/components/AlarmHost";
+import { PushSetupPrompt } from "@/components/PushSetupPrompt";
 import { usePushTokenRefresh } from "@/hooks/usePushTokenRefresh";
 
 

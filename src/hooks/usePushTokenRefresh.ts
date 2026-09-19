@@ -15,8 +15,10 @@ export function usePushTokenRefresh() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Permission already granted is enough: after a reload or reinstall the
+    // stored token can be gone while the OS permission stands, and without
+    // this the device would look "off" until somebody toggled it by hand.
     if (pushPermission() !== "granted") return;
-    if (!localStorage.getItem(STORAGE_KEY)) return;
 
     let cancelled = false;
     void (async () => {
