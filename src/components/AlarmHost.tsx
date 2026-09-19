@@ -18,7 +18,7 @@ import {
 import { currentOccurrence, formatDate, type Reminder } from "@/lib/ereminder";
 import { useT } from "@/hooks/useLanguage";
 
-const TICK_MS = 15_000;
+const TICK_MS = 5_000;
 /**
  * How long after its moment a recomputed occurrence may still ring. `due_at`
  * only rolls forward when somebody acts on the reminder, so an untouched daily
@@ -107,7 +107,8 @@ export function AlarmHost() {
     staleTime: 30_000,
   });
 
-  const dueAlarm = useMemo(() => {
+  /** Every reminder whose current occurrence is outstanding right now. */
+  const dueList = useMemo(() => {
     return (reminders ?? [])
       .filter((r) => !r.completed)
       // The occurrence actually being asked for right now — not the next future
@@ -115,7 +116,7 @@ export function AlarmHost() {
       // time passed, which silenced the alarm for every recurring reminder.
       .map((r) => ({ reminder: r, occurrence: currentOccurrence(r) }))
       .sort((a, b) => a.occurrence.getTime() - b.occurrence.getTime())
-      .find(({ reminder, occurrence }) => {
+      .filter(({ reminder, occurrence }) => {
         const at = occurrence.getTime();
         if (at > now) return false;
         const stored = new Date(reminder.due_at).getTime();
@@ -126,6 +127,28 @@ export function AlarmHost() {
       });
   }, [reminders, snoozedIds, now, handled]);
 
+  const dueAlarm = dueList[0];
+
+  /**
+   * Wake up exactly when the next reminder falls due instead of waiting for the
+   * next heartbeat — a reminder created seconds before its time used to sit
+   * silent until the poll happened to come round.
+   */
+  const nextDueAt = useMemo(() => {
+    const times = (reminders ?? [])
+      .filter((r) => !r.completed)
+      .map((r) => currentOccurrence(r).getTime())
+      .filter((at) => at > now);
+    return times.length ? Math.min(...times) : null;
+  }, [reminders, now]);
+
+  useEffect(() => {
+    if (nextDueAt === null) return;
+    const delay = nextDueAt - Date.now();
+    if (delay <= 0 || delay > 60 * 60_000) return;
+    const timer = setTimeout(() => setNow(Date.now()), delay + 500);
+    return () => clearTimeout(timer);
+  }, [nextDueAt]);
 
   /**
    * The overlay keeps its own "snoozed" / "handled" screens, so we hold on to
@@ -140,9 +163,20 @@ export function AlarmHost() {
     if (!dueAlarm) return;
     const key = snoozeKeyFor(dueAlarm.reminder.id, dueAlarm.occurrence);
     if (closedKey.current === key) return;
-    setHeld((prev) => (prev ? prev : dueAlarm));
+    setHeld((prev) => {
+      if (!prev) return dueAlarm;
+      const prevKey = snoozeKeyFor(prev.reminder.id, prev.occurrence);
+      if (prevKey === key) return prev;
+      // A leftover confirmation screen must never block a newer alarm: if what
+      // we are holding is no longer outstanding, hand over to the one that is.
+      const stillDue = dueList.some(
+        (d) => snoozeKeyFor(d.reminder.id, d.occurrence) === prevKey,
+      );
+      return stillDue ? prev : dueAlarm;
+    });
     setSnoozeCount(readSnoozeCount(key));
-  }, [dueAlarm]);
+  }, [dueAlarm, dueList]);
+
 
   if (!held) return null;
   const heldKey = snoozeKeyFor(held.reminder.id, held.occurrence);
