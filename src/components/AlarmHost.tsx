@@ -85,6 +85,7 @@ export function AlarmHost() {
       );
       void queryClient.invalidateQueries({ queryKey: ["reminders"] });
       void queryClient.invalidateQueries({ queryKey: ["streak"] });
+      void queryClient.invalidateQueries({ queryKey: ["handled-occurrences"] });
     },
     onError: () => toast.error(t("home.updateFailed")),
   });
@@ -93,9 +94,11 @@ export function AlarmHost() {
     mutationFn: (reminder: Reminder) => skipReminder(reminder),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["reminders"] });
+      void queryClient.invalidateQueries({ queryKey: ["handled-occurrences"] });
     },
     onError: () => toast.error(t("home.updateFailed")),
   });
+
 
   // Occurrences already completed, dismissed or recorded as missed never ring.
   const { data: handled } = useQuery({
