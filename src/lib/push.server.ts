@@ -68,7 +68,13 @@ export async function sendPushToUser(
             },
             webpush: {
               notification: {
+                // Title and body MUST be repeated here: the webpush block
+                // overrides the common notification for web delivery, and
+                // without them the worker receives nothing displayable.
+                title: payload.title,
+                body: payload.body,
                 icon: "/icons/icon-192.png",
+
                 badge: "/icons/icon-192.png",
                 requireInteraction: true,
                 ...(actions ? { actions } : {}),

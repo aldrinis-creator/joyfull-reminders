@@ -13,19 +13,42 @@ export const registerPushToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => tokenSchema.parse(data))
   .handler(async ({ data, context }) => {
+    const nowIso = new Date().toISOString();
+
+    // One row per physical device: a re-registration replaces this device's
+    // previous token instead of piling up dead ones that still pass FCM.
+    if (data.userAgent) {
+      await context.supabase
+        .from("push_tokens")
+        .delete()
+        .eq("user_id", context.userId)
+        .eq("user_agent", data.userAgent)
+        .neq("token", data.token);
+    }
+
     const { error } = await context.supabase.from("push_tokens").upsert(
       {
         user_id: context.userId,
         token: data.token,
         platform: data.platform ?? null,
         user_agent: data.userAgent ?? null,
-        last_seen_at: new Date().toISOString(),
+        last_seen_at: nowIso,
       },
       { onConflict: "token" },
     );
     if (error) throw new Error("Could not save this device");
+
+    // Forget devices that haven't checked in for a month.
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60_000).toISOString();
+    await context.supabase
+      .from("push_tokens")
+      .delete()
+      .eq("user_id", context.userId)
+      .lt("last_seen_at", cutoff);
+
     return { ok: true as const };
   });
+
 
 /** Forget this device so it stops receiving notifications. */
 export const removePushToken = createServerFn({ method: "POST" })
