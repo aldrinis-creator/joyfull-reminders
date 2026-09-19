@@ -103,6 +103,7 @@ export function AppShell({
       </nav>
 
       <AlarmHost />
+      <PushSetupPrompt />
     </div>
   );
 }
