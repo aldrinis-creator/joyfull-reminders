@@ -36,8 +36,15 @@ export function useReminders() {
       if (error) throw error;
       return (data ?? []) as Reminder[];
     },
+    // The full-screen alarm reads this list, so it must not go blind when a
+    // reminder is added or changed somewhere that did not refresh the cache
+    // (another device, the server, or a screen that forgot to invalidate).
+    staleTime: 20_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
+
 
 export function useFamilyMembers() {
   return useQuery({
