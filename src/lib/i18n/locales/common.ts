@@ -121,6 +121,9 @@ const common: Namespace = {
     "day.inWeeks": "In {count} weeks",
     "day.inMonth": "In 1 month",
     "day.inMonths": "In {count} months",
+    "update.available": "A newer version of My-Mitr is ready.",
+    "update.action": "Refresh now",
+
   },
   hi: {
     appName: "My-Mitr",
@@ -234,6 +237,9 @@ const common: Namespace = {
     "day.inWeeks": "{count} हफ़्तों में",
     "day.inMonth": "1 महीने में",
     "day.inMonths": "{count} महीनों में",
+    "update.available": "My-Mitr का नया वर्शन तैयार है।",
+    "update.action": "अभी रिफ़्रेश करें",
+
   },
 };
 
