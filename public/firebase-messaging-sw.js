@@ -4,7 +4,26 @@ importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js
 importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js");
 
 firebase.initializeApp(Object.fromEntries(new URL(self.location).searchParams));
-firebase.messaging();
+const messaging = firebase.messaging();
+
+/* Show the notification ourselves instead of trusting the SDK default: if the
+   payload's notification block is incomplete the default quietly shows nothing. */
+messaging.onBackgroundMessage((payload) => {
+  const n = payload.notification || {};
+  const d = payload.data || {};
+  const title = n.title || d.title || "Reminder";
+  const options = {
+    body: n.body || d.body || "",
+    icon: n.icon || "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: d.path ? `mitr-${d.path}-${d.dismissToken || ""}`.slice(0, 80) : undefined,
+    requireInteraction: true,
+    data: d,
+  };
+  if (d.dismissToken) options.actions = [{ action: "dismiss", title: "Dismiss" }];
+  return self.registration.showNotification(title, options);
+});
+
 
 /** The payload can arrive either directly or wrapped by the FCM SDK. */
 function readData(notification) {
