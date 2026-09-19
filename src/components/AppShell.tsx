@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/hooks/useLanguage";
 import { AlarmHost } from "@/components/AlarmHost";
+import { usePushTokenRefresh } from "@/hooks/usePushTokenRefresh";
+
 
 const TABS = [
   { to: "/home", labelKey: "nav.today", icon: ListChecks },
@@ -27,6 +29,9 @@ export function AppShell({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const t = useT();
+  usePushTokenRefresh();
+
+
 
   return (
     <div className="min-h-screen bg-background pb-24">

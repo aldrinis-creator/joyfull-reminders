@@ -99,3 +99,20 @@ export async function enablePush(): Promise<PushResult> {
   const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration });
   return token ? { status: "registered", token } : { status: "denied" };
 }
+
+/**
+ * Silent re-check of an already-granted registration. Firebase can rotate or
+ * invalidate a token between visits (service worker updates, long gaps), and
+ * before this the token was only refreshed when somebody toggled the switch by
+ * hand — so it could go quietly stale and notifications would stop arriving.
+ */
+export async function refreshPushToken(): Promise<string | null> {
+  if (pushPermission() !== "granted") return null;
+  try {
+    const result = await enablePush();
+    return result.status === "registered" && result.token ? result.token : null;
+  } catch {
+    return null;
+  }
+}
+

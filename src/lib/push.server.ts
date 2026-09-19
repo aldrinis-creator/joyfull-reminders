@@ -16,25 +16,28 @@ export type PushPayload = {
   dismiss?: { reminderId: string; occurrenceAt: string };
 };
 
+export type PushAttempt = { token: string; ok: boolean; detail?: string };
+
 export async function sendPushToUser(
   admin: SupabaseClient<Database>,
   userId: string,
   payload: PushPayload,
-): Promise<{ sent: number; failed: number }> {
+): Promise<{ sent: number; failed: number; attempts: PushAttempt[] }> {
   const lovableKey = process.env["LOVABLE_API_KEY"];
   const connectionKey = process.env["FIREBASE_MESSAGING_API_KEY"];
-  if (!lovableKey || !connectionKey) return { sent: 0, failed: 0 };
+  if (!lovableKey || !connectionKey) return { sent: 0, failed: 0, attempts: [] };
 
   const { data: tokens } = await admin
     .from("push_tokens")
     .select("token")
     .eq("user_id", userId)
     .limit(20);
-  if (!tokens?.length) return { sent: 0, failed: 0 };
+  if (!tokens?.length) return { sent: 0, failed: 0, attempts: [] };
 
   let sent = 0;
   let failed = 0;
   const stale: string[] = [];
+  const attempts: PushAttempt[] = [];
 
   const { createDismissToken } = await import("@/lib/dismiss-token.server");
   const dismissToken = payload.dismiss
@@ -83,19 +86,23 @@ export async function sendPushToUser(
       });
       if (res.ok) {
         sent += 1;
+        attempts.push({ token, ok: true });
         continue;
       }
       const detail = await res.text();
       console.error(`FCM send failed [${res.status}]: ${detail}`);
       if (res.status === 404 || res.status === 400) stale.push(token);
       failed += 1;
-    } catch {
+      attempts.push({ token, ok: false, detail: `${res.status}: ${detail.slice(0, 300)}` });
+    } catch (err) {
       failed += 1;
+      attempts.push({ token, ok: false, detail: String(err).slice(0, 300) });
     }
   }
 
   if (stale.length) {
     await admin.from("push_tokens").delete().in("token", stale);
   }
-  return { sent, failed };
+  return { sent, failed, attempts };
 }
+

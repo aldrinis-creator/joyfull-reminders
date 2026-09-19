@@ -127,12 +127,43 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
         const nowIso = new Date().toISOString();
         const summary = { checked: 0, sent: 0, skipped: 0, failed: 0, nagged: 0 };
 
+        /**
+         * Durable, per-channel record of every attempt. Server logs expire in
+         * hours; these rows are what a later investigation can actually read.
+         */
+        async function logDelivery(entry: {
+          userId: string;
+          reminderId: string;
+          occurrenceIso: string;
+          channel: "push" | "whatsapp" | "email";
+          mode: string;
+          outcome: "selected" | "accepted" | "failed";
+          detail?: string | null;
+          target?: string | null;
+        }) {
+          try {
+            await supabaseAdmin.from("reminder_deliveries").insert({
+              user_id: entry.userId,
+              reminder_id: entry.reminderId,
+              occurrence_at: entry.occurrenceIso,
+              channel: entry.channel,
+              mode: entry.mode,
+              outcome: entry.outcome,
+              detail: entry.detail ?? null,
+              target: entry.target ? entry.target.slice(-12) : null,
+            });
+          } catch {
+            /* bookkeeping must never sink a delivery */
+          }
+        }
+
         const { data: alerts, error } = await supabaseAdmin
           .from("reminder_alerts")
           .select(
-            "id, user_id, reminder_id, offset_minutes, last_notified_occurrence_at, renotify_count, last_renotified_at, reminders!inner(id, title, category, due_at, recurrence, recurrence_interval_days, completed)",
+            "id, user_id, reminder_id, offset_minutes, last_notified_occurrence_at, renotify_count, last_renotified_at, reminders!inner(id, title, category, due_at, recurrence, recurrence_interval_days, completed, medicine_id)",
           )
           .limit(BATCH_LIMIT);
+
 
         if (error) {
           return Response.json({ error: "query_failed", detail: error.message }, { status: 500 });
@@ -236,6 +267,35 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
 
         summary.checked = batches.length;
 
+        /**
+         * Several medicines due at the same minute used to mean several
+         * WhatsApp messages. We group them by owner + occurrence and send one
+         * combined message from the first reminder of the group; the others
+         * skip WhatsApp. Push and the in-app alarm stay per-medicine.
+         */
+        const waLeader = new Map<string, string>(); // reminder_id -> combined text
+        const waFollowers = new Set<string>();
+        {
+          const groups = new Map<string, typeof batches>();
+          for (const b of batches) {
+            if (b.mode !== "full") continue;
+            if (!b.row.reminders?.medicine_id) continue;
+            const key = `${b.row.user_id}|${b.occAt}`;
+            const list = groups.get(key) ?? [];
+            list.push(b);
+            groups.set(key, list);
+          }
+          for (const list of groups.values()) {
+            if (list.length < 2) continue;
+            const titles = list.map((b) => b.row.reminders!.title.replace(/\s+/g, " ").trim());
+            const combined = `${titles.length} medicines: ${titles.join(", ")}`;
+            waLeader.set(list[0]!.row.reminder_id, combined);
+            for (const b of list.slice(1)) waFollowers.add(b.row.reminder_id);
+          }
+        }
+
+
+
 
 
 
@@ -305,13 +365,55 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
             let delivered = false;
 
             if (mode === "full" && owner.pushEnabled && owner.phoneVerified && owner.phone) {
-              const wa = await sendWhatsapp(owner.phone, reminder.title, when);
-              if (wa.ok) delivered = true;
+              if (waFollowers.has(row.reminder_id)) {
+                await logDelivery({
+                  userId: row.user_id,
+                  reminderId: row.reminder_id,
+                  occurrenceIso,
+                  channel: "whatsapp",
+                  mode,
+                  outcome: "selected",
+                  detail: "batched_into_sibling_message",
+                  target: owner.phone,
+                });
+              } else {
+                const text = waLeader.get(row.reminder_id) ?? reminder.title;
+                await logDelivery({
+                  userId: row.user_id,
+                  reminderId: row.reminder_id,
+                  occurrenceIso,
+                  channel: "whatsapp",
+                  mode,
+                  outcome: "selected",
+                  detail: waLeader.has(row.reminder_id) ? `combined: ${text}` : null,
+                  target: owner.phone,
+                });
+                const wa = await sendWhatsapp(owner.phone, text, when);
+                if (wa.ok) delivered = true;
+                await logDelivery({
+                  userId: row.user_id,
+                  reminderId: row.reminder_id,
+                  occurrenceIso,
+                  channel: "whatsapp",
+                  mode,
+                  outcome: wa.ok ? "accepted" : "failed",
+                  detail: wa.detail ?? null,
+                  target: owner.phone,
+                });
+              }
             }
 
             if (owner.pushEnabled) {
               try {
                 const { sendPushToUser } = await import("@/lib/push.server");
+                await logDelivery({
+                  userId: row.user_id,
+                  reminderId: row.reminder_id,
+                  occurrenceIso,
+                  channel: "push",
+                  mode,
+                  outcome: "selected",
+                });
                 const push = await sendPushToUser(supabaseAdmin, row.user_id, {
                   title: reminder.title,
                   body: `${label} · ${when}`,
@@ -323,15 +425,56 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
                 console.log(
                   `[cron] push reminder=${row.reminder_id} mode=${mode} sent=${push.sent} failed=${push.failed}`,
                 );
+                for (const attempt of push.attempts) {
+                  await logDelivery({
+                    userId: row.user_id,
+                    reminderId: row.reminder_id,
+                    occurrenceIso,
+                    channel: "push",
+                    mode,
+                    outcome: attempt.ok ? "accepted" : "failed",
+                    detail: attempt.detail ?? null,
+                    target: attempt.token,
+                  });
+                }
+                if (!push.attempts.length) {
+                  await logDelivery({
+                    userId: row.user_id,
+                    reminderId: row.reminder_id,
+                    occurrenceIso,
+                    channel: "push",
+                    mode,
+                    outcome: "failed",
+                    detail: "no_device_tokens_or_not_configured",
+                  });
+                }
                 if (push.sent > 0) delivered = true;
               } catch (err) {
                 console.error(`[cron] push threw for reminder=${row.reminder_id}: ${String(err)}`);
+                await logDelivery({
+                  userId: row.user_id,
+                  reminderId: row.reminder_id,
+                  occurrenceIso,
+                  channel: "push",
+                  mode,
+                  outcome: "failed",
+                  detail: String(err).slice(0, 300),
+                });
               }
             }
 
             if (mode === "full" && owner.emailEnabled && owner.email) {
               try {
                 const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+                await logDelivery({
+                  userId: row.user_id,
+                  reminderId: row.reminder_id,
+                  occurrenceIso,
+                  channel: "email",
+                  mode,
+                  outcome: "selected",
+                  target: owner.email,
+                });
                 const result = await sendTemplateEmail("reminder-alert", owner.email, {
                   templateData: {
                     recipientName: owner.fullName ?? undefined,
@@ -343,10 +486,30 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
                   idempotencyKey: `reminder-${row.id}-${occurrenceIso}`,
                 });
                 if (result.sent) delivered = true;
-              } catch {
+                await logDelivery({
+                  userId: row.user_id,
+                  reminderId: row.reminder_id,
+                  occurrenceIso,
+                  channel: "email",
+                  mode,
+                  outcome: result.sent ? "accepted" : "failed",
+                  target: owner.email,
+                });
+              } catch (err) {
                 /* one channel failing must not sink the batch */
+                await logDelivery({
+                  userId: row.user_id,
+                  reminderId: row.reminder_id,
+                  occurrenceIso,
+                  channel: "email",
+                  mode,
+                  outcome: "failed",
+                  detail: String(err).slice(0, 300),
+                  target: owner.email,
+                });
               }
             }
+
 
             if (!delivered) {
               summary.skipped += 1;
