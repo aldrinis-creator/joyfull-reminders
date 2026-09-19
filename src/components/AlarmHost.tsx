@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AlarmOverlay } from "@/components/AlarmOverlay";
 import { useFamilyMembers, useReminderRecipients, useReminders } from "@/lib/queries";
 import { useAlarmSettings } from "@/hooks/useAlarmSettings";
 import { completeReminder, skipReminder } from "@/lib/complete-reminder";
+import { fetchHandledOccurrences, occurrenceKey } from "@/lib/occurrence-status";
 import {
   bumpSnoozeCount,
   fetchActiveSnoozes,
@@ -14,10 +15,18 @@ import {
   snoozeKeyFor,
   snoozeLocally,
 } from "@/lib/snooze";
-import { formatDate, nextOccurrence, type Reminder } from "@/lib/ereminder";
+import { currentOccurrence, formatDate, type Reminder } from "@/lib/ereminder";
 import { useT } from "@/hooks/useLanguage";
 
 const TICK_MS = 15_000;
+/**
+ * How long after its moment a recomputed occurrence may still ring. `due_at`
+ * only rolls forward when somebody acts on the reminder, so an untouched daily
+ * reminder keeps an old stored date — we derive today's occurrence instead and
+ * only ring it while it is still fresh.
+ */
+const DUE_GRACE_MS = 6 * 60 * 60_000;
+
 
 /**
  * Watches the clock on every screen and shows the full-screen alarm as soon as
