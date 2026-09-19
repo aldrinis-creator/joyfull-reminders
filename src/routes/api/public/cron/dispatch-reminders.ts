@@ -267,6 +267,35 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
 
         summary.checked = batches.length;
 
+        /**
+         * Several medicines due at the same minute used to mean several
+         * WhatsApp messages. We group them by owner + occurrence and send one
+         * combined message from the first reminder of the group; the others
+         * skip WhatsApp. Push and the in-app alarm stay per-medicine.
+         */
+        const waLeader = new Map<string, string>(); // reminder_id -> combined text
+        const waFollowers = new Set<string>();
+        {
+          const groups = new Map<string, typeof batches>();
+          for (const b of batches) {
+            if (b.mode !== "full") continue;
+            if (!b.row.reminders?.medicine_id) continue;
+            const key = `${b.row.user_id}|${b.occAt}`;
+            const list = groups.get(key) ?? [];
+            list.push(b);
+            groups.set(key, list);
+          }
+          for (const list of groups.values()) {
+            if (list.length < 2) continue;
+            const titles = list.map((b) => b.row.reminders!.title.replace(/\s+/g, " ").trim());
+            const combined = `${titles.length} medicines: ${titles.join(", ")}`;
+            waLeader.set(list[0]!.row.reminder_id, combined);
+            for (const b of list.slice(1)) waFollowers.add(b.row.reminder_id);
+          }
+        }
+
+
+
 
 
 
