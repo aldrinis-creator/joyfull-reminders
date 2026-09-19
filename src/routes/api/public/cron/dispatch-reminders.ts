@@ -127,12 +127,43 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
         const nowIso = new Date().toISOString();
         const summary = { checked: 0, sent: 0, skipped: 0, failed: 0, nagged: 0 };
 
+        /**
+         * Durable, per-channel record of every attempt. Server logs expire in
+         * hours; these rows are what a later investigation can actually read.
+         */
+        async function logDelivery(entry: {
+          userId: string;
+          reminderId: string;
+          occurrenceIso: string;
+          channel: "push" | "whatsapp" | "email";
+          mode: string;
+          outcome: "selected" | "accepted" | "failed";
+          detail?: string | null;
+          target?: string | null;
+        }) {
+          try {
+            await supabaseAdmin.from("reminder_deliveries").insert({
+              user_id: entry.userId,
+              reminder_id: entry.reminderId,
+              occurrence_at: entry.occurrenceIso,
+              channel: entry.channel,
+              mode: entry.mode,
+              outcome: entry.outcome,
+              detail: entry.detail ?? null,
+              target: entry.target ? entry.target.slice(-12) : null,
+            });
+          } catch {
+            /* bookkeeping must never sink a delivery */
+          }
+        }
+
         const { data: alerts, error } = await supabaseAdmin
           .from("reminder_alerts")
           .select(
-            "id, user_id, reminder_id, offset_minutes, last_notified_occurrence_at, renotify_count, last_renotified_at, reminders!inner(id, title, category, due_at, recurrence, recurrence_interval_days, completed)",
+            "id, user_id, reminder_id, offset_minutes, last_notified_occurrence_at, renotify_count, last_renotified_at, reminders!inner(id, title, category, due_at, recurrence, recurrence_interval_days, completed, medicine_id)",
           )
           .limit(BATCH_LIMIT);
+
 
         if (error) {
           return Response.json({ error: "query_failed", detail: error.message }, { status: 500 });
