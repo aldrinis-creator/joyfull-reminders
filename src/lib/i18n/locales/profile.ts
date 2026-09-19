@@ -31,6 +31,11 @@ const profile: Namespace = {
       "Turn this on so reminders ring here even when My-Mitr is closed. Do it once on each device you use.",
     pushDeviceOn: "Notifications are on for this device.",
     pushTurnOn: "Turn on notifications here",
+    pushSetupTitle: "Let My-Mitr alert you",
+    pushSetupBody:
+      "Allow notifications so medicine doses and reminders ring on this phone even when the app is closed. You only need to do this once.",
+    pushSetupAllow: "Allow notifications",
+    pushSetupLater: "Not now",
     pushTurnOff: "Notifications on — tap to turn off",
     pushOnDevice: "Notifications turned on for this device",
     pushOffDevice: "Notifications turned off for this device",
@@ -182,6 +187,11 @@ const profile: Namespace = {
       "इसे चालू कीजिए ताकि ऐप बंद होने पर भी रिमाइंडर यहाँ बजे। हर डिवाइस पर एक बार करना होगा।",
     pushDeviceOn: "इस डिवाइस पर सूचनाएँ चालू हैं।",
     pushTurnOn: "यहाँ सूचनाएँ चालू करें",
+    pushSetupTitle: "My-Mitr को सूचनाएँ भेजने दीजिए",
+    pushSetupBody:
+      "सूचनाओं की अनुमति दीजिए ताकि दवा और रिमाइंडर इस फ़ोन पर तब भी बजें जब ऐप बंद हो। यह सिर्फ़ एक बार करना है।",
+    pushSetupAllow: "सूचनाएँ चालू कीजिए",
+    pushSetupLater: "अभी नहीं",
     pushTurnOff: "सूचनाएँ चालू हैं — बंद करने के लिए दबाएँ",
     pushOnDevice: "इस डिवाइस पर सूचनाएँ चालू हो गईं",
     pushOffDevice: "इस डिवाइस पर सूचनाएँ बंद हो गईं",
