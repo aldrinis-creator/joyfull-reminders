@@ -511,10 +511,24 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
             }
 
 
+            // Even when every channel failed we stamp the occurrence, so a
+            // reminder that can never be delivered (no devices, dead address)
+            // is attempted once instead of retried every ten minutes forever.
             if (!delivered) {
               summary.skipped += 1;
+              if (mode === "full") {
+                await supabaseAdmin
+                  .from("reminder_alerts")
+                  .update({
+                    last_notified_occurrence_at: occurrenceIso,
+                    renotify_count: MAX_RENOTIFY,
+                    last_renotified_at: new Date().toISOString(),
+                  })
+                  .eq("reminder_id", row.reminder_id);
+              }
               continue;
             }
+
 
             const { error: stampError } = await supabaseAdmin
               .from("reminder_alerts")
