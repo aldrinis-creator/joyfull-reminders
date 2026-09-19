@@ -29,6 +29,9 @@ export function AppShell({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const t = useT();
+  usePushTokenRefresh();
+
+
 
   return (
     <div className="min-h-screen bg-background pb-24">
