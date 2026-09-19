@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useRouterState } from "@tanstack/react-router";
 import { RefreshCw } from "lucide-react";
 import { useT } from "@/hooks/useLanguage";
 import { currentEntry, isUpdateAvailable } from "@/lib/app-update";
@@ -15,11 +14,9 @@ const EDITING = ["/new", "/edit", "/auth"];
  */
 export function UpdateBanner() {
   const t = useT();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [stale, setStale] = useState(false);
   const booted = useRef<string | null>(null);
   const wasHidden = useRef(false);
-  const editing = EDITING.some((part) => pathname.includes(part));
 
   useEffect(() => {
     booted.current = currentEntry();
@@ -61,7 +58,6 @@ export function UpdateBanner() {
         <button
           type="button"
           onClick={() => window.location.reload()}
-          disabled={editing && false}
           className="bg-primary-foreground text-primary inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
         >
           <RefreshCw className="size-3.5" aria-hidden />

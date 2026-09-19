@@ -5,7 +5,9 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/hooks/useLanguage";
 import { AlarmHost } from "@/components/AlarmHost";
 import { PushSetupPrompt } from "@/components/PushSetupPrompt";
+import { UpdateBanner } from "@/components/UpdateBanner";
 import { usePushTokenRefresh } from "@/hooks/usePushTokenRefresh";
+
 
 
 const TABS = [
@@ -102,6 +104,7 @@ export function AppShell({
         </ul>
       </nav>
 
+      <UpdateBanner />
       <AlarmHost />
       <PushSetupPrompt />
     </div>
