@@ -97,16 +97,32 @@ export function AlarmHost() {
     onError: () => toast.error(t("home.updateFailed")),
   });
 
+  // Occurrences already completed, dismissed or recorded as missed never ring.
+  const { data: handled } = useQuery({
+    queryKey: ["handled-occurrences"],
+    queryFn: fetchHandledOccurrences,
+    staleTime: 30_000,
+  });
+
   const dueAlarm = useMemo(() => {
     return (reminders ?? [])
       .filter((r) => !r.completed)
-      .map((r) => ({ reminder: r, occurrence: nextOccurrence(r) }))
+      // The occurrence actually being asked for right now — not the next future
+      // one. `nextOccurrence` jumped to tomorrow the instant a daily reminder's
+      // time passed, which silenced the alarm for every recurring reminder.
+      .map((r) => ({ reminder: r, occurrence: currentOccurrence(r) }))
       .sort((a, b) => a.occurrence.getTime() - b.occurrence.getTime())
-      .find(
-        ({ reminder, occurrence }) =>
-          occurrence.getTime() <= now && (snoozedIds[reminder.id] ?? 0) < now,
-      );
-  }, [reminders, snoozedIds, now]);
+      .find(({ reminder, occurrence }) => {
+        const at = occurrence.getTime();
+        if (at > now) return false;
+        const stored = new Date(reminder.due_at).getTime();
+        // A rolled (recomputed) occurrence only rings while it is fresh.
+        if (at !== stored && now - at > DUE_GRACE_MS) return false;
+        if (handled?.has(occurrenceKey(reminder.id, at))) return false;
+        return (snoozedIds[reminder.id] ?? 0) < now;
+      });
+  }, [reminders, snoozedIds, now, handled]);
+
 
   /**
    * The overlay keeps its own "snoozed" / "handled" screens, so we hold on to
