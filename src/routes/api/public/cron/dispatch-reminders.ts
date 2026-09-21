@@ -589,16 +589,16 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
             }
 
 
-            // Even when every channel failed we stamp the occurrence, so a
-            // reminder that can never be delivered (no devices, dead address)
-            // is attempted once instead of retried every ten minutes forever.
+            // The occurrence was already claimed (stamped) before sending, so a
+            // reminder that can never be delivered — no devices, dead address —
+            // is attempted once instead of retried on every pass. Burn the
+            // remaining nudges too, so a dead channel is not chased for an hour.
             if (!delivered) {
               summary.skipped += 1;
               if (mode === "full") {
                 await supabaseAdmin
                   .from("reminder_alerts")
                   .update({
-                    last_notified_occurrence_at: occurrenceIso,
                     renotify_count: MAX_RENOTIFY,
                     last_renotified_at: new Date().toISOString(),
                   })
@@ -607,28 +607,6 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
               continue;
             }
 
-
-            const { error: stampError } = await supabaseAdmin
-              .from("reminder_alerts")
-              .update(
-                mode === "full"
-                  ? {
-                      last_notified_occurrence_at: occurrenceIso,
-                      renotify_count: 0,
-                      last_renotified_at: null,
-                    }
-                  : {
-                      renotify_count: (row.renotify_count ?? 0) + 1,
-                      last_renotified_at: new Date().toISOString(),
-                    },
-              )
-              // Every alert of this reminder is stamped for this occurrence, so
-              // no sibling row can send a second message for the same event.
-              .eq("reminder_id", row.reminder_id);
-            if (stampError) {
-              summary.failed += 1;
-              continue;
-            }
             if (mode === "nag") summary.nagged += 1;
             else summary.sent += 1;
 
