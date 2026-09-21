@@ -52,6 +52,22 @@ export async function sendPushToUser(
     : null;
   const actions = dismissToken ? [{ action: "dismiss", title: "Dismiss" }] : undefined;
 
+  // FCM data values must be strings. reminderId/occurrenceAt/alertSeq give the
+  // service worker a genuinely unique notification tag, so one alert never
+  // silently replaces another.
+  const dataPayload: Record<string, string> = {
+    path: payload.path ?? "/home",
+    ...(dismissToken ? { dismissToken } : {}),
+    ...(payload.dismiss
+      ? {
+          reminderId: payload.dismiss.reminderId,
+          occurrenceAt: payload.dismiss.occurrenceAt,
+        }
+      : {}),
+    alertSeq: String(payload.alertSeq ?? Date.now()),
+  };
+
+
   for (const { token } of tokens) {
     try {
       const res = await fetch(`${GATEWAY_URL}/v1/projects/_/messages:send`, {
