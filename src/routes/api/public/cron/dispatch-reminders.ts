@@ -615,25 +615,34 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           }
         }
 
+        // The reminder dispatch above runs every minute. These two ride-alongs
+        // do not need that frequency, so they only run on minutes divisible by
+        // ten — i.e. roughly their previous cadence, once per ten passes.
+        const rideAlong = new Date().getUTCMinutes() % 10 === 0;
+
         // Scheduled greetings ride along on this same job so no separate
         // cron schedule (and database wake-up) is needed. A failure here
         // must not sink the reminder summary.
         let greetings: unknown = null;
-        try {
-          const { dispatchDueGreetings } = await import("@/lib/greetings.dispatch.server");
-          greetings = await dispatchDueGreetings(supabaseAdmin);
-        } catch {
-          greetings = { error: "greetings_dispatch_failed" };
+        if (rideAlong) {
+          try {
+            const { dispatchDueGreetings } = await import("@/lib/greetings.dispatch.server");
+            greetings = await dispatchDueGreetings(supabaseAdmin);
+          } catch {
+            greetings = { error: "greetings_dispatch_failed" };
+          }
         }
 
         // Missed medicine doses escalate to the chosen family member on the
         // same schedule. A failure here must not sink the reminder summary.
         let medicines: unknown = null;
-        try {
-          const { escalateMissedDoses } = await import("@/lib/medicine-escalation.server");
-          medicines = await escalateMissedDoses(supabaseAdmin as never);
-        } catch {
-          medicines = { error: "medicine_escalation_failed" };
+        if (rideAlong) {
+          try {
+            const { escalateMissedDoses } = await import("@/lib/medicine-escalation.server");
+            medicines = await escalateMissedDoses(supabaseAdmin as never);
+          } catch {
+            medicines = { error: "medicine_escalation_failed" };
+          }
         }
 
         return Response.json({ ok: true, ranAt: nowIso, ...summary, greetings, medicines });
