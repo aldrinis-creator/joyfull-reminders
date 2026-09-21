@@ -11,13 +11,13 @@ import { useProfile } from "@/lib/queries";
 import { normalizeTone, signedAlarmUrl } from "@/hooks/useAlarmSettings";
 import {
   BUILT_IN_TONES,
-  getAudioDiagnostics,
   playAlarm,
   preloadCustomAlarm,
   setAlarmSettings,
   unlockAudio,
   type AlarmToneId,
 } from "@/lib/alarm-sound";
+
 
 const MAX_BYTES = 2 * 1024 * 1024;
 
