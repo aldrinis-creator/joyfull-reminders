@@ -17,8 +17,18 @@ import type { Database } from "@/integrations/supabase/types";
 const BATCH_LIMIT = 200;
 /** Extra push-only nudges after the first send, for one unhandled occurrence. */
 const MAX_RENOTIFY = 3;
-/** Roughly one cron pass apart; the slack absorbs jitter in the schedule. */
-const RENOTIFY_GAP_MS = 9 * 60_000;
+/**
+ * Spacing between nudges. Medication must behave like an alarm — roughly
+ * +2/+4/+6 minutes after the dose — while everything else keeps the old,
+ * calmer cadence. The health value sits just under two minutes so a 2-minute
+ * tick is never missed by scheduler jitter, and comfortably above one minute
+ * so two nudges can never land in the same cron minute.
+ */
+const RENOTIFY_GAP_HEALTH_MS = 110_000;
+const RENOTIFY_GAP_DEFAULT_MS = 9 * 60_000;
+function renotifyGapMs(category: string | null | undefined): number {
+  return category === "health" ? RENOTIFY_GAP_HEALTH_MS : RENOTIFY_GAP_DEFAULT_MS;
+}
 const HANDLED_STATUSES = ["completed", "acknowledged", "missed"] as const;
 /** Never chase a stale occurrence: nudges only run within an hour of due time. */
 const RENOTIFY_WINDOW_MS = 60 * 60_000;
