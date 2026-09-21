@@ -84,28 +84,14 @@ export async function sendPushToUser(
         body: JSON.stringify({
           message: {
             token,
-            notification: { title: payload.title, body: payload.body },
             data: dataPayload,
             webpush: {
-              notification: {
-                // Title and body MUST be repeated here: the webpush block
-                // overrides the common notification for web delivery, and
-                // without them the worker receives nothing displayable.
-                title: payload.title,
-                body: payload.body,
-                icon: "/icons/icon-192.png",
-
-                badge: "/icons/icon-192.png",
-                requireInteraction: true,
-                renotify: true,
-                ...(actions ? { actions } : {}),
-                data: dataPayload,
-              },
-              // Web Push urgency: without it the push is "normal" priority and
-              // the OS may legitimately present it quietly.
+              // Deliberately NO `notification` block here (nor a top-level one):
+              // see the dataPayload comment above.
               headers: { Urgency: "high", TTL: "300" },
               fcm_options: { link: payload.path ?? "/home" },
             },
+
 
             android: { priority: "HIGH", notification: { sound: "default" } },
             apns: { payload: { aps: { sound: "default" } } },
