@@ -257,12 +257,6 @@ export function AlarmSoundCard({ embedded = false }: { embedded?: boolean }) {
 
       <p className="text-muted-foreground border-t pt-4 text-xs">{t("profile.alarmClosedNote")}</p>
 
-      {/* TEMPORARY diagnostic — remove once the silent-audio issue is closed. */}
-      <p className="text-muted-foreground rounded-xl border border-dashed p-3 font-mono text-xs">
-        TEMP DIAGNOSTIC · audio: {diag.state} · gain: {diag.masterGain ?? "—"} · lastPlay:{" "}
-        {diag.lastPlay === null ? "—" : String(diag.lastPlay)} · unlockListeners:{" "}
-        {String(diag.listenersAttached)}
-      </p>
     </section>
   );
 }
