@@ -14,7 +14,10 @@ export type PushPayload = {
   path?: string;
   /** Enables the notification's "Dismiss" action for this reminder occurrence. */
   dismiss?: { reminderId: string; occurrenceAt: string };
+  /** Distinguishes repeat nudges for the same occurrence so none replaces another. */
+  alertSeq?: number | string;
 };
+
 
 export type PushAttempt = { token: string; ok: boolean; detail?: string };
 
