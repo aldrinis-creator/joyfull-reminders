@@ -3,8 +3,15 @@
 importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js");
 
+/* Take over immediately. Push events go to the ACTIVE worker, so without these
+   a fixed worker would sit in "waiting" until every tab is closed, and the old
+   buggy one would keep handling notifications. */
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+
 firebase.initializeApp(Object.fromEntries(new URL(self.location).searchParams));
 const messaging = firebase.messaging();
+
 
 /* Show the notification ourselves instead of trusting the SDK default: if the
    payload's notification block is incomplete the default quietly shows nothing. */
