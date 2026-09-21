@@ -279,7 +279,10 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           const groups = new Map<string, typeof batches>();
           for (const b of batches) {
             if (b.mode !== "full") continue;
-            if (!b.row.reminders?.medicine_id) continue;
+            // A medication reminder is identified by its category — the
+            // catalog link (medicine_id) only exists when the person picked
+            // the medicine from the lookup list, which most doses don't.
+            if (b.row.reminders?.category !== "health") continue;
             const key = `${b.row.user_id}|${b.occAt}`;
             const list = groups.get(key) ?? [];
             list.push(b);
