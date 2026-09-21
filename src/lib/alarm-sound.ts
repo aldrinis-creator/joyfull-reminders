@@ -27,6 +27,8 @@ const TONE_LENGTH: Record<Exclude<AlarmToneId, "custom">, number> = {
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let listenersAttached = false;
+/** Result of the most recent playAlarm() call — surfaced in diagnostics. */
+let lastPlay: boolean | null = null;
 
 let settings: { tone: AlarmToneId; volume: number } = { tone: "siren", volume: 1 };
 let customUrl: string | null = null;
