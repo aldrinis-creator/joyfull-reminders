@@ -27,6 +27,8 @@ const TONE_LENGTH: Record<Exclude<AlarmToneId, "custom">, number> = {
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let listenersAttached = false;
+/** Result of the most recent playAlarm() call — surfaced in diagnostics. */
+let lastPlay: boolean | null = null;
 
 let settings: { tone: AlarmToneId; volume: number } = { tone: "siren", volume: 1 };
 let customUrl: string | null = null;
@@ -55,16 +57,35 @@ export function isAudioUnlocked(): boolean {
   return ctx?.state === "running";
 }
 
+/** Silent one-sample buffer — iOS only truly starts output after a real play. */
+function kick(context: AudioContext) {
+  try {
+    const buffer = context.createBuffer(1, 1, context.sampleRate);
+    const src = context.createBufferSource();
+    src.buffer = buffer;
+    src.connect(context.destination);
+    src.start(0);
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Resume (or create) the shared context. Resolves to whether sound can play. */
 export async function unlockAudio(): Promise<boolean> {
   const context = createContext();
   if (!context) return false;
-  if (context.state === "running") return true;
+  if (context.state === "running") {
+    kick(context);
+    return true;
+  }
   try {
+    // Fire the kick synchronously inside the gesture, then resume.
+    kick(context);
     await context.resume();
   } catch {
     return false;
   }
+  if (isAudioUnlocked()) kick(context);
   return isAudioUnlocked();
 }
 
@@ -201,8 +222,16 @@ function schedule(context: AudioContext, out: GainNode, id: Exclude<AlarmToneId,
  * Returns false when sound is still blocked by the browser.
  */
 export function playAlarm(override?: { tone?: AlarmToneId; volume?: number }): boolean {
-  const context = ctx;
-  if (!context || context.state !== "running" || !master) return false;
+  // Self-sufficient: create the context if nothing has yet, and nudge a
+  // suspended one awake instead of silently doing nothing.
+  const context = createContext();
+  if (!context || !master) {
+    lastPlay = false;
+    return false;
+  }
+  if (context.state !== "running") {
+    void context.resume().catch(() => {});
+  }
 
   let out = master;
   if (override?.volume !== undefined) {
@@ -218,16 +247,27 @@ export function playAlarm(override?: { tone?: AlarmToneId; volume?: number }): b
     if (!buffer) {
       void loadCustomBuffer();
       schedule(context, out, "siren");
-      return true;
+    } else {
+      const src = context.createBufferSource();
+      src.buffer = buffer;
+      src.connect(out);
+      src.start();
     }
-    const src = context.createBufferSource();
-    src.buffer = buffer;
-    src.connect(out);
-    src.start();
-    return true;
+  } else {
+    schedule(context, out, id);
   }
-  schedule(context, out, id);
-  return true;
+  lastPlay = context.state === "running";
+  return lastPlay;
+}
+
+/** Temporary diagnostic snapshot for the Alarm sound sheet. */
+export function getAudioDiagnostics() {
+  return {
+    state: ctx ? ctx.state : "not created",
+    masterGain: master ? Number(master.gain.value.toFixed(2)) : null,
+    lastPlay,
+    listenersAttached,
+  };
 }
 
 /** How often the alarm should repeat for the current tone, in milliseconds. */

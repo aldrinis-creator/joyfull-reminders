@@ -143,7 +143,11 @@ function RootComponent() {
 
   // Prepare the alarm sound on the first interaction so a due reminder can ring
   // by itself later (browsers block audio that starts without a gesture).
-  useEffect(() => installAudioUnlock(), []);
+  // Note: deliberately NOT returning the cleanup — unmounting the root should
+  // never detach the unlock listeners.
+  useEffect(() => {
+    installAudioUnlock();
+  }, []);
 
 
   useEffect(() => {
