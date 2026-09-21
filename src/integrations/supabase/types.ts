@@ -1219,6 +1219,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      due_reminder_alerts: {
+        Args: { p_limit?: number }
+        Returns: {
+          category: Database["public"]["Enums"]["reminder_category"]
+          completed: boolean
+          due_at: string
+          id: string
+          last_notified_occurrence_at: string
+          last_renotified_at: string
+          medicine_id: string
+          offset_minutes: number
+          recurrence: Database["public"]["Enums"]["recurrence_kind"]
+          recurrence_interval_days: number
+          reminder_id: string
+          renotify_count: number
+          title: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

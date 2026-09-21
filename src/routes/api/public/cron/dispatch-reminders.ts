@@ -17,8 +17,18 @@ import type { Database } from "@/integrations/supabase/types";
 const BATCH_LIMIT = 200;
 /** Extra push-only nudges after the first send, for one unhandled occurrence. */
 const MAX_RENOTIFY = 3;
-/** Roughly one cron pass apart; the slack absorbs jitter in the schedule. */
-const RENOTIFY_GAP_MS = 9 * 60_000;
+/**
+ * Spacing between nudges. Medication must behave like an alarm — roughly
+ * +2/+4/+6 minutes after the dose — while everything else keeps the old,
+ * calmer cadence. The health value sits just under two minutes so a 2-minute
+ * tick is never missed by scheduler jitter, and comfortably above one minute
+ * so two nudges can never land in the same cron minute.
+ */
+const RENOTIFY_GAP_HEALTH_MS = 110_000;
+const RENOTIFY_GAP_DEFAULT_MS = 9 * 60_000;
+function renotifyGapMs(category: string | null | undefined): number {
+  return category === "health" ? RENOTIFY_GAP_HEALTH_MS : RENOTIFY_GAP_DEFAULT_MS;
+}
 const HANDLED_STATUSES = ["completed", "acknowledged", "missed"] as const;
 /** Never chase a stale occurrence: nudges only run within an hour of due time. */
 const RENOTIFY_WINDOW_MS = 60 * 60_000;
@@ -157,29 +167,48 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           }
         }
 
-        const { data: alerts, error } = await supabaseAdmin
-          .from("reminder_alerts")
-          .select(
-            "id, user_id, reminder_id, offset_minutes, last_notified_occurrence_at, renotify_count, last_renotified_at, reminders!inner(id, title, category, due_at, recurrence, recurrence_interval_days, completed, medicine_id)",
-          )
-          .limit(BATCH_LIMIT);
-
+        // The heavy lifting happens in the database: `due_reminder_alerts`
+        // returns only rows whose fire moment has arrived and which are not
+        // already exhausted for a recent occurrence. The job runs every minute,
+        // so a pass with nothing due must cost one indexed query and nothing else.
+        const { data: rpcRows, error } = await supabaseAdmin.rpc("due_reminder_alerts", {
+          p_limit: BATCH_LIMIT,
+        });
 
         if (error) {
           return Response.json({ error: "query_failed", detail: error.message }, { status: 500 });
         }
 
-        type AlertRow = NonNullable<typeof alerts>[number];
+        const alerts = (rpcRows ?? []).map((r) => ({
+          id: r.id,
+          user_id: r.user_id,
+          reminder_id: r.reminder_id,
+          offset_minutes: r.offset_minutes,
+          last_notified_occurrence_at: r.last_notified_occurrence_at,
+          renotify_count: r.renotify_count,
+          last_renotified_at: r.last_renotified_at,
+          reminders: {
+            id: r.reminder_id,
+            title: r.title,
+            category: r.category,
+            due_at: r.due_at,
+            recurrence: r.recurrence,
+            recurrence_interval_days: r.recurrence_interval_days,
+            completed: r.completed,
+            medicine_id: r.medicine_id,
+          },
+        }));
+
+        type AlertRow = (typeof alerts)[number];
         type Candidate = { row: AlertRow; mode: "full" | "nag"; occAt: number };
 
         // "full" = first send for this occurrence (every channel).
         // "nag"  = the occurrence already went out but nobody handled it, so we
         //          repeat the push only — WhatsApp and email stay single-send.
         const candidates: Candidate[] = [];
-        for (const row of alerts ?? []) {
+        for (const row of alerts) {
           const reminder = row.reminders;
           if (!reminder) continue;
-          if (reminder.recurrence === "once" && reminder.completed) continue;
           const dueAt = new Date(reminder.due_at).getTime();
           // The occurrence we are actually delivering, derived from the
           // recurrence — not the stored `due_at`, which is only rolled forward
@@ -205,7 +234,7 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           if ((row.renotify_count ?? 0) >= MAX_RENOTIFY) continue;
           if (Date.now() - occAt > RENOTIFY_WINDOW_MS) continue;
           const lastNag = row.last_renotified_at ? new Date(row.last_renotified_at).getTime() : 0;
-          if (Date.now() - lastNag < RENOTIFY_GAP_MS) continue;
+          if (Date.now() - lastNag < renotifyGapMs(reminder.category)) continue;
           candidates.push({ row, mode: "nag", occAt });
         }
 
@@ -354,6 +383,50 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
         for (const { row, mode, occAt } of batches) {
           const reminder = row.reminders;
           if (!reminder) continue;
+          const occIsoClaim = new Date(occAt).toISOString();
+          // Claim the send BEFORE doing it. Runs are now one minute apart, so
+          // two passes can overlap; the conditional update is the lock. If it
+          // matches no rows another run already took this send, and we skip.
+          if (mode === "full") {
+            const { data: claimed, error: claimError } = await supabaseAdmin
+              .from("reminder_alerts")
+              .update({
+                last_notified_occurrence_at: occIsoClaim,
+                renotify_count: 0,
+                last_renotified_at: null,
+              })
+              // Every alert of this reminder is claimed for this occurrence, so
+              // no sibling row can send a second message for the same event.
+              .eq("reminder_id", row.reminder_id)
+              .or(
+                `last_notified_occurrence_at.is.null,last_notified_occurrence_at.neq.${occIsoClaim}`,
+              )
+              .select("id");
+            if (claimError) {
+              summary.failed += 1;
+              continue;
+            }
+            if (!claimed?.length) {
+              summary.skipped += 1;
+              continue;
+            }
+          } else {
+            const prev = row.renotify_count ?? 0;
+            const { data: claimed, error: claimError } = await supabaseAdmin
+              .from("reminder_alerts")
+              .update({ renotify_count: prev + 1, last_renotified_at: new Date().toISOString() })
+              .eq("reminder_id", row.reminder_id)
+              .eq("renotify_count", prev)
+              .select("id");
+            if (claimError) {
+              summary.failed += 1;
+              continue;
+            }
+            if (!claimed?.length) {
+              summary.skipped += 1;
+              continue;
+            }
+          }
           try {
             const owner = await loadOwner(row.user_id);
             if (!owner) {
@@ -516,16 +589,16 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
             }
 
 
-            // Even when every channel failed we stamp the occurrence, so a
-            // reminder that can never be delivered (no devices, dead address)
-            // is attempted once instead of retried every ten minutes forever.
+            // The occurrence was already claimed (stamped) before sending, so a
+            // reminder that can never be delivered — no devices, dead address —
+            // is attempted once instead of retried on every pass. Burn the
+            // remaining nudges too, so a dead channel is not chased for an hour.
             if (!delivered) {
               summary.skipped += 1;
               if (mode === "full") {
                 await supabaseAdmin
                   .from("reminder_alerts")
                   .update({
-                    last_notified_occurrence_at: occurrenceIso,
                     renotify_count: MAX_RENOTIFY,
                     last_renotified_at: new Date().toISOString(),
                   })
@@ -534,28 +607,6 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
               continue;
             }
 
-
-            const { error: stampError } = await supabaseAdmin
-              .from("reminder_alerts")
-              .update(
-                mode === "full"
-                  ? {
-                      last_notified_occurrence_at: occurrenceIso,
-                      renotify_count: 0,
-                      last_renotified_at: null,
-                    }
-                  : {
-                      renotify_count: (row.renotify_count ?? 0) + 1,
-                      last_renotified_at: new Date().toISOString(),
-                    },
-              )
-              // Every alert of this reminder is stamped for this occurrence, so
-              // no sibling row can send a second message for the same event.
-              .eq("reminder_id", row.reminder_id);
-            if (stampError) {
-              summary.failed += 1;
-              continue;
-            }
             if (mode === "nag") summary.nagged += 1;
             else summary.sent += 1;
 
@@ -564,25 +615,34 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           }
         }
 
+        // The reminder dispatch above runs every minute. These two ride-alongs
+        // do not need that frequency, so they only run on minutes divisible by
+        // ten — i.e. roughly their previous cadence, once per ten passes.
+        const rideAlong = new Date().getUTCMinutes() % 10 === 0;
+
         // Scheduled greetings ride along on this same job so no separate
         // cron schedule (and database wake-up) is needed. A failure here
         // must not sink the reminder summary.
         let greetings: unknown = null;
-        try {
-          const { dispatchDueGreetings } = await import("@/lib/greetings.dispatch.server");
-          greetings = await dispatchDueGreetings(supabaseAdmin);
-        } catch {
-          greetings = { error: "greetings_dispatch_failed" };
+        if (rideAlong) {
+          try {
+            const { dispatchDueGreetings } = await import("@/lib/greetings.dispatch.server");
+            greetings = await dispatchDueGreetings(supabaseAdmin);
+          } catch {
+            greetings = { error: "greetings_dispatch_failed" };
+          }
         }
 
         // Missed medicine doses escalate to the chosen family member on the
         // same schedule. A failure here must not sink the reminder summary.
         let medicines: unknown = null;
-        try {
-          const { escalateMissedDoses } = await import("@/lib/medicine-escalation.server");
-          medicines = await escalateMissedDoses(supabaseAdmin as never);
-        } catch {
-          medicines = { error: "medicine_escalation_failed" };
+        if (rideAlong) {
+          try {
+            const { escalateMissedDoses } = await import("@/lib/medicine-escalation.server");
+            medicines = await escalateMissedDoses(supabaseAdmin as never);
+          } catch {
+            medicines = { error: "medicine_escalation_failed" };
+          }
         }
 
         return Response.json({ ok: true, ranAt: nowIso, ...summary, greetings, medicines });
