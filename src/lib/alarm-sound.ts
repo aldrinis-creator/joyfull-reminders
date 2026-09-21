@@ -220,8 +220,16 @@ function schedule(context: AudioContext, out: GainNode, id: Exclude<AlarmToneId,
  * Returns false when sound is still blocked by the browser.
  */
 export function playAlarm(override?: { tone?: AlarmToneId; volume?: number }): boolean {
-  const context = ctx;
-  if (!context || context.state !== "running" || !master) return false;
+  // Self-sufficient: create the context if nothing has yet, and nudge a
+  // suspended one awake instead of silently doing nothing.
+  const context = createContext();
+  if (!context || !master) {
+    lastPlay = false;
+    return false;
+  }
+  if (context.state !== "running") {
+    void context.resume().catch(() => {});
+  }
 
   let out = master;
   if (override?.volume !== undefined) {
