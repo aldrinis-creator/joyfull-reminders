@@ -11,13 +11,13 @@ import { useProfile } from "@/lib/queries";
 import { normalizeTone, signedAlarmUrl } from "@/hooks/useAlarmSettings";
 import {
   BUILT_IN_TONES,
-  getAudioDiagnostics,
   playAlarm,
   preloadCustomAlarm,
   setAlarmSettings,
   unlockAudio,
   type AlarmToneId,
 } from "@/lib/alarm-sound";
+
 
 const MAX_BYTES = 2 * 1024 * 1024;
 
@@ -31,13 +31,7 @@ export function AlarmSoundCard({ embedded = false }: { embedded?: boolean }) {
   const [volume, setVolume] = useState(1);
   const [customPath, setCustomPath] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // TEMPORARY diagnostic state — remove once the silent-audio issue is closed.
-  const [diag, setDiag] = useState(() => getAudioDiagnostics());
 
-  useEffect(() => {
-    const id = setInterval(() => setDiag(getAudioDiagnostics()), 500);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     if (!profile) return;
@@ -65,7 +59,6 @@ export function AlarmSoundCard({ embedded = false }: { embedded?: boolean }) {
   const preview = async (id: AlarmToneId, level = volume) => {
     const unlocked = await unlockAudio();
     const played = playAlarm({ tone: id, volume: level });
-    setDiag(getAudioDiagnostics());
     if (!unlocked || !played) {
       toast.error(t("profile.alarmBlocked"), {
         action: { label: t("retry"), onClick: () => void preview(id, level) },
@@ -257,12 +250,6 @@ export function AlarmSoundCard({ embedded = false }: { embedded?: boolean }) {
 
       <p className="text-muted-foreground border-t pt-4 text-xs">{t("profile.alarmClosedNote")}</p>
 
-      {/* TEMPORARY diagnostic — remove once the silent-audio issue is closed. */}
-      <p className="text-muted-foreground rounded-xl border border-dashed p-3 font-mono text-xs">
-        TEMP DIAGNOSTIC · audio: {diag.state} · gain: {diag.masterGain ?? "—"} · lastPlay:{" "}
-        {diag.lastPlay === null ? "—" : String(diag.lastPlay)} · unlockListeners:{" "}
-        {String(diag.listenersAttached)}
-      </p>
     </section>
   );
 }

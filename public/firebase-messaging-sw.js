@@ -20,27 +20,6 @@ messaging.onBackgroundMessage((payload) => {
   const d = payload.data || {};
   const title = n.title || d.title || "Reminder";
 
-  /* ---- TEMPORARY DIAGNOSTIC BRANCH — remove once iOS silent-push cause found ---- */
-  if (d.testVariant) {
-    const base = { body: n.body || d.body || "", icon: "/icons/icon-192.png" };
-    const variants = {
-      v1: base,
-      v2: { ...base, tag: `mitr-test-${d.alertSeq || "0"}`, renotify: true },
-      v3: { ...base, requireInteraction: true },
-      v4: { ...base, actions: [{ action: "dismiss", title: "Dismiss" }] },
-      v5: {
-        ...base,
-        badge: "/icons/icon-192.png",
-        tag: `mitr-test-${d.alertSeq || "0"}`,
-        renotify: true,
-        requireInteraction: true,
-        actions: [{ action: "dismiss", title: "Dismiss" }],
-      },
-    };
-    return self.registration.showNotification(title, variants[d.testVariant] || base);
-  }
-  /* ---- END TEMPORARY DIAGNOSTIC BRANCH ---- */
-
   // The tag must be unique per reminder, per occurrence, per attempt: a repeated
   // tag replaces the earlier notification, and (without renotify) does so
   // silently — no sound. renotify is a second line of defence if tags ever clash.

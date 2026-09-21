@@ -50,12 +50,15 @@ export async function sendPushToUser(
         occurrenceAt: payload.dismiss.occurrenceAt,
       })
     : null;
-  const actions = dismissToken ? [{ action: "dismiss", title: "Dismiss" }] : undefined;
 
-  // FCM data values must be strings. reminderId/occurrenceAt/alertSeq give the
-  // service worker a genuinely unique notification tag, so one alert never
-  // silently replaces another.
+  // Data-only messages. A payload carrying a `notification` block is rendered by
+  // the browser/FCM display path, which iOS presents SILENTLY. When the payload
+  // is data-only our own service worker calls showNotification(), and iOS alerts
+  // with sound. Verified on device 2026-09-21. Do not reintroduce a notification
+  // block. FCM data values must be strings.
   const dataPayload: Record<string, string> = {
+    title: payload.title,
+    body: payload.body,
     path: payload.path ?? "/home",
     ...(dismissToken ? { dismissToken } : {}),
     ...(payload.dismiss
@@ -66,6 +69,7 @@ export async function sendPushToUser(
       : {}),
     alertSeq: String(payload.alertSeq ?? Date.now()),
   };
+
 
 
   for (const { token } of tokens) {
@@ -80,28 +84,14 @@ export async function sendPushToUser(
         body: JSON.stringify({
           message: {
             token,
-            notification: { title: payload.title, body: payload.body },
             data: dataPayload,
             webpush: {
-              notification: {
-                // Title and body MUST be repeated here: the webpush block
-                // overrides the common notification for web delivery, and
-                // without them the worker receives nothing displayable.
-                title: payload.title,
-                body: payload.body,
-                icon: "/icons/icon-192.png",
-
-                badge: "/icons/icon-192.png",
-                requireInteraction: true,
-                renotify: true,
-                ...(actions ? { actions } : {}),
-                data: dataPayload,
-              },
-              // Web Push urgency: without it the push is "normal" priority and
-              // the OS may legitimately present it quietly.
+              // Deliberately NO `notification` block here (nor a top-level one):
+              // see the dataPayload comment above.
               headers: { Urgency: "high", TTL: "300" },
               fcm_options: { link: payload.path ?? "/home" },
             },
+
 
             android: { priority: "HIGH", notification: { sound: "default" } },
             apns: { payload: { aps: { sound: "default" } } },
