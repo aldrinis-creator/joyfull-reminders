@@ -12,14 +12,20 @@ messaging.onBackgroundMessage((payload) => {
   const n = payload.notification || {};
   const d = payload.data || {};
   const title = n.title || d.title || "Reminder";
+  // The tag must be unique per reminder, per occurrence, per attempt: a repeated
+  // tag replaces the earlier notification, and (without renotify) does so
+  // silently — no sound. renotify is a second line of defence if tags ever clash.
+  const tagParts = [d.reminderId, d.occurrenceAt, d.alertSeq].filter(Boolean);
   const options = {
     body: n.body || d.body || "",
     icon: n.icon || "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    tag: d.path ? `mitr-${d.path}-${d.dismissToken || ""}`.slice(0, 80) : undefined,
+    tag: tagParts.length ? `mitr-${tagParts.join("-")}` : `mitr-${Date.now()}-${Math.random()}`,
+    renotify: true,
     requireInteraction: true,
     data: d,
   };
+
   if (d.dismissToken) options.actions = [{ action: "dismiss", title: "Dismiss" }];
   return self.registration.showNotification(title, options);
 });
