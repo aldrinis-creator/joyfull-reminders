@@ -81,10 +81,7 @@ export async function sendPushToUser(
           message: {
             token,
             notification: { title: payload.title, body: payload.body },
-            data: {
-              path: payload.path ?? "/home",
-              ...(dismissToken ? { dismissToken } : {}),
-            },
+            data: dataPayload,
             webpush: {
               notification: {
                 // Title and body MUST be repeated here: the webpush block
@@ -96,14 +93,13 @@ export async function sendPushToUser(
 
                 badge: "/icons/icon-192.png",
                 requireInteraction: true,
+                renotify: true,
                 ...(actions ? { actions } : {}),
-                data: {
-                  path: payload.path ?? "/home",
-                  ...(dismissToken ? { dismissToken } : {}),
-                },
+                data: dataPayload,
               },
               fcm_options: { link: payload.path ?? "/home" },
             },
+
             android: { priority: "HIGH", notification: { sound: "default" } },
             apns: { payload: { aps: { sound: "default" } } },
           },
