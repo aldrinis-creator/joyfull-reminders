@@ -383,6 +383,50 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
         for (const { row, mode, occAt } of batches) {
           const reminder = row.reminders;
           if (!reminder) continue;
+          const occIsoClaim = new Date(occAt).toISOString();
+          // Claim the send BEFORE doing it. Runs are now one minute apart, so
+          // two passes can overlap; the conditional update is the lock. If it
+          // matches no rows another run already took this send, and we skip.
+          if (mode === "full") {
+            const { data: claimed, error: claimError } = await supabaseAdmin
+              .from("reminder_alerts")
+              .update({
+                last_notified_occurrence_at: occIsoClaim,
+                renotify_count: 0,
+                last_renotified_at: null,
+              })
+              // Every alert of this reminder is claimed for this occurrence, so
+              // no sibling row can send a second message for the same event.
+              .eq("reminder_id", row.reminder_id)
+              .or(
+                `last_notified_occurrence_at.is.null,last_notified_occurrence_at.neq.${occIsoClaim}`,
+              )
+              .select("id");
+            if (claimError) {
+              summary.failed += 1;
+              continue;
+            }
+            if (!claimed?.length) {
+              summary.skipped += 1;
+              continue;
+            }
+          } else {
+            const prev = row.renotify_count ?? 0;
+            const { data: claimed, error: claimError } = await supabaseAdmin
+              .from("reminder_alerts")
+              .update({ renotify_count: prev + 1, last_renotified_at: new Date().toISOString() })
+              .eq("reminder_id", row.reminder_id)
+              .eq("renotify_count", prev)
+              .select("id");
+            if (claimError) {
+              summary.failed += 1;
+              continue;
+            }
+            if (!claimed?.length) {
+              summary.skipped += 1;
+              continue;
+            }
+          }
           try {
             const owner = await loadOwner(row.user_id);
             if (!owner) {
