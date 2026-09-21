@@ -31,13 +31,7 @@ export function AlarmSoundCard({ embedded = false }: { embedded?: boolean }) {
   const [volume, setVolume] = useState(1);
   const [customPath, setCustomPath] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // TEMPORARY diagnostic state — remove once the silent-audio issue is closed.
-  const [diag, setDiag] = useState(() => getAudioDiagnostics());
 
-  useEffect(() => {
-    const id = setInterval(() => setDiag(getAudioDiagnostics()), 500);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     if (!profile) return;
