@@ -50,12 +50,15 @@ export async function sendPushToUser(
         occurrenceAt: payload.dismiss.occurrenceAt,
       })
     : null;
-  const actions = dismissToken ? [{ action: "dismiss", title: "Dismiss" }] : undefined;
 
-  // FCM data values must be strings. reminderId/occurrenceAt/alertSeq give the
-  // service worker a genuinely unique notification tag, so one alert never
-  // silently replaces another.
+  // Data-only messages. A payload carrying a `notification` block is rendered by
+  // the browser/FCM display path, which iOS presents SILENTLY. When the payload
+  // is data-only our own service worker calls showNotification(), and iOS alerts
+  // with sound. Verified on device 2026-09-21. Do not reintroduce a notification
+  // block. FCM data values must be strings.
   const dataPayload: Record<string, string> = {
+    title: payload.title,
+    body: payload.body,
     path: payload.path ?? "/home",
     ...(dismissToken ? { dismissToken } : {}),
     ...(payload.dismiss
@@ -66,6 +69,7 @@ export async function sendPushToUser(
       : {}),
     alertSeq: String(payload.alertSeq ?? Date.now()),
   };
+
 
 
   for (const { token } of tokens) {
