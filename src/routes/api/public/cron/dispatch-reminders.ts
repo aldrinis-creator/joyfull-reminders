@@ -157,29 +157,48 @@ export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
           }
         }
 
-        const { data: alerts, error } = await supabaseAdmin
-          .from("reminder_alerts")
-          .select(
-            "id, user_id, reminder_id, offset_minutes, last_notified_occurrence_at, renotify_count, last_renotified_at, reminders!inner(id, title, category, due_at, recurrence, recurrence_interval_days, completed, medicine_id)",
-          )
-          .limit(BATCH_LIMIT);
-
+        // The heavy lifting happens in the database: `due_reminder_alerts`
+        // returns only rows whose fire moment has arrived and which are not
+        // already exhausted for a recent occurrence. The job runs every minute,
+        // so a pass with nothing due must cost one indexed query and nothing else.
+        const { data: rpcRows, error } = await supabaseAdmin.rpc("due_reminder_alerts", {
+          p_limit: BATCH_LIMIT,
+        });
 
         if (error) {
           return Response.json({ error: "query_failed", detail: error.message }, { status: 500 });
         }
 
-        type AlertRow = NonNullable<typeof alerts>[number];
+        const alerts = (rpcRows ?? []).map((r) => ({
+          id: r.id,
+          user_id: r.user_id,
+          reminder_id: r.reminder_id,
+          offset_minutes: r.offset_minutes,
+          last_notified_occurrence_at: r.last_notified_occurrence_at,
+          renotify_count: r.renotify_count,
+          last_renotified_at: r.last_renotified_at,
+          reminders: {
+            id: r.reminder_id,
+            title: r.title,
+            category: r.category,
+            due_at: r.due_at,
+            recurrence: r.recurrence,
+            recurrence_interval_days: r.recurrence_interval_days,
+            completed: r.completed,
+            medicine_id: r.medicine_id,
+          },
+        }));
+
+        type AlertRow = (typeof alerts)[number];
         type Candidate = { row: AlertRow; mode: "full" | "nag"; occAt: number };
 
         // "full" = first send for this occurrence (every channel).
         // "nag"  = the occurrence already went out but nobody handled it, so we
         //          repeat the push only — WhatsApp and email stay single-send.
         const candidates: Candidate[] = [];
-        for (const row of alerts ?? []) {
+        for (const row of alerts) {
           const reminder = row.reminders;
           if (!reminder) continue;
-          if (reminder.recurrence === "once" && reminder.completed) continue;
           const dueAt = new Date(reminder.due_at).getTime();
           // The occurrence we are actually delivering, derived from the
           // recurrence — not the stored `due_at`, which is only rolled forward
