@@ -59,7 +59,6 @@ export function AlarmSoundCard({ embedded = false }: { embedded?: boolean }) {
   const preview = async (id: AlarmToneId, level = volume) => {
     const unlocked = await unlockAudio();
     const played = playAlarm({ tone: id, volume: level });
-    setDiag(getAudioDiagnostics());
     if (!unlocked || !played) {
       toast.error(t("profile.alarmBlocked"), {
         action: { label: t("retry"), onClick: () => void preview(id, level) },
