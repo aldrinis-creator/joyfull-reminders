@@ -86,6 +86,14 @@ export async function enablePush(): Promise<PushResult> {
   const serviceWorkerRegistration = await navigator.serviceWorker.register(
     `/firebase-messaging-sw.js?${query}`,
   );
+  // register() on an already-registered scope can short-circuit, so ask
+  // explicitly for the byte-comparison that picks up a fixed worker.
+  try {
+    await serviceWorkerRegistration.update();
+  } catch {
+    /* an update check must never block registration */
+  }
+
 
   const { initializeApp, getApps, getApp } = await import("firebase/app");
   const options = {
