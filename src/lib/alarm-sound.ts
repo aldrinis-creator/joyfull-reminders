@@ -55,16 +55,35 @@ export function isAudioUnlocked(): boolean {
   return ctx?.state === "running";
 }
 
+/** Silent one-sample buffer — iOS only truly starts output after a real play. */
+function kick(context: AudioContext) {
+  try {
+    const buffer = context.createBuffer(1, 1, context.sampleRate);
+    const src = context.createBufferSource();
+    src.buffer = buffer;
+    src.connect(context.destination);
+    src.start(0);
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Resume (or create) the shared context. Resolves to whether sound can play. */
 export async function unlockAudio(): Promise<boolean> {
   const context = createContext();
   if (!context) return false;
-  if (context.state === "running") return true;
+  if (context.state === "running") {
+    kick(context);
+    return true;
+  }
   try {
+    // Fire the kick synchronously inside the gesture, then resume.
+    kick(context);
     await context.resume();
   } catch {
     return false;
   }
+  if (context.state === "running") kick(context);
   return isAudioUnlocked();
 }
 
