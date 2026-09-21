@@ -85,7 +85,7 @@ export async function unlockAudio(): Promise<boolean> {
   } catch {
     return false;
   }
-  if (context.state === "running") kick(context);
+  if (isAudioUnlocked()) kick(context);
   return isAudioUnlocked();
 }
 
