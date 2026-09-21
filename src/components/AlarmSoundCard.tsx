@@ -11,6 +11,7 @@ import { useProfile } from "@/lib/queries";
 import { normalizeTone, signedAlarmUrl } from "@/hooks/useAlarmSettings";
 import {
   BUILT_IN_TONES,
+  getAudioDiagnostics,
   playAlarm,
   preloadCustomAlarm,
   setAlarmSettings,
