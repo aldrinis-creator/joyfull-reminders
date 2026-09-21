@@ -97,6 +97,9 @@ export async function sendPushToUser(
                 ...(actions ? { actions } : {}),
                 data: dataPayload,
               },
+              // Web Push urgency: without it the push is "normal" priority and
+              // the OS may legitimately present it quietly.
+              headers: { Urgency: "high", TTL: "300" },
               fcm_options: { link: payload.path ?? "/home" },
             },
 
