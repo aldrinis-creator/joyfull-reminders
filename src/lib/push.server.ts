@@ -14,7 +14,10 @@ export type PushPayload = {
   path?: string;
   /** Enables the notification's "Dismiss" action for this reminder occurrence. */
   dismiss?: { reminderId: string; occurrenceAt: string };
+  /** Distinguishes repeat nudges for the same occurrence so none replaces another. */
+  alertSeq?: number | string;
 };
+
 
 export type PushAttempt = { token: string; ok: boolean; detail?: string };
 
@@ -49,6 +52,22 @@ export async function sendPushToUser(
     : null;
   const actions = dismissToken ? [{ action: "dismiss", title: "Dismiss" }] : undefined;
 
+  // FCM data values must be strings. reminderId/occurrenceAt/alertSeq give the
+  // service worker a genuinely unique notification tag, so one alert never
+  // silently replaces another.
+  const dataPayload: Record<string, string> = {
+    path: payload.path ?? "/home",
+    ...(dismissToken ? { dismissToken } : {}),
+    ...(payload.dismiss
+      ? {
+          reminderId: payload.dismiss.reminderId,
+          occurrenceAt: payload.dismiss.occurrenceAt,
+        }
+      : {}),
+    alertSeq: String(payload.alertSeq ?? Date.now()),
+  };
+
+
   for (const { token } of tokens) {
     try {
       const res = await fetch(`${GATEWAY_URL}/v1/projects/_/messages:send`, {
@@ -62,10 +81,7 @@ export async function sendPushToUser(
           message: {
             token,
             notification: { title: payload.title, body: payload.body },
-            data: {
-              path: payload.path ?? "/home",
-              ...(dismissToken ? { dismissToken } : {}),
-            },
+            data: dataPayload,
             webpush: {
               notification: {
                 // Title and body MUST be repeated here: the webpush block
@@ -77,14 +93,13 @@ export async function sendPushToUser(
 
                 badge: "/icons/icon-192.png",
                 requireInteraction: true,
+                renotify: true,
                 ...(actions ? { actions } : {}),
-                data: {
-                  path: payload.path ?? "/home",
-                  ...(dismissToken ? { dismissToken } : {}),
-                },
+                data: dataPayload,
               },
               fcm_options: { link: payload.path ?? "/home" },
             },
+
             android: { priority: "HIGH", notification: { sound: "default" } },
             apns: { payload: { aps: { sound: "default" } } },
           },
