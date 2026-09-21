@@ -245,16 +245,27 @@ export function playAlarm(override?: { tone?: AlarmToneId; volume?: number }): b
     if (!buffer) {
       void loadCustomBuffer();
       schedule(context, out, "siren");
-      return true;
+    } else {
+      const src = context.createBufferSource();
+      src.buffer = buffer;
+      src.connect(out);
+      src.start();
     }
-    const src = context.createBufferSource();
-    src.buffer = buffer;
-    src.connect(out);
-    src.start();
-    return true;
+  } else {
+    schedule(context, out, id);
   }
-  schedule(context, out, id);
-  return true;
+  lastPlay = context.state === "running";
+  return lastPlay;
+}
+
+/** Temporary diagnostic snapshot for the Alarm sound sheet. */
+export function getAudioDiagnostics() {
+  return {
+    state: ctx ? ctx.state : "not created",
+    masterGain: master ? Number(master.gain.value.toFixed(2)) : null,
+    lastPlay,
+    listenersAttached,
+  };
 }
 
 /** How often the alarm should repeat for the current tone, in milliseconds. */
