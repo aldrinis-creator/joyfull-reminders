@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { CalendarPlus, Check, Gift, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import { buildIcs } from "@/lib/ics";
 import { paymentTarget } from "@/lib/pay-link";
 import { useT } from "@/hooks/useLanguage";
@@ -53,12 +54,15 @@ export function ReminderCard({
   onDelete?: ((r: Reminder) => void) | undefined;
   memberName?: string | undefined;
   member?: FamilyMember | undefined;
-  /** Everyone linked through reminder_recipients — source of truth when present. */
+  /** Everyone linked through reminder_recipients â€” source of truth when present. */
   recipients?: FamilyMember[] | undefined;
   tone?: "default" | "overdue" | undefined;
 }) {
   const t = useT();
   const meta = categoryMeta(reminder.category);
+  const audioUrl = (reminder as any).audio_path 
+    ? supabase.storage.from("reminder_audio").getPublicUrl((reminder as any).audio_path).data.publicUrl 
+    : null;
   const isGiftable = reminder.category === "personal_family";
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -75,7 +79,7 @@ export function ReminderCard({
           start: occurrence,
           durationMinutes: 30,
           summary: `${meta.emoji} ${reminder.title}`,
-          description: [categoryLabel(reminder.category), reminder.description].filter(Boolean).join(" — "),
+          description: [categoryLabel(reminder.category), reminder.description].filter(Boolean).join(" â€” "),
         },
       ],
     });
@@ -222,3 +226,6 @@ export function ReminderCard({
     </article>
   );
 }
+
+
+

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ import { useFamilyMembers } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import { isValidUpiId, safePaymentUrl } from "@/lib/pay-link";
 import { VoiceReminderButton } from "@/components/VoiceReminderButton";
+import { AudioRecorder } from "@/components/AudioRecorder";
 import { DocumentScanButton } from "@/components/DocumentScanButton";
 import type { ParsedReminder } from "@/lib/voice-reminder.schemas";
 
@@ -51,7 +52,7 @@ const schema = z.object({
   birthYear: z.string().trim().max(4).optional(),
 });
 
-/** Local date/time parts for the two inputs (never UTC — see the streak fix). */
+/** Local date/time parts for the two inputs (never UTC â€” see the streak fix). */
 function localParts(iso: string): { date: string; time: string } {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -86,6 +87,7 @@ export function ReminderForm({
     normalizeCategory(existing?.category ?? "personal_family"),
   );
   const [description, setDescription] = useState(existing?.description ?? "");
+  const [audioPath, setAudioPath] = useState<string | null>(null);
   const [dueDate, setDueDate] = useState(
     initial?.date ?? defaultDate ?? new Date().toISOString().slice(0, 10),
   );
@@ -145,7 +147,7 @@ export function ReminderForm({
       prev.includes(minutes) ? prev.filter((m) => m !== minutes) : [...prev, minutes],
     );
 
-  /** Fills only what the voice step was confident about — never clears the rest. */
+  /** Fills only what the voice step was confident about â€” never clears the rest. */
   function applyParsed(parsed: ParsedReminder) {
     if (parsed.title) setTitle(parsed.title.slice(0, 120));
     if (parsed.category) setCategory(parsed.category);
@@ -463,7 +465,7 @@ export function ReminderForm({
                   onCheckedChange={() => toggleMember(m.id)}
                 />
                 <span>
-                  {m.full_name} · {m.relationship}
+                  {m.full_name} Â· {m.relationship}
                 </span>
               </label>
             ))}
@@ -607,3 +609,5 @@ function Field({
     </div>
   );
 }
+
+
