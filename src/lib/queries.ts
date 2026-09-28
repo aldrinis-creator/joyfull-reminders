@@ -230,3 +230,30 @@ export function useStreak() {
     },
   });
 }
+
+// --- Smart Pantry ---
+
+export type PantryItem = {
+  id: string;
+  user_id: string;
+  name: string;
+  quantity: number;
+  refill_cycle_days: number;
+  last_refilled_at: string;
+  created_at: string;
+};
+
+export function usePantryItems() {
+  return useQuery({
+    queryKey: ["pantry_items"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pantry_items")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return (data as PantryItem[]) || [];
+    },
+  });
+}

@@ -1,5 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { Gift, ListChecks, Plus, ShoppingBag, Users } from "lucide-react";
+﻿import { Link, useRouterState } from "@tanstack/react-router";
+import { Gift, ListChecks, Plus, ShoppingBag, Users, ShoppingCart } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/hooks/useLanguage";
@@ -13,6 +13,7 @@ import { usePushTokenRefresh } from "@/hooks/usePushTokenRefresh";
 const TABS = [
   { to: "/home", labelKey: "nav.today", icon: ListChecks },
   { to: "/family", labelKey: "nav.people", icon: Users },
+  { to: "/pantry", labelKey: "nav.pantry", icon: ShoppingCart },
   { to: "/market", labelKey: "nav.gifts", icon: Gift },
   { to: "/orders", labelKey: "nav.orders", icon: ShoppingBag },
 ] as const;
@@ -110,3 +111,4 @@ export function AppShell({
     </div>
   );
 }
+
