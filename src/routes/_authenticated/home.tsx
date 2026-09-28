@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ChevronDown, PartyPopper, Pill } from "lucide-react";
+import { CalendarDays, ChevronDown, PartyPopper, Pill, Heart, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { AskAssistant } from "@/components/AskAssistant";
@@ -31,15 +31,25 @@ import {
   type Reminder,
 } from "@/lib/ereminder";
 
+const MITR_QUOTES = [
+  "A 10-minute walk today can boost your mood!",
+  "Drink a glass of water and stay hydrated.",
+  "Call a loved one today just to say hello.",
+  "Take a deep breath. You're doing great!",
+  "Small steps every day lead to big changes.",
+  "Your health is your greatest wealth.",
+  "Mitr is here to help you stay on track!"
+];
+
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
-      { title: "Your timeline — My-Mitr" },
+      { title: "Your timeline â€” My-Mitr" },
       {
         name: "description",
         content: "Every upcoming birthday, bill, renewal and deadline in one chronological feed.",
       },
-      { property: "og:title", content: "Your timeline — My-Mitr" },
+      { property: "og:title", content: "Your timeline â€” My-Mitr" },
       { property: "og:description", content: "All your upcoming reminders, grouped by urgency." },
     ],
   }),
@@ -197,6 +207,21 @@ function HomePage() {
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* --- Mitr Companion Cards --- */}
+        <div className="px-[22px] mb-5 space-y-3">
+          <div className="bg-indigo/10 text-indigo flex items-center gap-3 rounded-3xl px-5 py-4 font-semibold shadow-sm">
+            <Sparkles className="size-6 text-indigo shrink-0" aria-hidden />
+            <span>Mitr says: "{MITR_QUOTES[Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24) % MITR_QUOTES.length]}"</span>
+          </div>
+          
+          {(members?.length ?? 0) > 0 ? (
+            <div className="bg-rose-50 text-rose-600 flex items-center gap-3 rounded-3xl px-5 py-4 font-semibold shadow-sm">
+              <Heart className="size-6 text-rose-500 shrink-0" aria-hidden />
+              <span>{members?.length} family member{(members?.length ?? 0) > 1 ? "s are" : " is"} in your Mitr network today.</span>
+            </div>
+          ) : null}
         </div>
 
         {isLoading ? (
@@ -372,7 +397,7 @@ function DayGroupItem({ item, members, recipientsByReminder, memberName, onCompl
     />
   );
 
-  // Single-item days render the full card directly — no row/accordion.
+  // Single-item days render the full card directly â€” no row/accordion.
   if (!multi) return card;
 
   const time = occurrence.toLocaleTimeString(activeLocale(), { hour: "numeric", minute: "2-digit" });
@@ -416,3 +441,7 @@ function EmptyState({ t }: { t: (key: string) => string }) {
     </div>
   );
 }
+
+
+
+
