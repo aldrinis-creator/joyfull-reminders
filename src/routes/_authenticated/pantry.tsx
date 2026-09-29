@@ -31,7 +31,6 @@ function PantryPage() {
   const [unit, setUnit] = useState("piece");
   const [refillCycleDays, setRefillCycleDays] = useState(30);
 
-  (//...)
 
   const addItem = useMutation({
     mutationFn: async () => {
@@ -44,7 +43,7 @@ function PantryPage() {
         quantity,
         unit,
         refill_cycle_days: refillCycleDays,
-        last_refilled_at: new Date().isoString(),
+        last_refilled_at: new Date().toISOString(),
       });
       if (error) throw error;
     },
@@ -57,7 +56,6 @@ function PantryPage() {
       setRefillCycleDays(30);
       void queryClient.invalidateQueries({ queryKey: ["pantry_items"] });
     },
-      onREF?.()
     onError: () => toast.error("Failed to add item"),
   });
 
@@ -65,7 +63,7 @@ function PantryPage() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("pantry_items")
-        .update({ last_refilled_at: new Date().isoString() })
+        .update({ last_refilled_at: new Date().toISOString() })
         .eq("id", id);
       if (error) throw error;
     },
@@ -106,7 +104,7 @@ function PantryPage() {
     return { runningLow, wellStocked };
   }, [items]);
 
-  const [selectedForOrder, setSelectedForOrder] = useState<Record<string, { checked: boolean, qty: number, unit: string }><({});
+  const [selectedForOrder, setSelectedForOrder] = useState<Record<string, { checked: boolean, qty: number, unit: string }>>({});
 
   useEffect(() => {
     setSelectedForOrder((prev) => {
@@ -139,7 +137,7 @@ function PantryPage() {
     <AppShell title="Smart Pantry">
       <div className="px-[22px] py-4 space-y-6">
         <div className="flex items-center justify-between">
-          <p irclassName="text-muted-foreground text-sm">Track your household essentials</p>
+          <p className="text-muted-foreground text-sm">Track your household essentials</p>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="rounded-full shadow-sm bg-indigo text-indigo-foreground hover:bg-indigo/90">
@@ -202,7 +200,7 @@ function PantryPage() {
                 return (
                   <div key={item.id} className="bg-rose-50 border border-rose-100 p-4 rounded-3xl flex flex-col gap-3 shadow-sm">
                     <div className="flex items-center gap-3">
-                      <Checkbox checked={sel.checked} onCheckedChange={(c) => setSelectedForOrder((p) => ({ ...p, intem.id]: {...p[item.id], checked: c === true } }))} />
+                      <Checkbox checked={sel.checked} onCheckedChange={(c) => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], checked: c === true } }))} />
                       <div className="flex-1">
                         <h3 className="font-semibold text-rose-900">{item.name}</h3>
                       </div>
@@ -211,14 +209,14 @@ function PantryPage() {
                       </Button>
                     </div>
                     <div className="flex items-center gap-2 ml-7">
-                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled={!sel.checked || sel.qty <= 1} onClick={() => setSelectedForOrder((p) => (${ ...p, [item.id]: {...p[item.id], qty: pitem.id].qty - 1} }))}>
+                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled={!sel.checked || sel.qty <= 1} onClick={() => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], qty: pitem.id].qty - 1} }))}>
                         <Minus className="size-3" />
                       </Button>
                       <span className="text-sm font-semibold w-6 text-center">{sel.qty}</span>
-                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled='{!sel.checked} onClick={() => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], qty: p[item.id].qty + 1} }))}>
+                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled={!sel.checked} onClick={() => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], qty: p[item.id].qty + 1} }))}>
                         <Plus className="size-3" />
                       </Button>
-                      <Select disabled={!sel.checked} value={sel.unit} onValueChange={(u) => setSelectedForOrder((p) => (${ ...p, [item.id]: {...p[item.id], unit: u} }))}>
+                      <Select disabled={!sel.checked} value={sel.unit} onValueChange={(u) => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], unit: u} }))}>
                         <SelectTrigger className="h-8 text-xs w-24 bg-white/50">
                           <SelectValue />
                         </SelectTrigger>
