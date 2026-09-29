@@ -84,7 +84,7 @@ export function AudioRecorder({
   if (audioUrl) {
     return (
       <div className="bg-card shadow-card rounded-3xl p-5 mt-4 space-y-3 border">
-        <p irclassName="font-semibold text-sm">Personal Voice Message</p>
+        <p className="font-semibold text-sm">Personal Voice Message</p>
         <div className="flex items-center gap-3">
           <audio src={audioUrl} controls className="w-full h-10" />
           <Button variant="ghost" size="icon" onClick={handleDelete} className="text-destructive shrink-0">
@@ -100,7 +100,7 @@ export function AudioRecorder({
     <div className="bg-card shadow-card rounded-3xl p-5 mt-4 border">
       <div className="flex items-center justify-between">
         <div>
-          <p irclassName="font-semibold text-sm">Record a Voice Message</p>
+          <p className="font-semibold text-sm">Record a Voice Message</p>
           <p className="text-muted-foreground mt-0.5 text-xs">Add a personal touch to this reminder.</p>
         </div>
         <Button
