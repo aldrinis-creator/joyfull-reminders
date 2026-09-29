@@ -67,6 +67,7 @@ function HomePage() {
   const t = useT();
   const queryClient = useQueryClient();
   const [showLater, setShowLater] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
   const [clearedToday, setClearedToday] = useState(false);
 
   /** Drops a reminder from the cached list straight away, so the card goes instantly. */
@@ -216,12 +217,9 @@ function HomePage() {
             <span>Mitr says: "{MITR_QUOTES[Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24) % MITR_QUOTES.length]}"</span>
           </div>
           
-          {(members?.length ?? 0) > 0 ? (
-            <div className="bg-rose-50 text-rose-600 flex items-center gap-3 rounded-3xl px-5 py-4 font-semibold shadow-sm">
-              <Heart className="size-6 text-rose-500 shrink-0" aria-hidden />
-              <span>{members?.length} family member{(members?.length ?? 0) > 1 ? "s are" : " is"} in your Mitr network today.</span>
-            </div>
-          ) : null}
+          <Button asChild size="lg" className="w-full h-14 rounded-2xl text-base font-semibold shadow-lifted">
+            <Link to="/reminders/new" search={{}}>+ Add Reminders</Link>
+          </Button>
         </div>
 
         {isLoading ? (
@@ -272,19 +270,34 @@ function HomePage() {
               </div>
             ) : null}
 
-            <div className="px-[22px]">
-              {dayGroups.map(([key, items]) => (
-                <DayGroup
-                  key={key}
-                  items={items}
-                  members={members ?? []}
-                  recipientsByReminder={recipientsByReminder}
-                  memberName={memberName}
-                  onComplete={(reminder) => complete.mutate(reminder)}
-                  onDelete={(reminder) => remove.mutate(reminder)}
-                />
-              ))}
+            <div className="px-[22px] mb-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowSchedule((v) => !v)}
+                aria-expanded={showSchedule}
+                className="bg-card shadow-card flex min-h-13 w-full items-center justify-between rounded-[26px] px-5 py-4 text-left font-semibold"
+              >
+                Today's Schedule
+                <ChevronDown className={cn("size-5 transition-transform text-muted-foreground", showSchedule && "rotate-180")} aria-hidden />
+              </Button>
             </div>
+
+            {showSchedule && (
+              <div className="px-[22px]">
+                {dayGroups.map(([key, items]) => (
+                  <DayGroup
+                    key={key}
+                    items={items}
+                    members={members ?? []}
+                    recipientsByReminder={recipientsByReminder}
+                    memberName={memberName}
+                    onComplete={(reminder) => complete.mutate(reminder)}
+                    onDelete={(reminder) => remove.mutate(reminder)}
+                  />
+                ))}
+              </div>
+            )}
 
             {later.length ? (
               <section className="px-[22px] pt-1">
@@ -441,6 +454,8 @@ function EmptyState({ t }: { t: (key: string) => string }) {
     </div>
   );
 }
+
+
 
 
 
