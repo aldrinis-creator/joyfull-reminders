@@ -13,7 +13,6 @@ import { usePushTokenRefresh } from "@/hooks/usePushTokenRefresh";
 const TABS = [
   { to: "/home", labelKey: "nav.today", icon: ListChecks },
   { to: "/family", labelKey: "nav.people", icon: Users },
-  { to: "/pantry", labelKey: "nav.pantry", icon: ShoppingCart },
   { to: "/market", labelKey: "nav.gifts", icon: Gift },
   { to: "/orders", labelKey: "nav.orders", icon: ShoppingBag },
 ] as const;
