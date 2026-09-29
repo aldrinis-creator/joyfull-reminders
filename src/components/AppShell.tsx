@@ -76,14 +76,6 @@ export function AppShell({
               </li>
             );
           })}
-          
-           />
-                  <Icon className="size-5" strokeWidth={2} aria-hidden />
-                  {t(tab.labelKey)}
-                </Link>
-              </li>
-            );
-          })}
         </ul>
       </nav>
 
