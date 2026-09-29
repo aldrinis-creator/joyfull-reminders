@@ -1,5 +1,5 @@
 ﻿import { Link, useRouterState } from "@tanstack/react-router";
-import { Gift, ListChecks, Plus, ShoppingBag, Users, ShoppingCart } from "lucide-react";
+import { Gift, ListChecks, Plus, ShoppingBag, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/hooks/useLanguage";
