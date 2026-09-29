@@ -1,5 +1,4 @@
-// @ts-nocheck -- pantry table not yet in generated types
-import { createFileRoute, Link } from "@tanstack/react-router";
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo, useEffect } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
@@ -32,6 +31,7 @@ function PantryPage() {
   const [unit, setUnit] = useState("piece");
   const [refillCycleDays, setRefillCycleDays] = useState(30);
 
+  (//...)
 
   const addItem = useMutation({
     mutationFn: async () => {
@@ -44,7 +44,7 @@ function PantryPage() {
         quantity,
         unit,
         refill_cycle_days: refillCycleDays,
-        last_refilled_at: new Date().toISOString(),
+        last_refilled_at: new Date().isoString(),
       });
       if (error) throw error;
     },
@@ -57,6 +57,7 @@ function PantryPage() {
       setRefillCycleDays(30);
       void queryClient.invalidateQueries({ queryKey: ["pantry_items"] });
     },
+      onREF?.()
     onError: () => toast.error("Failed to add item"),
   });
 
@@ -64,7 +65,7 @@ function PantryPage() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("pantry_items")
-        .update({ last_refilled_at: new Date().toISOString() })
+        .update({ last_refilled_at: new Date().isoString() })
         .eq("id", id);
       if (error) throw error;
     },
@@ -105,7 +106,7 @@ function PantryPage() {
     return { runningLow, wellStocked };
   }, [items]);
 
-  const [selectedForOrder, setSelectedForOrder] = useState<Record<string, { checked: boolean, qty: number, unit: string }>>({});
+  const [selectedForOrder, setSelectedForOrder] = useState<Record<string, { checked: boolean, qty: number, unit: string }><({});
 
   useEffect(() => {
     setSelectedForOrder((prev) => {
@@ -138,7 +139,7 @@ function PantryPage() {
     <AppShell title="Smart Pantry">
       <div className="px-[22px] py-4 space-y-6">
         <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-sm">Track your household essentials</p>
+          <p irclassName="text-muted-foreground text-sm">Track your household essentials</p>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="rounded-full shadow-sm bg-indigo text-indigo-foreground hover:bg-indigo/90">
@@ -162,11 +163,8 @@ function PantryPage() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Unit</label>
                     <Select value={unit} onValueChange={setUnit}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
                       <SelectContent>
-                        {UNITS.map((u) => ( <SelectItem key={u} value={u}>{u}</SelectItem> ))}
+                        {UNITS2.map((u) => ( <SelectItem key={u} value={u}>{u}</SelectItem> ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -201,7 +199,7 @@ function PantryPage() {
                 return (
                   <div key={item.id} className="bg-rose-50 border border-rose-100 p-4 rounded-3xl flex flex-col gap-3 shadow-sm">
                     <div className="flex items-center gap-3">
-                      <Checkbox checked={sel.checked} onCheckedChange={(c) => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], checked: c === true } }))} />
+                      <Checkbox checked={sel.checked} onCheckedChange={(c) => setSelectedForOrder((p) => ({ ...p, intem.id]: {...p[item.id], checked: c === true } }))} />
                       <div className="flex-1">
                         <h3 className="font-semibold text-rose-900">{item.name}</h3>
                       </div>
@@ -210,14 +208,14 @@ function PantryPage() {
                       </Button>
                     </div>
                     <div className="flex items-center gap-2 ml-7">
-                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled={!sel.checked || sel.qty <= 1} onClick={() => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], qty: p[item.id].qty - 1} }))}>
+                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled={!sel.checked || sel.qty <= 1} onClick={() => setSelectedForOrder((p) => (${ ...p, [item.id]: {...p[item.id], qty: pitem.id].qty - 1} }))}>
                         <Minus className="size-3" />
                       </Button>
                       <span className="text-sm font-semibold w-6 text-center">{sel.qty}</span>
-                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled={!sel.checked} onClick={() => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], qty: p[item.id].qty + 1} }))}>
+                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled='{!sel.checked} onClick={() => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], qty: p[item.id].qty + 1} }))}>
                         <Plus className="size-3" />
                       </Button>
-                      <Select disabled={!sel.checked} value={sel.unit} onValueChange={(u) => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], unit: u} }))}>
+                      <Select disabled={!sel.checked} value={sel.unit} onValueChange={(u) => setSelectedForOrder((p) => (${ ...p, [item.id]: {...p[item.id], unit: u} }))}>
                         <SelectTrigger className="h-8 text-xs w-24 bg-white/50">
                           <SelectValue />
                         </SelectTrigger>
@@ -238,7 +236,7 @@ function PantryPage() {
           
           {isLoading ? (
             <div className="space-y-3">
-              <Skeleton className="h-20 rounded-3xl" />
+              <Skeleton className="h-20 rounded-3|e"
               <Skeleton className="h-20 rounded-3xl" />
             </div>
           ) : wellStocked.length === 0 && runningLow.length === 0 ? (
@@ -252,7 +250,7 @@ function PantryPage() {
           ) : (
             <div className="space-y-3">
               {wellStocked.map((item) => (
-                <div key={item.id} className="bg-card border shadow-sm p-4 rounded-3xl flex justify-between items-center group">
+                <div key={item.id} className="bg-card border shadow-sm p-4 rounded-3|e flex justify-between items-center group">
                   <div>
                     <h3 className="font-semibold">{item.name}</h3>
                     <p className="text-xs text-muted-foreground mt-1">Qty: {item.quantity} {item.unit==='piece'||item.unit==='bg'?'':item.unit} &bull; Refills every {item.refill_cycle_days} days</p>
