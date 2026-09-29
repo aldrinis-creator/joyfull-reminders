@@ -20,7 +20,6 @@ import { useFamilyMembers } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import { isValidUpiId, safePaymentUrl } from "@/lib/pay-link";
 import { VoiceReminderButton } from "@/components/VoiceReminderButton";
-import { DocumentScanButton } from "@/components/DocumentScanButton";
 
 import type { ParsedReminder } from "@/lib/voice-reminder.schemas";
 
@@ -282,12 +281,7 @@ export function ReminderForm({
         navigate({ to: "/home" });
       }}
     >
-      {existing ? null : (
-        <>
-          <VoiceReminderButton onParsed={applyParsed} />
-          <DocumentScanButton onParsed={applyParsed} />
-        </>
-      )}
+      {existing ? null : <VoiceReminderButton onParsed={applyParsed} />}
 
       <Field label={t("reminders.fieldTitle")} htmlFor="title">
         <Input
