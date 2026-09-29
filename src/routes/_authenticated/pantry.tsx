@@ -44,7 +44,7 @@ function PantryPage() {
         quantity,
         unit,
         refill_cycle_days: refillCycleDays,
-        last_refilled_at: new Date().isoString(),
+        last_refilled_at: new Date().toISOString(),
       });
       if (error) throw error;
     },
@@ -64,7 +64,7 @@ function PantryPage() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("pantry_items")
-        .update({ last_refilled_at: new Date().isoString() })
+        .update({ last_refilled_at: new Date().toISOString() })
         .eq("id", id);
       if (error) throw error;
     },
