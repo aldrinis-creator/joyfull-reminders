@@ -20,7 +20,7 @@ import { useFamilyMembers } from "@/lib/queries";
 import { useT } from "@/hooks/useLanguage";
 import { isValidUpiId, safePaymentUrl } from "@/lib/pay-link";
 import { VoiceReminderButton } from "@/components/VoiceReminderButton";
-import { AudioRecorder } from "@/components/AudioRecorder";
+import { DocumentScanButton } from "@/components/DocumentScanButton";
 
 import type { ParsedReminder } from "@/lib/voice-reminder.schemas";
 
