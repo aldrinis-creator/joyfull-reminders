@@ -209,7 +209,7 @@ function PantryPage() {
                       </Button>
                     </div>
                     <div className="flex items-center gap-2 ml-7">
-                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled={!sel.checked || sel.qty <= 1} onClick={() => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], qty: pitem.id].qty - 1} }))}>
+                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled={!sel.checked || sel.qty <= 1} onClick={() => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], qty: p[item.id].qty - 1} }))}>
                         <Minus className="size-3" />
                       </Button>
                       <span className="text-sm font-semibold w-6 text-center">{sel.qty}</span>
