@@ -38,7 +38,7 @@ function PantryPage() {
     mutationFn: async () => {
       if (!name || quantity === '' || refillCycleDays === '') throw new Error('Missing fields');
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user?.id) throw new Error('Not logged in');
+      if (!userData?.user?.id) throw new Error('Not logged in');
 
       const { error } = await supabase.from('pantry_items').insert({
         user_id: userData.user.id,
@@ -150,7 +150,7 @@ function PantryPage() {
         if (!next[item.id]) {
           next[item.id] = { checked: true, qty: item.quantity, unit: item.unit || 'piece', name: item.name };
         } else {
-          next[item.id].name = item.name;
+          if (next[item.id]) next[item.id]!.name = item.name;
         }
       });
       return next;
@@ -415,3 +415,5 @@ function PantryPage() {
     </AppShell>
   );
 }
+
+
