@@ -443,6 +443,44 @@ export type Database = {
           },
         ]
       }
+      pantry_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_refilled_at: string | null
+          name: string
+          quantity: number
+          refill_cycle_days: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_refilled_at?: string | null
+          name: string
+          quantity?: number
+          refill_cycle_days?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_refilled_at?: string | null
+          name?: string
+          quantity?: number
+          refill_cycle_days?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pantry_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount_paise: number
