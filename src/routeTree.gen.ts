@@ -1,4 +1,4 @@
-﻿/* eslint-disable */
+/* eslint-disable */
 
 // @ts-nocheck
 
@@ -477,13 +477,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMedicinesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/pantry': {
-      id: '/_authenticated/pantry'
-      path: '/pantry'
-      fullPath: '/pantry'
-      preLoaderRoute: typeof AuthenticatedPantryRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/orders': {
       id: '/_authenticated/orders'
       path: '/orders'
@@ -672,7 +665,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
-  AuthenticatedPantryRoute: typeof AuthenticatedPantryRoute
   AuthenticatedMedicinesRoute: typeof AuthenticatedMedicinesRoute
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -690,7 +682,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
-  AuthenticatedPantryRoute: AuthenticatedPantryRoute,
   AuthenticatedMedicinesRoute: AuthenticatedMedicinesRoute,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
@@ -738,5 +729,3 @@ declare module '@tanstack/react-start' {
     config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
-
-
