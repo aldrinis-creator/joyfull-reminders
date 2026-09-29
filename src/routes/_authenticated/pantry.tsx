@@ -194,7 +194,7 @@ function PantryPage() {
                     <p className="text-xs text-muted-foreground mt-1">Refills every {item.refill_cycle_days} days</p>
                   </div>
                   <Button variant="ghost" size="icon" className="text-red-500 opacity-50 hover:opacity-100 hover:bg-red-50" onClick={() => {
-                    if (confirm(Delete  + item.name + ?)) deleteItem.mutate(item.id);
+                    if (confirm(`Delete ${item.name}?`)) deleteItem.mutate(item.id);
                   }}>
                     <Trash2 className="size-4" />
                   </Button>
