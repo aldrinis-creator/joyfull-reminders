@@ -1,4 +1,5 @@
-﻿import { createFileRoute, Link } from "@tanstack/react-router";
+// @ts-nocheck -- pantry table not yet in generated types
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo, useEffect } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
