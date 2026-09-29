@@ -60,7 +60,7 @@ export function AppShell({
         className="bg-background fixed inset-x-0 bottom-0 z-40 border-t border-border"
       >
         <ul className="mx-auto grid max-w-2xl grid-cols-5 items-end px-[18px] pt-[10px] pb-[18px]">
-          {TABS.slice(0, 2).map((tab) => {
+          {TABS.map((tab) => {
             const active = pathname === tab.to || pathname.startsWith(`${tab.to}/`);
             const Icon = tab.icon;
             return (
@@ -76,26 +76,8 @@ export function AppShell({
               </li>
             );
           })}
-          <li className="flex justify-center">
-            <Link
-              to="/reminders/new"
-              search={{}}
-              aria-label={t("nav.addReminder")}
-              className="bg-primary text-primary-foreground shadow-lifted -mt-7 flex size-[60px] items-center justify-center rounded-full"
-            >
-              <Plus className="size-7" strokeWidth={2.2} aria-hidden />
-            </Link>
-          </li>
-          {TABS.slice(2).map((tab) => {
-            const active = pathname === tab.to || pathname.startsWith(`${tab.to}/`);
-            const Icon = tab.icon;
-            return (
-              <li key={tab.to}>
-                <Link
-                  to={tab.to}
-                  className="text-foreground flex min-h-14 flex-col items-center justify-end gap-1 px-1 text-[11.5px] font-semibold"
-                >
-                  <span className={cn("size-[7px] rounded-full", active ? "bg-primary" : "bg-transparent")} />
+          
+           />
                   <Icon className="size-5" strokeWidth={2} aria-hidden />
                   {t(tab.labelKey)}
                 </Link>
@@ -111,6 +93,10 @@ export function AppShell({
     </div>
   );
 }
+
+
+
+
 
 
 

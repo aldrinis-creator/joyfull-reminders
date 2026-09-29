@@ -1,14 +1,16 @@
 ﻿import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { usePantryItems, type PantryItem } from "@/lib/queries";
 import { toast } from "sonner";
-import { ShoppingCart, Plus, CheckCircle2, Share2, Trash2 } from "lucide-react";
+import { ShoppingCart, Plus, CheckCircle2, Share2, Trash2, Minus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/pantry")({
@@ -18,13 +20,18 @@ export const Route = createFileRoute("/_authenticated/pantry")({
   component: PantryPage,
 });
 
+const UNITS = ["bg", "kg", "g", "L", "ml", "packet", "piece", "box", "bottle"];
+
 function PantryPage() {
   const { data: items, isLoading } = usePantryItems();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [unit, setUnit] = useState("piece");
   const [refillCycleDays, setRefillCycleDays] = useState(30);
+
+  (//...)
 
   const addItem = useMutation({
     mutationFn: async () => {
@@ -35,8 +42,9 @@ function PantryPage() {
         user_id: userData.user.id,
         name,
         quantity,
+        unit,
         refill_cycle_days: refillCycleDays,
-        last_refilled_at: new Date().toISOString(),
+        last_refilled_at: new Date().isoString(),
       });
       if (error) throw error;
     },
@@ -45,9 +53,11 @@ function PantryPage() {
       setIsOpen(false);
       setName("");
       setQuantity(1);
+      setUnit("piece");
       setRefillCycleDays(30);
       void queryClient.invalidateQueries({ queryKey: ["pantry_items"] });
     },
+      onREF?.()
     onError: () => toast.error("Failed to add item"),
   });
 
@@ -55,7 +65,7 @@ function PantryPage() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("pantry_items")
-        .update({ last_refilled_at: new Date().toISOString() })
+        .update({ last_refilled_at: new Date().isoString() })
         .eq("id", id);
       if (error) throw error;
     },
@@ -81,7 +91,7 @@ function PantryPage() {
     const wellStocked: PantryItem[] = [];
     const now = new Date().getTime();
 
-    (items || []).forEach((item) => {
+    (items || []).sort((a, b) => a.name.localeCompare(b.name)).forEach((item) => {
       const lastRefilled = new Date(item.last_refilled_at).getTime();
       const cycleMs = item.refill_cycle_days * 24 * 60 * 60 * 1000;
       const daysUntilEmpty = Math.ceil((lastRefilled + cycleMs - now) / (24 * 60 * 60 * 1000));
@@ -96,12 +106,31 @@ function PantryPage() {
     return { runningLow, wellStocked };
   }, [items]);
 
+  const [selectedForOrder, setSelectedForOrder] = useState<Record<string, { checked: boolean, qty: number, unit: string }><({});
+
+  useEffect(() => {
+    setSelectedForOrder((prev) => {
+      const next = { ...prev };
+      runningLow.forEach((item) => {
+        if (!next[item.id]) {
+          next[item.id] = { checked: true, qty: item.quantity, unit: item.unit || "piece" };
+        }
+      });
+      return next;
+    });
+  }, [runningLow]);
+
   const handleShareToGrocer = () => {
-    if (runningLow.length === 0) {
-      toast.info("No items running low right now.");
+    const orderItems = runningLow.filter((i) => selectedForOrder[i.id]?.checked);
+    if (orderItems.length === 0) {
+      toast.info("No items selected for replenishment.");
       return;
     }
-    const text = "Hello! Please arrange the following items for delivery:\n\n" + runningLow.map((i) => "- " + i.name + " (Qty: " + i.quantity + ")").join("\n") + "\n\nThank you!";
+    const text = "Hello! Please arrange the following items for delivery:\n\n" + orderItems.map((i) => {
+      const sel = selectedForOrder[i.id];
+      const unitLabel = sel.unit === "piece" || sel.unit === "bg" ? "" : " " + sel.unit;
+      return "- " + i.name + " (Qty: " + sel.qty + unitLabel + ")";
+    }).join("\n") + "\n\nThank you!";
     const url = "https://wa.me/?text=" + encodeURIComponent(text);
     window.open(url, "_blank");
   };
@@ -110,7 +139,7 @@ function PantryPage() {
     <AppShell title="Smart Pantry">
       <div className="px-[22px] py-4 space-y-6">
         <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-sm">Track your household essentials</p>
+          <p irclassName="text-muted-foreground text-sm">Track your household essentials</p>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="rounded-full shadow-sm bg-indigo text-indigo-foreground hover:bg-indigo/90">
@@ -124,11 +153,24 @@ function PantryPage() {
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Item Name</label>
-                  <Input placeholder="e.g. Aashirvaad Atta (10kg)" value={name} onChange={(e) => setName(e.target.value)} />
+                  <Input placeholder="e.g. Aashirvaad Atta" value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Quantity per order</label>
-                  <Input type="number" min="1" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Quantity</label>
+                    <Input type="number" min="1" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Unit</label>
+                    <Select value={unit} onValueChange={setUnit}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {UNITS.map((u) => ( <SelectItem key={u} value={u}>{u}</SelectItem> ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Refill Cycle (Days)</label>
@@ -154,17 +196,40 @@ function PantryPage() {
               </Button>
             </div>
             <div className="space-y-3">
-              {runningLow.map((item) => (
-                <div key={item.id} className="bg-rose-50 border border-rose-100 p-4 rounded-3xl flex justify-between items-center shadow-sm">
-                  <div>
-                    <h3 className="font-semibold text-rose-900">{item.name}</h3>
-                    <p className="text-xs text-rose-600 mt-1">Qty: {item.quantity} • Due for refill</p>
+              {runningLow.map((item) => {
+                const sel = selectedForOrder[item.id] || { checked: true, qty: item.quantity, unit: item.unit || "piece" };
+
+                return (
+                  <div key={item.id} className="bg-rose-50 border border-rose-100 p-4 rounded-3xl flex flex-col gap-3 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <Checkbox checked={sel.checked} onCheckedChange={(c) => setSelectedForOrder((p) => ({ ...p, intem.id]: {...p[item.id], checked: c === true } }))} />
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-rose-900">{item.name}</h3>
+                      </div>
+                      <Button onClick={() => restockItem.mutate(item.id)} size="sm" className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl h-8">
+                        <CheckCircle2 className="size-4 mr-1.5" /> Restocked
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2 ml-7">
+                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled={!sel.checked || sel.qty <= 1} onClick={() => setSelectedForOrder((p) => (${ ...p, [item.id]: {...p[item.id], qty: pitem.id].qty - 1} }))}>
+                        <Minus className="size-3" />
+                      </Button>
+                      <span className="text-sm font-semibold w-6 text-center">{sel.qty}</span>
+                      <Button variant="outline" size="icon" className="size-8 rounded-full" disabled='{!sel.checked} onClick={() => setSelectedForOrder((p) => ({ ...p, [item.id]: {...p[item.id], qty: p[item.id].qty + 1} }))}>
+                        <Plus className="size-3" />
+                      </Button>
+                      <Select disabled={!sel.checked} value={sel.unit} onValueChange={(u) => setSelectedForOrder((p) => (${ ...p, [item.id]: {...p[item.id], unit: u} }))}>
+                        <SelectTrigger className="h-8 text-xs w-24 bg-white/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {UNITS.map((u) => ( <SelectItem key={u} value={u}><span className="text-xs">{u}</span></SelectItem> ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <Button onClick={() => restockItem.mutate(item.id)} size="sm" className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl h-10">
-                    <CheckCircle2 className="size-4 mr-1.5" /> Restocked
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -191,7 +256,7 @@ function PantryPage() {
                 <div key={item.id} className="bg-card border shadow-sm p-4 rounded-3xl flex justify-between items-center group">
                   <div>
                     <h3 className="font-semibold">{item.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Refills every {item.refill_cycle_days} days</p>
+                    <p className="text-xs text-muted-foreground mt-1">Qty: {item.quantity} {item.unit==='piece'||item.unit==='bg'?'':item.unit} &bull; Refills every {item.refill_cycle_days} days</p>
                   </div>
                   <Button variant="ghost" size="icon" className="text-red-500 opacity-50 hover:opacity-100 hover:bg-red-50" onClick={() => {
                     if (confirm(`Delete ${item.name}?`)) deleteItem.mutate(item.id);
@@ -207,3 +272,4 @@ function PantryPage() {
     </AppShell>
   );
 }
+

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+﻿import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { FamilyMember, Order, Reminder, SpecialDate, Vendor, VendorProduct } from "./ereminder";
 import { sortDocuments, type DocumentRow } from "./documents";
@@ -238,6 +238,7 @@ export type PantryItem = {
   user_id: string;
   name: string;
   quantity: number;
+  unit?: string;
   refill_cycle_days: number;
   last_refilled_at: string;
   created_at: string;
@@ -257,3 +258,4 @@ export function usePantryItems() {
     },
   });
 }
+
