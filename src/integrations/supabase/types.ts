@@ -451,6 +451,7 @@ export type Database = {
           name: string
           quantity: number
           refill_cycle_days: number
+          unit: string | null
           user_id: string
         }
         Insert: {
@@ -460,6 +461,7 @@ export type Database = {
           name: string
           quantity?: number
           refill_cycle_days?: number
+          unit?: string | null
           user_id: string
         }
         Update: {
@@ -469,6 +471,7 @@ export type Database = {
           name?: string
           quantity?: number
           refill_cycle_days?: number
+          unit?: string | null
           user_id?: string
         }
         Relationships: [
