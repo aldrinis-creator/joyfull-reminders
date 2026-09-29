@@ -17,6 +17,7 @@ import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedMedicinesRouteImport } from './routes/_authenticated/medicines'
 import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
+import { Route as AuthenticatedPantryRouteImport } from './routes/_authenticated/pantry'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedVendorRouteImport } from './routes/_authenticated/vendor'
 import { Route as GreetingIdRouteImport } from './routes/greeting.$id'
@@ -78,6 +79,11 @@ const AuthenticatedMedicinesRoute = AuthenticatedMedicinesRouteImport.update({
 const AuthenticatedOrdersRoute = AuthenticatedOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPantryRoute = AuthenticatedPantryRouteImport.update({
+  id: '/pantry',
+  path: '/pantry',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/medicines': typeof AuthenticatedMedicinesRoute
   '/orders': typeof AuthenticatedOrdersRouteWithChildren
+  '/pantry': typeof AuthenticatedPantryRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/vendor': typeof AuthenticatedVendorRoute
   '/greeting/$id': typeof GreetingIdRoute
@@ -251,6 +258,7 @@ export interface FileRoutesByTo {
   '/documents': typeof AuthenticatedDocumentsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/medicines': typeof AuthenticatedMedicinesRoute
+  '/pantry': typeof AuthenticatedPantryRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/vendor': typeof AuthenticatedVendorRoute
   '/greeting/$id': typeof GreetingIdRoute
@@ -285,6 +293,7 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/medicines': typeof AuthenticatedMedicinesRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRouteWithChildren
+  '/_authenticated/pantry': typeof AuthenticatedPantryRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/vendor': typeof AuthenticatedVendorRoute
   '/greeting/$id': typeof GreetingIdRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/medicines'
     | '/orders'
+    | '/pantry'
     | '/profile'
     | '/vendor'
     | '/greeting/$id'
@@ -350,6 +360,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/home'
     | '/medicines'
+    | '/pantry'
     | '/profile'
     | '/vendor'
     | '/greeting/$id'
@@ -383,6 +394,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/medicines'
     | '/_authenticated/orders'
+    | '/_authenticated/pantry'
     | '/_authenticated/profile'
     | '/_authenticated/vendor'
     | '/greeting/$id'
@@ -482,6 +494,13 @@ declare module '@tanstack/react-router' {
       path: '/orders'
       fullPath: '/orders'
       preLoaderRoute: typeof AuthenticatedOrdersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pantry': {
+      id: '/_authenticated/pantry'
+      path: '/pantry'
+      fullPath: '/pantry'
+      preLoaderRoute: typeof AuthenticatedPantryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile': {
@@ -667,6 +686,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMedicinesRoute: typeof AuthenticatedMedicinesRoute
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRouteWithChildren
+  AuthenticatedPantryRoute: typeof AuthenticatedPantryRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedVendorRoute: typeof AuthenticatedVendorRoute
   AuthenticatedFamilyMemberIdRoute: typeof AuthenticatedFamilyMemberIdRoute
@@ -684,6 +704,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMedicinesRoute: AuthenticatedMedicinesRoute,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRouteWithChildren,
+  AuthenticatedPantryRoute: AuthenticatedPantryRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedVendorRoute: AuthenticatedVendorRoute,
   AuthenticatedFamilyMemberIdRoute: AuthenticatedFamilyMemberIdRoute,
