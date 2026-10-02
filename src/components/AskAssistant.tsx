@@ -110,6 +110,9 @@ export function AskAssistant() {
       audioRef.current.pause();
       audioRef.current = null;
     }
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     setVoice("off");
   }
 
@@ -158,7 +161,17 @@ export function AskAssistant() {
     try {
       const result = await speak({ data: { text: text.slice(0, 1500), language } });
       if (!result.ok) {
-        if (result.reason === "failed" && voiceOnRef.current) toast.message(t("home.askSpeakFailed"));
+        if (!voiceOnRef.current) return;
+        const utterance = new SpeechSynthesisUtterance(text);
+        if (language === "hi") utterance.lang = "hi-IN";
+        else if (language === "kn") utterance.lang = "kn-IN";
+        else utterance.lang = "en-IN";
+        
+        await new Promise<void>((resolve) => {
+          utterance.onend = () => resolve();
+          utterance.onerror = () => resolve();
+          window.speechSynthesis.speak(utterance);
+        });
         return;
       }
       if (!voiceOnRef.current) return;
@@ -430,6 +443,7 @@ export function AskAssistant() {
     </>
   );
 }
+
 
 
 
