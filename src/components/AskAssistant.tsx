@@ -155,16 +155,21 @@ export function AskAssistant() {
       
       const doFallbackTTS = async () => {
         if (!voiceOnRef.current) return;
-        const utterance = new SpeechSynthesisUtterance(text);
-        if (language === "hi") utterance.lang = "hi-IN";
-        else utterance.lang = "en-IN";
-        
-        await new Promise<void>((resolve) => {
-          utterance.onend = () => resolve();
-          utterance.onerror = () => resolve();
-          if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-          window.speechSynthesis.speak(utterance);
-        });
+        try {
+          const utterance = new SpeechSynthesisUtterance(text);
+          if (language === "hi") utterance.lang = "hi-IN";
+          else utterance.lang = "en-IN";
+          
+          await new Promise<void>((resolve) => {
+            let done = false;
+            const finish = () => { if (!done) { done = true; resolve(); } };
+            utterance.onend = finish;
+            utterance.onerror = finish;
+            setTimeout(finish, 10000); // 10s max timeout so we never hang forever
+            if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+            window.speechSynthesis.speak(utterance);
+          });
+        } catch {}
       };
 
       if (!result.ok) {
@@ -313,13 +318,6 @@ export function AskAssistant() {
   function startVoice() {
     voiceOnRef.current = true;
     if (typeof window !== 'undefined') {
-      if (window.speechSynthesis) {
-        try {
-          const u = new SpeechSynthesisUtterance('');
-          u.volume = 0;
-          window.speechSynthesis.speak(u);
-        } catch (e) {}
-      }
       try {
         const a = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
         a.play().catch(()=>{});
@@ -456,6 +454,7 @@ export function AskAssistant() {
     </>
   );
 }
+
 
 
 
