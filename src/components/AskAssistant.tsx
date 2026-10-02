@@ -164,7 +164,7 @@ export function AskAssistant() {
         if (!voiceOnRef.current) return;
         const utterance = new SpeechSynthesisUtterance(text);
         if (language === "hi") utterance.lang = "hi-IN";
-        else if (language === "kn") utterance.lang = "kn-IN";
+        
         else utterance.lang = "en-IN";
         
         await new Promise<void>((resolve) => {
@@ -443,6 +443,7 @@ export function AskAssistant() {
     </>
   );
 }
+
 
 
 
