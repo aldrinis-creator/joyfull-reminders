@@ -276,7 +276,7 @@ function HomePage() {
                 variant="outline"
                 onClick={() => setShowSchedule((v) => !v)}
                 aria-expanded={showSchedule}
-                className="bg-card shadow-card flex min-h-13 w-full items-center justify-between rounded-[26px] px-5 py-4 text-left font-semibold"
+                className={cn("bg-card shadow-card flex min-h-13 w-full items-center justify-between rounded-[26px] px-5 py-4 text-left font-semibold transition-all", todayItems.some(i => i.reminder?.category === 'appointment' && !i.completed) && !showSchedule ? "animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.6)] border-red-200 text-red-600" : "")}
               >
                 Today's Schedule
                 <ChevronDown className={cn("size-5 transition-transform text-muted-foreground", showSchedule && "rotate-180")} aria-hidden />
@@ -454,6 +454,7 @@ function EmptyState({ t }: { t: (key: string) => string }) {
     </div>
   );
 }
+
 
 
 
