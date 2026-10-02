@@ -208,7 +208,7 @@ export function AskAssistant() {
     streamRef.current = stream;
 
     const mimeType = pickMimeType();
-    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
     recorderRef.current = recorder;
     const chunks: Blob[] = [];
     recorder.ondataavailable = (event) => {
@@ -314,9 +314,11 @@ export function AskAssistant() {
     voiceOnRef.current = true;
     if (typeof window !== 'undefined') {
       if (window.speechSynthesis) {
-        const u = new SpeechSynthesisUtterance('');
-        u.volume = 0;
-        window.speechSynthesis.speak(u);
+        try {
+          const u = new SpeechSynthesisUtterance('');
+          u.volume = 0;
+          window.speechSynthesis.speak(u);
+        } catch (e) {}
       }
       try {
         const a = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
@@ -454,4 +456,6 @@ export function AskAssistant() {
     </>
   );
 }
+
+
 
