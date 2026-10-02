@@ -170,7 +170,7 @@ export function AskAssistant() {
         await new Promise<void>((resolve) => {
           utterance.onend = () => resolve();
           utterance.onerror = () => resolve();
-          window.speechSynthesis.speak(utterance);
+          if (window.speechSynthesis.paused) window.speechSynthesis.resume(); window.speechSynthesis.speak(utterance);
         });
         return;
       }
@@ -310,7 +310,7 @@ export function AskAssistant() {
     if (voiceOnRef.current) void listenOnce();
   }
 
-  function startVoice() {
+  function startVoice() { if (typeof window !== 'undefined' && window.speechSynthesis) { const u = new SpeechSynthesisUtterance(''); u.volume = 0; window.speechSynthesis.speak(u); }
     voiceOnRef.current = true;
     void listenOnce();
   }
@@ -443,6 +443,8 @@ export function AskAssistant() {
     </>
   );
 }
+
+
 
 
 
