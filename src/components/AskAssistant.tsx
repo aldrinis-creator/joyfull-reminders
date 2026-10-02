@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, MessageCircle, Mic, Send, Square, Volume2 } from "lucide-react";
+import { Loader2, MessageCircle, Mic, Send, Square } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/drawer";
 import { useLanguage, useT } from "@/hooks/useLanguage";
 import { askAssistant } from "@/lib/assistant.functions";
-import { speakText, transcribeSpeech } from "@/lib/voice.functions";
+import { transcribeSpeech } from "@/lib/voice.functions";
 
 type Message = { role: "user" | "assistant"; text: string };
-type VoiceState = "off" | "listening" | "transcribing" | "thinking" | "speaking";
+
+type VoiceState = "off" | "listening" | "transcribing" | "thinking";
 
 const SILENCE_MS = 3000;
 const NO_SPEECH_MS = 9000;
@@ -47,7 +48,6 @@ export function AskAssistant() {
   const { language } = useLanguage();
   const ask = useServerFn(askAssistant);
   const transcribe = useServerFn(transcribeSpeech);
-  const speak = useServerFn(speakText);
 
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -62,7 +62,6 @@ export function AskAssistant() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const timersRef = useRef<ReturnType<typeof setInterval>[]>([]);
 
   useEffect(() => {
@@ -100,13 +99,6 @@ export function AskAssistant() {
     streamRef.current = null;
     void audioCtxRef.current?.close().catch(() => {});
     audioCtxRef.current = null;
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
     setVoice("off");
   }
 
@@ -124,77 +116,23 @@ export function AskAssistant() {
     const text = question.trim();
     if (!text || thinking) return;
     setDraft("");
-    await runTurn(text, false);
+    await runTurn(text);
   }
 
-  async function runTurn(question: string, withAudio: boolean): Promise<string | null> {
+  async function runTurn(question: string) {
     const history = messagesRef.current.slice(-6);
     setMessages((prev) => [...prev, { role: "user", text: question }]);
     setThinking(true);
-    let answer: string | null = null;
     try {
       const result = await ask({ data: { question, language, history } });
-      answer = result.ok
+      const answer = result.ok
         ? result.answer
         : t(result.reason === "not_configured" ? "home.askNotConfigured" : "home.askFailed");
       setMessages((prev) => [...prev, { role: "assistant", text: answer! }]);
-      if (!result.ok) answer = null;
     } catch {
       setMessages((prev) => [...prev, { role: "assistant", text: t("home.askFailed") }]);
     } finally {
       setThinking(false);
-    }
-    if (answer && withAudio) await playAnswer(answer);
-    return answer;
-  }
-
-  async function playAnswer(text: string) {
-    setVoice("speaking");
-    try {
-      const result = await speak({ data: { text: text.slice(0, 1500), language } });
-      
-      const doFallbackTTS = async () => {
-        if (!voiceOnRef.current) return;
-        try {
-          const utterance = new SpeechSynthesisUtterance(text);
-          if (language === "hi") utterance.lang = "hi-IN";
-          else utterance.lang = "en-IN";
-          
-          await new Promise<void>((resolve) => {
-            let done = false;
-            const finish = () => { if (!done) { done = true; resolve(); } };
-            utterance.onend = finish;
-            utterance.onerror = finish;
-            setTimeout(finish, 10000); // 10s max timeout so we never hang forever
-            if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-            window.speechSynthesis.speak(utterance);
-          });
-        } catch {}
-      };
-
-      if (!result.ok) {
-        await doFallbackTTS();
-        return;
-      }
-      
-      if (!voiceOnRef.current) return;
-
-      const audio = new Audio(`data:${result.mimeType};base64,${result.audioBase64}`);
-      audioRef.current = audio;
-      await new Promise<void>((resolve) => {
-        audio.onended = () => resolve();
-        audio.onerror = () => {
-          // If server audio fails to play, fallback to browser TTS!
-          doFallbackTTS().then(resolve);
-        };
-        audio.play().catch(() => {
-          // If autoplay blocked, fallback!
-          doFallbackTTS().then(resolve);
-        });
-      });
-      audioRef.current = null;
-    } catch {
-      /* speaking is a bonus; the answer is already on screen */
     }
   }
 
@@ -214,6 +152,7 @@ export function AskAssistant() {
 
     const mimeType = pickMimeType();
     const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+    
     recorderRef.current = recorder;
     const chunks: Blob[] = [];
     recorder.ondataavailable = (event) => {
@@ -311,18 +250,15 @@ export function AskAssistant() {
 
     if (!voiceOnRef.current) return;
     setVoice("thinking");
-    await runTurn(question, true);
-    if (voiceOnRef.current) void listenOnce();
+    await runTurn(question);
+    
+    // In text-only mode, we stop after answering so the user can read the text
+    // instead of automatically turning the mic back on and listening again.
+    stopEverything();
   }
 
   function startVoice() {
     voiceOnRef.current = true;
-    if (typeof window !== 'undefined') {
-      try {
-        const a = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
-        a.play().catch(()=>{});
-      } catch {}
-    }
     void listenOnce();
   }
 
@@ -331,9 +267,7 @@ export function AskAssistant() {
       ? t("home.askListening")
       : voice === "transcribing"
         ? t("home.askTranscribing")
-        : voice === "speaking"
-          ? t("home.askSpeaking")
-          : null;
+        : null;
 
   return (
     <>
@@ -398,8 +332,6 @@ export function AskAssistant() {
               >
                 {voice === "listening" ? (
                   <Mic className="size-4 animate-pulse" aria-hidden />
-                ) : voice === "speaking" ? (
-                  <Volume2 className="size-4" aria-hidden />
                 ) : (
                   <Loader2 className="size-4 animate-spin" aria-hidden />
                 )}
@@ -454,7 +386,3 @@ export function AskAssistant() {
     </>
   );
 }
-
-
-
-
