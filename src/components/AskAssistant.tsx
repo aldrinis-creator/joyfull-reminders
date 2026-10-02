@@ -16,12 +16,10 @@ import { askAssistant } from "@/lib/assistant.functions";
 import { speakText, transcribeSpeech } from "@/lib/voice.functions";
 
 type Message = { role: "user" | "assistant"; text: string };
-
-/** Everything the voice loop can be doing at a given moment. */
 type VoiceState = "off" | "listening" | "transcribing" | "thinking" | "speaking";
 
-const SILENCE_MS = 3000; // pause after speech that ends the turn
-const NO_SPEECH_MS = 9000; // give up if nothing is said at all
+const SILENCE_MS = 3000;
+const NO_SPEECH_MS = 9000;
 const MAX_TURN_MS = 30000;
 
 function blobToBase64(blob: Blob): Promise<string> {
@@ -44,7 +42,6 @@ function pickMimeType(): string {
   return "";
 }
 
-/** Floating "Ask My-Mitr" assistant: answers from the signed-in user's own data. */
 export function AskAssistant() {
   const t = useT();
   const { language } = useLanguage();
@@ -79,7 +76,6 @@ export function AskAssistant() {
         typeof MediaRecorder !== "undefined",
     );
     return () => stopEverything();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -98,9 +94,7 @@ export function AskAssistant() {
       if (recorderRef.current && recorderRef.current.state !== "inactive") {
         recorderRef.current.stop();
       }
-    } catch {
-      /* already stopped */
-    }
+    } catch {}
     recorderRef.current = null;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
@@ -126,7 +120,6 @@ export function AskAssistant() {
     }
   }
 
-  /** Text turn: no audio in, no audio out. */
   async function send(question: string) {
     const text = question.trim();
     if (!text || thinking) return;
@@ -134,7 +127,6 @@ export function AskAssistant() {
     await runTurn(text, false);
   }
 
-  /** One question/answer. Returns the spoken answer, or null when it failed. */
   async function runTurn(question: string, withAudio: boolean): Promise<string | null> {
     const history = messagesRef.current.slice(-6);
     setMessages((prev) => [...prev, { role: "user", text: question }]);
@@ -160,28 +152,40 @@ export function AskAssistant() {
     setVoice("speaking");
     try {
       const result = await speak({ data: { text: text.slice(0, 1500), language } });
-      if (!result.ok) {
+      
+      const doFallbackTTS = async () => {
         if (!voiceOnRef.current) return;
         const utterance = new SpeechSynthesisUtterance(text);
         if (language === "hi") utterance.lang = "hi-IN";
-        
         else utterance.lang = "en-IN";
         
         await new Promise<void>((resolve) => {
           utterance.onend = () => resolve();
           utterance.onerror = () => resolve();
-          if (window.speechSynthesis.paused) window.speechSynthesis.resume(); window.speechSynthesis.speak(utterance);
+          if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+          window.speechSynthesis.speak(utterance);
         });
+      };
+
+      if (!result.ok) {
+        await doFallbackTTS();
         return;
       }
+      
       if (!voiceOnRef.current) return;
 
       const audio = new Audio(`data:${result.mimeType};base64,${result.audioBase64}`);
       audioRef.current = audio;
       await new Promise<void>((resolve) => {
         audio.onended = () => resolve();
-        audio.onerror = () => resolve();
-        void audio.play().catch(() => resolve());
+        audio.onerror = () => {
+          // If server audio fails to play, fallback to browser TTS!
+          doFallbackTTS().then(resolve);
+        };
+        audio.play().catch(() => {
+          // If autoplay blocked, fallback!
+          doFallbackTTS().then(resolve);
+        });
       });
       audioRef.current = null;
     } catch {
@@ -189,7 +193,6 @@ export function AskAssistant() {
     }
   }
 
-  /** Records until a ~3s pause, then transcribes, answers and speaks back. */
   async function listenOnce() {
     if (!voiceOnRef.current) return;
     let stream: MediaStream;
@@ -228,9 +231,7 @@ export function AskAssistant() {
       clearTimers();
       try {
         if (recorder.state !== "inactive") recorder.stop();
-      } catch {
-        /* already stopped */
-      }
+      } catch {}
     };
 
     const meter = setInterval(() => {
@@ -306,12 +307,22 @@ export function AskAssistant() {
     if (!voiceOnRef.current) return;
     setVoice("thinking");
     await runTurn(question, true);
-    // Continuous conversation: listen again straight after speaking.
     if (voiceOnRef.current) void listenOnce();
   }
 
-  function startVoice() { if (typeof window !== 'undefined' && window.speechSynthesis) { const u = new SpeechSynthesisUtterance(''); u.volume = 0; window.speechSynthesis.speak(u); }
+  function startVoice() {
     voiceOnRef.current = true;
+    if (typeof window !== 'undefined') {
+      if (window.speechSynthesis) {
+        const u = new SpeechSynthesisUtterance('');
+        u.volume = 0;
+        window.speechSynthesis.speak(u);
+      }
+      try {
+        const a = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+        a.play().catch(()=>{});
+      } catch {}
+    }
     void listenOnce();
   }
 
@@ -443,10 +454,4 @@ export function AskAssistant() {
     </>
   );
 }
-
-
-
-
-
-
 
