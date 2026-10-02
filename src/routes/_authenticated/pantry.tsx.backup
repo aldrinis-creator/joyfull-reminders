@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePantryItems, type PantryItem } from '@/lib/queries';
 import { toast } from 'sonner';
 import { ShoppingCart, Plus, CheckCircle2, Share2, Trash2, Minus, Edit3, History, RotateCcw } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export const Route = createFileRoute('/_authenticated/pantry')({
   head: () => ({ meta: [{ title: 'Smart Pantry - My-Mitr' }] }),
@@ -136,17 +136,10 @@ function PantryPage() {
   const [selectedForOrder, setSelectedForOrder] = useState<Record<string, OrderItemSel>>({});
   const [pastOrder, setPastOrder] = useState<{ date: string, items: { name: string, qty: number, unit: string }[] } | null>(null);
 
-  const [grocerPhone, setGrocerPhone] = useState('');
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [orderSource, setOrderSource] = useState<'runningLow' | 'past'>('runningLow');
-  const [editingPastItems, setEditingPastItems] = useState<{ id: string, name: string, qty: number, unit: string, checked: boolean }[]>([]);
-
   useEffect(() => {
     try {
       const saved = localStorage.getItem('pantry_last_order');
       if (saved) setPastOrder(JSON.parse(saved));
-      const phone = localStorage.getItem('pantry_grocer_phone');
-      if (phone) setGrocerPhone(phone);
     } catch {}
   }, []);
 
@@ -164,66 +157,37 @@ function PantryPage() {
     });
   }, [runningLow]);
 
-  const handleShareToGrocerClick = () => {
-    const orderItems = runningLow.filter((i) => selectedForOrder[i.id]?.checked);
+  const handleShareToGrocer = () => {
+    const orderItems = runningLow.filter((i) => selectedForOrder[i.id]?.checked).map(i => selectedForOrder[i.id]);
     if (orderItems.length === 0) {
       toast.info('No items selected for replenishment.');
-      return;
-    }
-    setOrderSource('runningLow');
-    setConfirmDialogOpen(true);
-  };
-
-  const handleResendPastOrderClick = () => {
-    if (!pastOrder || pastOrder.items.length === 0) return;
-    setEditingPastItems(pastOrder.items.map((i, idx) => ({ ...i, id: String(idx), checked: true })));
-    setOrderSource('past');
-    setConfirmDialogOpen(true);
-  };
-
-  const confirmAndSend = () => {
-    try {
-      localStorage.setItem('pantry_grocer_phone', grocerPhone.trim());
-    } catch {}
-
-    let finalItems: { name: string; qty: number; unit: string }[] = [];
-    if (orderSource === 'runningLow') {
-      finalItems = runningLow.filter((i) => selectedForOrder[i.id]?.checked).map(i => ({
-        name: selectedForOrder[i.id]!.name,
-        qty: selectedForOrder[i.id]!.qty,
-        unit: selectedForOrder[i.id]!.unit
-      }));
-    } else {
-      finalItems = editingPastItems.filter(i => i.checked).map(i => ({ name: i.name, qty: i.qty, unit: i.unit }));
-    }
-
-    if (finalItems.length === 0) {
-      toast.info('No items selected.');
       return;
     }
 
     try {
       localStorage.setItem('pantry_last_order', JSON.stringify({
         date: new Date().toISOString(),
-        items: finalItems
+        items: orderItems
       }));
-      setPastOrder({ date: new Date().toISOString(), items: finalItems });
+      setPastOrder({ date: new Date().toISOString(), items: orderItems as any });
     } catch {}
 
-    const text = 'Hello! Please arrange the following items for delivery:\n\n' + finalItems.map((sel) => {
+    const text = 'Hello! Please arrange the following items for delivery:\n\n' + orderItems.map((sel) => {
+      const s = sel as OrderItemSel;
+      const unitLabel = s.unit === 'piece' || s.unit === 'bg' ? '' : ' ' + s.unit;
+      return '- ' + s.name + ' (Qty: ' + s.qty + unitLabel + ')';
+    }).join('\n') + '\n\nThank you!';
+    
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  };
+
+  const handleResendPastOrder = () => {
+    if (!pastOrder || pastOrder.items.length === 0) return;
+    const text = 'Hello! Please arrange the following items for delivery:\n\n' + pastOrder.items.map((sel) => {
       const unitLabel = sel.unit === 'piece' || sel.unit === 'bg' ? '' : ' ' + sel.unit;
       return '- ' + sel.name + ' (Qty: ' + sel.qty + unitLabel + ')';
     }).join('\n') + '\n\nThank you!';
-    
-    let url = 'https://wa.me/';
-    if (grocerPhone.trim()) {
-      let cleaned = grocerPhone.replace(/\D/g, '');
-      if (cleaned.length === 10) cleaned = '91' + cleaned;
-      url += cleaned;
-    }
-    url += '?text=' + encodeURIComponent(text);
-    window.open(url, '_blank');
-    setConfirmDialogOpen(false);
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
   };
 
   return (
@@ -320,71 +284,6 @@ function PantryPage() {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-            <DialogContent className="sm:max-w-[425px] rounded-3xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Confirm Order List</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Grocer WhatsApp Number</label>
-                  <Input placeholder="e.g. 9876543210 (Optional)" value={grocerPhone} onChange={(e) => setGrocerPhone(e.target.value)} />
-                  <p className="text-xs text-muted-foreground">We'll save this for next time.</p>
-                </div>
-                <div className="bg-gray-50 border rounded-2xl p-4 space-y-3">
-                  <h4 className="text-sm font-semibold">Items to send:</h4>
-                  {orderSource === 'past' ? (
-                    editingPastItems.map((item) => (
-                      <div key={item.id} className="flex items-center gap-2">
-                        <Checkbox checked={item.checked} onCheckedChange={(c) => setEditingPastItems(p => p.map(x => x.id === item.id ? { ...x, checked: c === true } : x))} />
-                        <span className="flex-1 text-sm">{item.name}</span>
-                        <Button variant="outline" size="icon" className="size-6 h-6 w-6 rounded-full" disabled={!item.checked || item.qty <= 1} onClick={() => setEditingPastItems(p => p.map(x => x.id === item.id ? { ...x, qty: x.qty - 1 } : x))}>
-                          <Minus className="size-3" />
-                        </Button>
-                        <span className="text-sm font-semibold w-5 text-center">{item.qty}</span>
-                        <Button variant="outline" size="icon" className="size-6 h-6 w-6 rounded-full" disabled={!item.checked} onClick={() => setEditingPastItems(p => p.map(x => x.id === item.id ? { ...x, qty: x.qty + 1 } : x))}>
-                          <Plus className="size-3" />
-                        </Button>
-                        <span className="text-xs text-muted-foreground w-8">{item.unit}</span>
-                      </div>
-                    ))
-                  ) : (
-                    runningLow.filter(i => selectedForOrder[i.id]?.checked).map(item => {
-                      const sel = selectedForOrder[item.id]!;
-                      return (
-                        <div key={item.id} className="flex items-center gap-2">
-                          <Checkbox checked={sel.checked} onCheckedChange={(c) => setSelectedForOrder((p) => {
-                            const existing = p[item.id]!;
-                            return { ...p, [item.id]: { ...existing, checked: c === true } };
-                          })} />
-                          <span className="flex-1 text-sm">{item.name}</span>
-                          <Button variant="outline" size="icon" className="size-6 h-6 w-6 rounded-full" disabled={!sel.checked || sel.qty <= 1} onClick={() => setSelectedForOrder((p) => {
-                            const existing = p[item.id]!;
-                            return { ...p, [item.id]: { ...existing, qty: existing.qty - 1 } };
-                          })}>
-                            <Minus className="size-3" />
-                          </Button>
-                          <span className="text-sm font-semibold w-5 text-center">{sel.qty}</span>
-                          <Button variant="outline" size="icon" className="size-6 h-6 w-6 rounded-full" disabled={!sel.checked} onClick={() => setSelectedForOrder((p) => {
-                            const existing = p[item.id]!;
-                            return { ...p, [item.id]: { ...existing, qty: existing.qty + 1 } };
-                          })}>
-                            <Plus className="size-3" />
-                          </Button>
-                          <span className="text-xs text-muted-foreground w-8">{sel.unit}</span>
-                        </div>
-                      )
-                    })
-                  )}
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={confirmAndSend} className="w-full h-12 rounded-2xl bg-green-600 hover:bg-green-700 text-white shadow-md">
-                  <Share2 className="size-4 mr-2" /> Send to WhatsApp
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
 
         {runningLow.length > 0 && (
@@ -393,7 +292,7 @@ function PantryPage() {
               <h2 className="text-rose-600 font-bold flex items-center gap-2">
                 <ShoppingCart className="size-5" /> Due for Restocking
               </h2>
-              <Button onClick={handleShareToGrocerClick} size="sm" className="bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-md">
+              <Button onClick={handleShareToGrocer} size="sm" className="bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-md">
                 <Share2 className="size-4 mr-2" /> WhatsApp Grocer
               </Button>
             </div>
@@ -467,7 +366,7 @@ function PantryPage() {
             <p className="text-xs text-green-700 leading-relaxed">
               {pastOrder.items.map(i => `${i.name} (${i.qty})`).join(', ')}
             </p>
-            <Button onClick={handleResendPastOrderClick} size="sm" variant="outline" className="w-full text-green-700 border-green-300 bg-white rounded-xl hover:bg-green-100">
+            <Button onClick={handleResendPastOrder} size="sm" variant="outline" className="w-full text-green-700 border-green-300 bg-white rounded-xl hover:bg-green-100">
               <RotateCcw className="size-4 mr-2" /> Resend Previous List
             </Button>
           </div>
@@ -516,3 +415,6 @@ function PantryPage() {
     </AppShell>
   );
 }
+
+
+
