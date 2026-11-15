@@ -9,6 +9,7 @@ import { isValidPincode } from "@/lib/greetings";
 import { useT } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/pincode/$memberId")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Share your pincode — My-Mitr" },

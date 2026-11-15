@@ -33,6 +33,7 @@ import {
 } from "@/lib/ereminder";
 
 export const Route = createFileRoute("/_authenticated/vendor")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Vendor portal — My-Mitr" },

@@ -27,6 +27,7 @@ import {
 } from "@/lib/ereminder";
 
 export const Route = createFileRoute("/_authenticated/reminders/")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "All reminders — My-Mitr" },

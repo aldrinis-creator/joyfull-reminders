@@ -14,6 +14,7 @@ import { ShoppingCart, Plus, CheckCircle2, Share2, Trash2, Minus, Edit3, History
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 
 export const Route = createFileRoute('/_authenticated/pantry')({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: 'Smart Pantry - My-Mitr' }] }),
   component: PantryPage,
 });

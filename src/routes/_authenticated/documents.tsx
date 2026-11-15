@@ -41,6 +41,7 @@ import {
 } from "@/lib/documents";
 
 export const Route = createFileRoute("/_authenticated/documents")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Document shelf — My-Mitr" },

@@ -5,6 +5,7 @@ import { getPublicGreeting } from "@/lib/greetings.functions";
 import { useT } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/greeting/$id")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "A greeting just for you — My-Mitr" },

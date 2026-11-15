@@ -43,6 +43,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/medicines")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Medicines — My-Mitr" },

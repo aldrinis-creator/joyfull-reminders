@@ -36,6 +36,7 @@ import {
 } from "@/lib/ereminder";
 
 export const Route = createFileRoute("/_authenticated/family/$memberId")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Family member — My-Mitr" },

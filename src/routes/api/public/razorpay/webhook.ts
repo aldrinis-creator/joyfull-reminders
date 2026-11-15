@@ -7,6 +7,7 @@ import { createHmac, timingSafeEqual } from "crypto";
  * This is the ONLY place an order becomes "paid".
  */
 export const Route = createFileRoute("/api/public/razorpay/webhook")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {

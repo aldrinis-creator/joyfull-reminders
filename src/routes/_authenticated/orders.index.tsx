@@ -7,6 +7,7 @@ import { useOrders } from "@/lib/queries";
 import { formatDate, orderStatusLabel, rupees } from "@/lib/ereminder";
 
 export const Route = createFileRoute("/_authenticated/orders/")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Orders — My-Mitr" },

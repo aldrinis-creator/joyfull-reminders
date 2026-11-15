@@ -38,6 +38,7 @@ import {
 } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/profile")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Profile & settings — My-Mitr" },

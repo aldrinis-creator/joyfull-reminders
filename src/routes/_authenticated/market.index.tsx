@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 type MarketSearch = { pin?: string | undefined; for?: string | undefined };
 
 export const Route = createFileRoute("/_authenticated/market/")({
+  staticData: { sitemap: false },
   validateSearch: (search: Record<string, unknown>): MarketSearch => ({
     pin: typeof search["pin"] === "string" ? search["pin"] : undefined,
     for: typeof search["for"] === "string" ? search["for"] : undefined,

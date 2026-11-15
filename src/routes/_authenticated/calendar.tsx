@@ -16,6 +16,7 @@ import { categoryMeta, formatDate, nextOccurrence, type Reminder } from "@/lib/e
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/calendar")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Calendar & categories — My-Mitr" },

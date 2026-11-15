@@ -9,6 +9,7 @@ import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
  * re-run inside the same week from double-sending.
  */
 export const Route = createFileRoute("/api/public/cron/weekly-digest")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {

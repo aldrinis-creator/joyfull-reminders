@@ -126,6 +126,7 @@ async function sendWhatsapp(
 }
 
 export const Route = createFileRoute("/api/public/cron/dispatch-reminders")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {

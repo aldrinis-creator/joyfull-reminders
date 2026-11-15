@@ -8,6 +8,7 @@ import { useT } from "@/hooks/useLanguage";
 import type { Reminder } from "@/lib/ereminder";
 
 export const Route = createFileRoute("/_authenticated/reminders/$reminderId/edit")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Edit reminder — My-Mitr" },

@@ -16,6 +16,7 @@ type ReminderCategory = Database["public"]["Enums"]["reminder_category"];
 const MAX_EVENTS = 500;
 
 export const Route = createFileRoute("/api/public/calendar/$token")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       GET: async ({ params }) => {

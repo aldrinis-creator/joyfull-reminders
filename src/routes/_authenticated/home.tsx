@@ -42,6 +42,7 @@ const MITR_QUOTES = [
 ];
 
 export const Route = createFileRoute("/_authenticated/home")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Your timeline â€” My-Mitr" },

@@ -26,6 +26,7 @@ import { useT } from "@/hooks/useLanguage";
 type VendorSearch = { pin?: string | undefined; for?: string | undefined };
 
 export const Route = createFileRoute("/_authenticated/market/$vendorId")({
+  staticData: { sitemap: false },
   validateSearch: (search: Record<string, unknown>): VendorSearch => ({
     pin: typeof search["pin"] === "string" ? search["pin"] : undefined,
     for: typeof search["for"] === "string" ? search["for"] : undefined,

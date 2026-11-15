@@ -16,6 +16,7 @@ import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/otp.functions";
 import { phoneSchema } from "@/lib/otp.schemas";
 
 export const Route = createFileRoute("/auth")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Sign in to My-Mitr" },

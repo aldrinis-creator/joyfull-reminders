@@ -7,6 +7,7 @@ import { verifyDismissToken } from "@/lib/dismiss-token.server";
  * carries (and proves) which reminder occurrence may be acknowledged.
  */
 export const Route = createFileRoute("/api/public/reminders/dismiss")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {

@@ -9,6 +9,7 @@ import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
  * date, and nudges an existing one if the date changed. Never duplicates.
  */
 export const Route = createFileRoute("/api/public/cron/document-expiry")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {

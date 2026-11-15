@@ -22,6 +22,7 @@ function secureEqual(left: string, right: string): boolean {
 }
 
 export const Route = createFileRoute("/api/public/msg91/whatsapp-status")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {

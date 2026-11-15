@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/hooks/useLanguage";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "My-Mitr — Never miss a birthday, bill or deadline again" },
